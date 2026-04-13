@@ -13,9 +13,9 @@ async function syncTasks() {
   // Mapeo de códigos a UUIDs reales de la base de datos
   const levelMapping = {
     'pasante': '36e8a644-d81c-4e8c-a9c5-6bc6f87cb72c',
-    'S1': 'd5d15a03-9caf-4586-9774-5aac09cb9980',
-    'S2': 'b50457f4-92c1-403f-91f0-3fc2add51c30',
-    'S3': '897d1306-675a-41ef-bf7e-59ccfd352077'
+    'Global 1': 'd5d15a03-9caf-4586-9774-5aac09cb9980',
+    'Global 2': 'b50457f4-92c1-403f-91f0-3fc2add51c30',
+    'Global 3': '897d1306-675a-41ef-bf7e-59ccfd352077'
   };
 
   const { tasks } = await initStore();

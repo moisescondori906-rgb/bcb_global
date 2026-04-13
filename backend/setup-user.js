@@ -8,7 +8,7 @@ async function setupUser() {
     const telefono = '+59174344916';
     const password = '12345';
     const nombre_usuario = 'usuario_real';
-    const nivel_codigo = 'S1';
+    const nivel_codigo = 'Global 1';
     
     console.log(`--- Configurando usuario: ${telefono} ---`);
     
@@ -43,7 +43,7 @@ async function setupUser() {
         codigo_invitacion,
         invitado_por: null,
         nivel_id: targetLevel.id,
-        saldo_principal: 200, // Saldo inicial para S1
+        saldo_principal: 200, // Saldo inicial para Global 1
         saldo_comisiones: 0,
         rol: 'usuario',
         bloqueado: false,

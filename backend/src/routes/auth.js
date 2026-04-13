@@ -33,11 +33,7 @@ router.post('/register', async (req, res) => {
     
     const pasanteLevel = levels.find(l => String(l.codigo).toLowerCase() === 'pasante' || String(l.id) === 'l1');
     
-    // Verificar que el invitador no sea un pasante
-    if (pasanteLevel && String(inviter.nivel_id) === String(pasanteLevel.id)) {
-      return res.status(400).json({ error: 'Este código de invitación pertenece a un usuario en prueba (pasante) y no es válido para nuevos registros. Por favor solicita un código de un usuario VIP.' });
-    }
-
+    // REGLA ACTUALIZADA: Los pasantes AHORA pueden invitar, pero no recibirán comisiones (manejado en distributeInvestmentCommissions)
     const codigo = Math.random().toString(36).slice(2, 10).toUpperCase();
     const user = {
       id: uuidv4(),

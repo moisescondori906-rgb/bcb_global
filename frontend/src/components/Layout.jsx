@@ -1,15 +1,21 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, Users, Gem, Wallet, User } from 'lucide-react';
+import { 
+  Home as HomeIcon, 
+  Users as UsersIcon, 
+  Gem as GemIcon, 
+  Wallet as WalletIcon, 
+  User as UserIcon 
+} from 'lucide-react';
 import FloatingQuestionnaire from './FloatingQuestionnaire.jsx';
 import { cn } from '../lib/utils/cn';
 
 const navItems = [
-  { to: '/', icon: Home, label: 'Inicio' },
-  { to: '/tareas', icon: Users, label: 'Tareas' },
-  { to: '/vip', icon: Gem, label: 'VIP' },
-  { to: '/ganancias', icon: Wallet, label: 'Billetera' },
-  { to: '/usuario', icon: User, label: 'Perfil' },
+  { to: '/', icon: HomeIcon, label: 'Inicio' },
+  { to: '/tareas', icon: UsersIcon, label: 'Tareas' },
+  { to: '/vip', icon: GemIcon, label: 'VIP' },
+  { to: '/ganancias', icon: WalletIcon, label: 'Billetera' },
+  { to: '/usuario', icon: UserIcon, label: 'Perfil' },
 ];
 
 export default function Layout({ children }) {
@@ -34,6 +40,7 @@ export default function Layout({ children }) {
         <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] nav-blur py-4 px-4 z-50 flex items-center justify-around">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to;
+            const Icon = item.icon;
             return (
               <NavLink
                 key={item.to}
@@ -53,7 +60,7 @@ export default function Layout({ children }) {
                   "transition-all duration-300",
                   isActive ? "scale-110 drop-shadow-[0_0_10px_rgba(220,38,38,0.5)]" : "scale-100 opacity-60 group-active:scale-90"
                 )}>
-                  <item.icon size={26} strokeWidth={isActive ? 2.5 : 1.5} />
+                  <Icon size={26} strokeWidth={isActive ? 2.5 : 1.5} />
                 </div>
                 <span className={cn(
                   "text-[9px] font-black uppercase tracking-widest transition-all",

@@ -1,271 +1,362 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Wallet, TrendingUp, Target, ShieldCheck, 
-  ArrowUpCircle, ArrowDownCircle, Bell,
-  ChevronRight, PlayCircle, Sparkles, Zap, Trophy, Users
+  Wallet as WalletIcon, 
+  TrendingUp as TrendingUpIcon, 
+  Target as TargetIcon, 
+  ShieldCheck as ShieldCheckIcon, 
+  ArrowUpCircle as ArrowUpCircleIcon, 
+  ArrowDownCircle as ArrowDownCircleIcon, 
+  Bell as BellIcon,
+  ChevronRight as ChevronRightIcon, 
+  PlayCircle as PlayCircleIcon, 
+  Sparkles as SparklesIcon, 
+  Zap as ZapIcon, 
+  Trophy as TrophyIcon, 
+  Users as UsersIcon,
+  FileText as FileTextIcon,
+  HelpCircle as HelpCircleIcon,
+  Info as InfoIcon,
+  MessageCircle as MessageIcon,
+  Compass as RouletteIcon,
+  Plus as PlusIcon,
+  X as CloseIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx';
-import { api } from '../lib/api.js';
-import { supabase } from '../lib/supabase.js';
-import { APP_DISPLAY_NAME } from '../theme/branding.js';
-import { displayLevelCode } from '../lib/displayLevel.js';
+import Layout from '../components/Layout';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
 import { cn } from '../lib/utils/cn';
-import Layout from '../components/Layout.jsx';
-
-// UI Components
-import { Card } from '../components/ui/Card.jsx';
-import { Button } from '../components/ui/Button.jsx';
-import { Badge } from '../components/ui/Badge.jsx';
-import BannerCarousel from '../components/dashboard/BannerCarousel.jsx';
-import ActionGrid from '../components/dashboard/ActionGrid.jsx';
-import GuideSection from '../components/dashboard/GuideSection.jsx';
+import BannerCarousel from '../components/dashboard/BannerCarousel';
+import ActionGrid from '../components/dashboard/ActionGrid';
+import GuideSection from '../components/dashboard/GuideSection';
+import FloatingQuestionnaire from '../components/FloatingQuestionnaire';
+import GlobalLoader from '../components/ui/GlobalLoader';
 
 export default function Dashboard() {
-  const { user, refreshUser } = useAuth();
-  const [banners, setBanners] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [guideText, setGuideText] = useState('');
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupData, setPopupData] = useState(null);
-
-  const quickActions = useMemo(() => [
-    { to: '/recompensas', icon: Trophy, label: 'Premios', color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    { to: '/tareas', icon: Zap, label: 'Tareas', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { to: '/equipo', icon: Users, label: 'Equipo', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-  ], []);
+  const { user } = useAuth();
+  const [stats, setStats] = useState({ ingresos_hoy: 0, total_acumulado: 0 });
+  const [loading, setLoading] = useState(true);
+  const [pc, setPc] = useState(null);
+  const [showSupportMenu, setShowSupportMenu] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
+    let isMounted = true;
+    const loadData = async () => {
       try {
-        const [bannersData, statsData, configData] = await Promise.all([
-          api.banners().catch(() => []),
-          api.users.stats().catch(() => null),
-          api.publicContent().catch(() => null)
+        const [statsData, pcData] = await Promise.all([
+          api.get('/users/stats'),
+          api.publicContent()
         ]);
         
-        setBanners(Array.isArray(bannersData) ? bannersData : []);
-        setStats(statsData);
-        if (configData) {
-          setGuideText(configData.home_guide);
-          setPopupData(configData);
-          if (configData.popup_enabled && !sessionStorage.getItem('seen_popup')) {
-            setShowPopup(true);
-            sessionStorage.setItem('seen_popup', 'true');
-          }
+        if (isMounted) {
+          setStats({
+            ingresos_hoy: statsData?.ingresos_hoy ?? 0,
+            total_acumulado: statsData?.total_acumulado ?? 0
+          });
+          setPc(pcData);
+          setLoading(false);
         }
       } catch (err) {
-        console.error('Error fetching dashboard data:', err);
+        if (isMounted) setLoading(false);
       }
     };
-    fetchData();
+    loadData();
+    return () => { isMounted = false; };
+  }, []);
 
-    // Real-time subscriptions
-    const userSub = supabase.channel(`user_${user?.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios', filter: `id=eq.${user?.id}` }, () => {
-        refreshUser();
-        api.users.stats().then(setStats).catch(() => {});
-      })
-      .subscribe();
+  const actionItems = [
+    { to: '/vip', icon: TrendingUpIcon, label: 'Membresía VIP', color: 'text-sav-primary', bg: 'bg-sav-primary/10' },
+    { to: '/invitar', icon: UsersIcon, label: 'Invitar', color: 'text-orange-400', bg: 'bg-orange-500/10' },
+    { to: '/recompensas', icon: RouletteIcon, label: 'Ruleta', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    { to: '/equipo', icon: UsersIcon, label: 'Mi Equipo', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { to: '/movimientos', icon: FileTextIcon, label: 'Movimientos', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { to: '/acerca-de', icon: InfoIcon, label: 'Nosotros', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+  ];
 
-    return () => {
-      supabase.removeChannel(userSub);
-    };
-  }, [user?.id]);
+  if (loading) return <GlobalLoader />;
 
   return (
     <Layout>
-      <div className="animate-fade pb-24">
-        {/* Header - More Premium */}
-        <header className="px-6 py-6 flex items-center justify-between sticky top-0 z-40 nav-blur border-b border-white/5">
-          <div className="flex items-center gap-4">
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-sav-primary to-sav-accent opacity-30 blur-sm group-hover:opacity-50 transition-opacity" />
-              <div className="relative w-11 h-11 rounded-2xl bg-sav-dark border border-white/10 flex items-center justify-center p-2.5 overflow-hidden shadow-2xl">
-                <img src="/imag/logo-carrusel.png" alt="Logo" className="w-full h-full object-contain" />
-              </div>
+      <div className="fixed inset-0 bg-sav-dark -z-10" />
+      {/* Dynamic Background Effects */}
+      <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-sav-primary/20 blur-[120px] rounded-full -z-10 animate-pulse" />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-rose-600/10 blur-[100px] rounded-full -z-10" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.05)_0%,transparent_70%)] -z-10" />
+      
+      <main className="px-5 space-y-7 pb-12 pt-4">
+        {/* Header Section */}
+        <header className="flex items-center justify-between py-4 px-1">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <SparklesIcon size={14} className="text-sav-primary animate-pulse" />
+              <h2 className="text-2xl font-black text-white uppercase tracking-tighter drop-shadow-sm">Panel de Socio</h2>
             </div>
-            <div>
-              <h1 className="text-xl font-black tracking-tighter text-white leading-none uppercase">
-                BCB <span className="text-sav-primary">Global</span>
-              </h1>
-              <div className="flex items-center gap-2 mt-1.5">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">SISTEMA ACTIVO</span>
+            <div className="flex items-center gap-2">
+              <div className="relative w-1.5 h-1.5">
+                <div className="absolute inset-0 rounded-full bg-sav-success animate-ping opacity-75" />
+                <div className="relative w-full h-full rounded-full bg-sav-success" />
               </div>
+              <p className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em]">Servidor Institucional Online</p>
             </div>
           </div>
-          <button className="relative p-2.5 rounded-2xl bg-white/5 border border-white/10 text-sav-muted hover:text-white hover:bg-white/10 transition-all active:scale-95 shadow-lg">
-            <Bell size={20} />
-            <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-sav-primary rounded-full ring-4 ring-sav-dark" />
-          </button>
+          <Link to="/mensajes" className="relative group">
+            <div className="absolute -inset-3 bg-sav-primary/20 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
+            <div className="relative w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-sav-muted hover:text-white transition-all duration-300 backdrop-blur-md group-hover:border-sav-primary/50 group-hover:bg-sav-primary/5">
+              <BellIcon size={22} className="group-hover:animate-bounce" />
+              {/* Notif Badge */}
+              <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-sav-primary rounded-full border-2 border-sav-dark shadow-[0_0_10px_rgba(220,38,38,0.8)]" />
+            </div>
+          </Link>
         </header>
 
-        <main className="px-5 space-y-8 pt-6">
-          {/* Balance Card - Refined Design */}
-          <Card variant="premium" className="relative overflow-hidden group border-none shadow-[0_30px_60px_-15px_rgba(220,38,38,0.3)]">
-            {/* Background elements */}
-            <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 group-hover:opacity-10 transition-all duration-700 pointer-events-none">
-              <Wallet size={120} />
-            </div>
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-sav-primary/20 blur-[60px] rounded-full pointer-events-none" />
-            
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] font-black text-sav-muted uppercase tracking-[0.3em] opacity-80">Saldo Disponible</span>
-                  <div className="h-0.5 w-8 bg-sav-primary/50 rounded-full" />
-                </div>
-                <Badge variant="info" className="bg-white/10 backdrop-blur-md border border-white/20 py-1 px-3">
-                  <Sparkles size={10} className="mr-1.5 text-amber-400" />
-                  {displayLevelCode(user?.nivel_codigo)}
-                </Badge>
-              </div>
-              
-              <div className="flex items-baseline gap-3">
-                <span className="text-5xl font-black text-white tracking-tighter drop-shadow-lg">
-                  {user?.saldo?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </span>
-                <span className="text-sm font-black text-sav-muted/60 uppercase tracking-widest">BOB</span>
-              </div>
+        {/* Banner Section */}
+        <BannerCarousel banners={pc?.banners || []} />
 
-              <div className="grid grid-cols-2 gap-4 mt-10">
-                <Link to="/recargar" className="w-full">
-                  <Button className="w-full h-14 text-[11px] font-black tracking-[0.2em] shadow-xl shadow-sav-primary/20 active:scale-[0.98] transition-all" icon={ArrowUpCircle}>RECARGAR</Button>
-                </Link>
-                <Link to="/retiro" className="w-full">
-                  <Button variant="secondary" className="w-full h-14 text-[11px] font-black tracking-[0.2em] bg-white/5 hover:bg-white/10 border-white/10 active:scale-[0.98] transition-all" icon={ArrowDownCircle}>RETIRAR</Button>
-                </Link>
-              </div>
-            </div>
-          </Card>
+        {/* Main Wallet Card */}
+        <Card variant="premium" className="p-8 border-none bg-gradient-to-br from-sav-primary via-sav-primary to-rose-700 relative overflow-hidden group shadow-[0_30px_70px_-15px_rgba(220,38,38,0.5)] active:scale-[0.99] transition-transform duration-500">
+          {/* Decorative Elements */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 blur-[90px] rounded-full -mr-40 -mt-40 transition-all group-hover:bg-white/20 group-hover:scale-125 duration-1000" />
+          <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-black/40 blur-[80px] rounded-full transition-all group-hover:bg-black/60 duration-1000" />
+          
+          {/* Animated Light Sweep */}
+          <motion.div 
+            animate={{ x: ['-200%', '200%'] }}
+            transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[35deg]"
+          />
 
-          {/* Carousel - Improved Visibility */}
-          <section className="relative">
-            <div className="flex items-center justify-between mb-4 px-1">
-              <h2 className="text-[11px] font-black text-white/40 uppercase tracking-[0.3em] flex items-center gap-2">
-                <Sparkles size={14} className="text-sav-primary" /> Promociones
-              </h2>
-            </div>
-            <BannerCarousel banners={banners} />
-          </section>
-
-          {/* Quick Actions Grid - Using ActionGrid Component */}
-          <section>
-            <div className="flex items-center justify-between mb-4 px-1">
-              <h2 className="text-[11px] font-black text-white/40 uppercase tracking-[0.3em] flex items-center gap-2">
-                <Zap size={14} className="text-sav-accent" /> Acceso Rápido
-              </h2>
-            </div>
-            <ActionGrid items={quickActions} />
-          </section>
-
-          {/* Guide Marquee */}
-          <GuideSection text={guideText} />
-
-          {/* Stats Grid - Premium Cards */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between px-1">
-              <h2 className="text-[11px] font-black text-white/40 uppercase tracking-[0.3em] flex items-center gap-2">
-                <TrendingUp size={14} className="text-sav-primary" /> Rendimiento
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Card variant="flat" className="p-6 space-y-3 bg-gradient-to-br from-white/[0.03] to-transparent border-white/5 group hover:border-white/10 transition-colors">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black text-sav-muted uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">Hoy</span>
-                  <div className="p-2 rounded-xl bg-sav-accent/10 text-sav-accent">
-                    <Target size={16} />
-                  </div>
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-white tracking-tighter">
-                    {stats?.earnings_today?.toLocaleString() || '0.00'}
-                  </p>
-                  <p className="text-[9px] font-bold text-emerald-400 mt-1 uppercase tracking-widest">+ Ingresos</p>
-                </div>
-              </Card>
-              <Card variant="flat" className="p-6 space-y-3 bg-gradient-to-br from-white/[0.03] to-transparent border-white/5 group hover:border-white/10 transition-colors">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black text-sav-muted uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">Total</span>
-                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
-                    <Sparkles size={16} />
-                  </div>
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-white tracking-tighter">
-                    {stats?.earnings_total?.toLocaleString() || '0.00'}
-                  </p>
-                  <p className="text-[9px] font-bold text-sav-primary mt-1 uppercase tracking-widest">Acumulado</p>
-                </div>
-              </Card>
-            </div>
-          </section>
-
-          {/* Tutorial CTA - More Integrated */}
-          <Link to="/ayuda">
-            <Card variant="outline" className="p-6 relative overflow-hidden group border-sav-primary/20 bg-sav-primary/5 hover:bg-sav-primary/10 transition-all duration-500">
-              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-150 transition-transform duration-700 pointer-events-none">
-                <PlayCircle size={80} />
-              </div>
-              <div className="flex items-center gap-5 relative z-10">
-                <div className="w-14 h-14 rounded-2xl bg-sav-primary/20 flex items-center justify-center text-sav-primary shadow-inner">
-                  <PlayCircle size={32} />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-black text-white uppercase tracking-wider">Centro de Ayuda</h3>
-                  <p className="text-[10px] text-sav-muted mt-1 font-bold uppercase tracking-widest">Aprende a maximizar tus ganancias</p>
-                </div>
-                <div className="p-2 rounded-full bg-white/5 group-hover:bg-sav-primary group-hover:text-white transition-all">
-                  <ChevronRight size={20} />
-                </div>
-              </div>
-            </Card>
-          </Link>
-        </main>
-      </div>
-
-      {/* Global Popup */}
-      <AnimatePresence>
-        {showPopup && popupData && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowPopup(false)}
-              className="absolute inset-0 bg-sav-dark/90 backdrop-blur-md"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm bg-sav-dark border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl"
-            >
-              {popupData.popup_image && (
-                <div className="aspect-video w-full overflow-hidden">
-                  <img src={api.getMediaUrl(popupData.popup_image)} alt="Aviso" className="w-full h-full object-cover" />
-                </div>
-              )}
-              <div className="p-8 text-center">
-                <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-4">
-                  {popupData.popup_title || 'Aviso Importante'}
-                </h3>
-                <p className="text-sm text-sav-muted font-bold leading-relaxed mb-8">
-                  {popupData.popup_text}
-                </p>
-                <Button 
-                  onClick={() => setShowPopup(false)}
-                  className="w-full h-14 rounded-2xl text-[11px] font-black tracking-widest"
-                >
-                  ENTENDIDO
-                </Button>
-              </div>
-            </motion.div>
+          <div className="absolute right-[-10px] top-[-10px] opacity-[0.08] rotate-12 group-hover:rotate-[20deg] group-hover:scale-110 transition-all duration-1000">
+            <WalletIcon size={180} />
           </div>
+
+          <div className="relative z-10 space-y-10">
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-md shadow-inner">
+                    <ZapIcon size={12} className="text-amber-300" />
+                  </div>
+                  <p className="text-[10px] font-black text-white/90 uppercase tracking-[0.3em] drop-shadow-sm">Balance de Capital</p>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-5xl font-black text-white tracking-tighter drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+                    {(user?.saldo_principal ?? 0).toLocaleString()}
+                  </p>
+                  <span className="text-xs font-black text-white/60 uppercase tracking-widest">BOB</span>
+                </div>
+              </div>
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="bg-black/20 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-2xl shadow-xl"
+              >
+                <p className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] text-center mb-0.5">Membresía</p>
+                <p className="text-xs font-black text-white uppercase tracking-tighter text-center">{user?.nivel_codigo || 'Global 1'}</p>
+              </motion.div>
+            </div>
+
+            <div className="flex gap-4 pt-2">
+              <Link to="/recargar" className="w-full">
+                <Button variant="secondary" className="w-full h-14 text-[11px] font-black tracking-[0.25em] bg-white text-sav-primary border-none hover:bg-white/90 shadow-[0_10px_25px_-5px_rgba(255,255,255,0.4)] active:scale-[0.98] transition-all" icon={ArrowUpCircleIcon}>DEPOSITAR</Button>
+              </Link>
+              <Link to="/retiro" className="w-full">
+                <Button variant="secondary" className="w-full h-14 text-[11px] font-black tracking-[0.25em] bg-black/20 hover:bg-black/30 border-white/10 text-white backdrop-blur-md active:scale-[0.98] transition-all" icon={ArrowDownCircleIcon}>RETIRAR</Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+
+        {/* Quick Stats Grid */}
+        <div className="glass-card shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-7 space-y-7 border-white/5 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sav-primary via-rose-500 to-sav-primary opacity-50" />
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-sav-primary/10">
+                <TrophyIcon size={16} className="text-sav-primary" />
+              </div>
+              <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Rendimiento Mensual</h3>
+            </div>
+            <div className="px-2 py-0.5 rounded-full bg-sav-success/10 border border-sav-success/20">
+              <span className="text-[8px] font-black text-sav-success uppercase tracking-widest">+12.5%</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-8 relative">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-10 bg-white/5" />
+            <div className="space-y-1">
+              <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Ingresos Hoy</p>
+              <p className="text-2xl font-black text-sav-success drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                +{(stats?.ingresos_hoy ?? 0).toLocaleString()} <span className="text-[10px] font-bold opacity-50">BOB</span>
+              </p>
+            </div>
+            <div className="space-y-1 text-right">
+              <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Total Acumulado</p>
+              <p className="text-2xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                {(stats?.total_acumulado ?? 0).toLocaleString()} <span className="text-[10px] font-bold opacity-50">BOB</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions Grid */}
+        <ActionGrid items={actionItems} />
+
+        {/* Tutorial Section */}
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-sav-primary/20 to-rose-500/20 rounded-[2rem] blur opacity-50 group-hover:opacity-100 transition duration-1000" />
+          <GuideSection text={pc?.marquee_text || "Bienvenido a BCB Global Institutional — Liderando la Inversión Publicitaria"} />
+        </div>
+
+        {/* Footer Brand */}
+        <div className="pt-6 pb-4 space-y-4">
+          <div className="flex items-center justify-center gap-4 opacity-30">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-white" />
+            <ShieldCheckIcon size={16} className="text-white" />
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-white" />
+          </div>
+          <p className="text-[9px] font-black text-sav-muted text-center uppercase tracking-[0.5em] drop-shadow-sm">BCB Global v7.0.0 Institutional — Colorado, USA</p>
+        </div>
+      </main>
+
+      <FloatingQuestionnaire />
+
+      {/* Floating Action Buttons */}
+      <motion.div 
+        drag
+        dragConstraints={{ left: -300, right: 0, top: -500, bottom: 0 }}
+        className="fixed bottom-24 right-6 flex flex-col gap-5 z-[60]"
+      >
+        <AnimatePresence>
+          {showSupportMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.8 }}
+              className="flex flex-col gap-4 mb-2 items-end"
+            >
+              <a 
+                href={pc?.soporte_canal_url || '#'} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 group active:scale-95 transition-transform"
+              >
+                <motion.span 
+                  initial={{ x: 10, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  className="bg-sav-dark/95 backdrop-blur-2xl border border-white/20 px-4 py-2.5 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-l-4 border-l-sav-primary"
+                >
+                  Canal Oficial
+                </motion.span>
+                <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-sav-primary to-rose-700 shadow-[0_15px_40px_-5px_rgba(220,38,38,0.6)] flex items-center justify-center text-white border-2 border-white/20 transition-all group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-sav-primary/40 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <UsersIcon size={24} className="relative z-10" />
+                </div>
+              </a>
+              <a 
+                href={pc?.soporte_gerente_url || '#'} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 group active:scale-95 transition-transform"
+              >
+                <motion.span 
+                  initial={{ x: 10, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-sav-dark/95 backdrop-blur-2xl border border-white/20 px-4 py-2.5 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-l-4 border-l-emerald-500"
+                >
+                  Soporte VIP
+                </motion.span>
+                <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-emerald-500 to-teal-700 shadow-[0_15px_40px_-5px_rgba(16,185,129,0.6)] flex items-center justify-center text-white border-2 border-white/20 transition-all group-hover:scale-110 group-hover:-rotate-6 group-hover:shadow-emerald-500/40 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <MessageIcon size={24} className="relative z-10" />
+                </div>
+              </a>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {pc?.ruleta_activa !== false && (
+          <Link to="/recompensas" className="group active:scale-90 transition-transform flex items-center gap-3 justify-end">
+            <motion.span 
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 rounded-2xl text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-lg shadow-orange-500/20 border border-white/20"
+            >
+              Ruleta
+            </motion.span>
+            <motion.div 
+              animate={{ 
+                y: [0, -8, 0],
+                boxShadow: [
+                  "0 20px 40px -10px rgba(245,158,11,0.5)",
+                  "0 30px 60px -10px rgba(245,158,11,0.8)",
+                  "0 20px 40px -10px rgba(245,158,11,0.5)"
+                ]
+              }}
+              transition={{ 
+                y: { repeat: Infinity, duration: 2.5, ease: "easeInOut" },
+                boxShadow: { repeat: Infinity, duration: 2.5, ease: "easeInOut" }
+              }}
+              className="w-16 h-16 rounded-[1.8rem] bg-gradient-to-br from-amber-400 via-orange-500 to-rose-600 flex items-center justify-center text-white relative overflow-hidden border-2 border-white/40 shadow-2xl"
+            >
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-white/20" />
+              <RouletteIcon size={32} className="animate-spin-slow drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+              
+              {/* Partículas de brillo */}
+              <motion.div 
+                animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5], rotate: 45 }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="absolute top-2 left-2 text-white/40"
+              >
+                <SparklesIcon size={12} />
+              </motion.div>
+
+              <motion.div 
+                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="absolute -top-1 -right-1 w-5 h-5 bg-sav-error rounded-full border-2 border-white shadow-lg flex items-center justify-center"
+              >
+                <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+              </motion.div>
+            </motion.div>
+          </Link>
         )}
-      </AnimatePresence>
+
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setShowSupportMenu(!showSupportMenu)}
+          className={cn(
+            "w-16 h-16 rounded-[1.8rem] flex items-center justify-center text-white transition-all duration-500 border-2 relative overflow-hidden group",
+            showSupportMenu 
+              ? "bg-sav-dark border-white/20 rotate-90 shadow-none" 
+              : "bg-gradient-to-br from-sav-primary via-sav-primary to-rose-700 border-white/20 shadow-[0_20px_50px_-10px_rgba(220,38,38,0.7)]"
+          )}
+        >
+          {/* Shimmer Effect */}
+          {!showSupportMenu && (
+            <motion.div 
+              animate={{ x: ['-100%', '100%'] }}
+              transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
+            />
+          )}
+          
+          <AnimatePresence mode="wait">
+            {showSupportMenu ? (
+              <motion.div key="close" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: 90 }}>
+                <CloseIcon size={28} />
+              </motion.div>
+            ) : (
+              <motion.div key="plus" initial={{ opacity: 0, rotate: 90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: -90 }}>
+                <PlusIcon size={32} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.button>
+      </motion.div>
     </Layout>
   );
 }

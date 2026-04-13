@@ -6,7 +6,8 @@ import {
   getPublicContent, getMetodosQr, getAllMetodosQr, getBanners, getAllTasks, getRecargaById, 
   updateRecarga, getRetiroById, updateRetiro, trySupabase, handleLevelUpRewards,
   getUserEarningsSummary, createMovimiento, boliviaTime, getPunishedUsers, unpunishUser,
-  unpunishAllUsers, distributeInvestmentCommissions, refreshPublicContent, invalidateLevelsCache, preloadLevels
+  unpunishAllUsers, distributeInvestmentCommissions, refreshPublicContent, invalidateLevelsCache, preloadLevels,
+  getMensajesGlobales, createMensajeGlobal, deleteMensajeGlobal
 } from '../lib/queries.js';
 import { getStore } from '../data/store.js';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
@@ -128,13 +129,13 @@ router.get('/ranking-invitados', async (req, res) => {
         const validB = userNet.B.filter(isValidGuest);
         const validC = userNet.C.filter(isValidGuest);
 
-        // Agrupar por nivel VIP (S1, S2, S3, S4, S5, etc.)
-        const statsByLevel = {}; // "S1": { A: 0, B: 0, C: 0, total: 0 }
+        // Agrupar por nivel VIP (Global 1, Global 2, etc.)
+        const statsByLevel = {}; // "Global 1": { A: 0, B: 0, C: 0, total: 0 }
         
         const countByDepth = (list, depthKey) => {
           list.forEach(guest => {
             const guestLevel = levelMap[guest.nivel_id];
-            const code = String(guestLevel?.codigo || 'S1').toUpperCase();
+            const code = String(guestLevel?.codigo || 'Global 1').toUpperCase();
             if (!statsByLevel[code]) statsByLevel[code] = { A: 0, B: 0, C: 0, total: 0 };
             statsByLevel[code][depthKey]++;
             statsByLevel[code].total++;
@@ -262,6 +263,58 @@ router.post('/usuarios/:id/ajuste', async (req, res) => {
   } finally {
     clearTimeout(lockTimeout);
     adminActionLocks.delete(lockKey);
+  }
+});
+
+router.put('/config', async (req, res) => {
+  const updates = req.body;
+  try {
+    const pc = await getPublicContent();
+    const merged = { ...pc, ...updates };
+    
+    if (hasDb()) {
+      const { error } = await supabase
+        .from('configuracion_publica')
+        .upsert({ id: 'main', contenido: merged });
+      if (error) throw error;
+    } else {
+      getStore().publicContent = merged;
+    }
+    
+    await refreshPublicContent();
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error('[Admin Config Update] Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/mensajes', async (req, res) => {
+  try {
+    const mensajes = await getMensajesGlobales();
+    res.json(mensajes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/mensajes', async (req, res) => {
+  try {
+    const { titulo, contenido, imagen_url } = req.body;
+    if (!titulo || !contenido) return res.status(400).json({ error: 'Título y contenido requeridos' });
+    const nuevo = await createMensajeGlobal({ titulo, contenido, imagen_url });
+    res.json(nuevo);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/mensajes/:id', async (req, res) => {
+  try {
+    await deleteMensajeGlobal(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

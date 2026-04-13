@@ -3,9 +3,10 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { 
   getLevels, updateUser, getTarjetasByUser, 
-  createTarjeta, deleteTarjeta, getUsers, trySupabase, getUserEarningsSummary,
+  createTarjeta, deleteTarjeta, getUsers, trySupabase, getUserEarningsSummary, 
   getPublicContent, checkUserQuestionnaire, submitQuestionnaire, isUserPunished,
-  boliviaTime, findUserWithAuthSecrets, buildPersistedEarningsSummary
+  boliviaTime, findUserWithAuthSecrets, buildPersistedEarningsSummary,
+  getMensajesGlobales
 } from '../lib/queries.js';
 import { authenticate } from '../middleware/auth.js';
 import { attachRequestUser } from '../middleware/requestContext.js';
@@ -462,6 +463,15 @@ router.get('/status-castigo', async (req, res) => {
   try {
     const castigado = await isUserPunished(req.user.id);
     res.json({ castigado });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/mensajes', async (req, res) => {
+  try {
+    const mensajes = await getMensajesGlobales();
+    res.json(mensajes);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

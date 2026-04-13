@@ -19,7 +19,7 @@ export const publicContentDefaults = {
     hora_inicio: '09:00',
     hora_fin: '18:00',
   },
-  /** Requisito de 20 subordinados S3 para ascender a S4/S5 */
+  /** Requisito de 20 subordinados Global 3 para ascender a Global 4/Global 5 */
   require_s3_subordinates: true,
   /** Configuración de Recompensas */
   recompensas_visibles: true,
@@ -27,7 +27,7 @@ export const publicContentDefaults = {
   recompensa_deposito_activa: true,
   recompensa_amigos_activa: true,
   recompensa_amigos_cantidad: 10,
-  recompensa_amigos_nivel_minimo: 'S1', // S1 o superior
+  recompensa_amigos_nivel_minimo: 'Global 1', // Global 1 o superior
   telegram_global_enabled: true,
   telegram_recargas_enabled: true,
   telegram_retiros_enabled: true,
@@ -42,6 +42,10 @@ export const publicContentDefaults = {
   },
   /** Configuración de Admins */
   notificar_grupo_recargas_siempre: false,
+  /** Soporte y Redes */
+  soporte_gerente_url: 'https://wa.me/59174344916',
+  soporte_canal_url: 'https://whatsapp.com/channel/example',
+  ruleta_activa: true,
 };
 
 export function mergePublicContent(pc) {

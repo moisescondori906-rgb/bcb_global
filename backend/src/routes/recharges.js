@@ -84,17 +84,17 @@ router.post('/', authenticate, attachRequestUser, async (req, res) => {
       logger.error('[Recharge] Error al validar límite diario:', err);
     }
 
-    // Validar requisitos para S4/S5 (20 subordinados S3)
+    // Validar requisitos para Global 4/Global 5 (20 subordinados Global 3)
     const niveles = await getLevels();
     const nivelDestino = niveles.find(l => (l.deposito || l.costo) === parseFloat(monto));
-    if (nivelDestino && ['S4', 'S5'].includes(nivelDestino.codigo)) {
+    if (nivelDestino && ['Global 4', 'Global 5'].includes(nivelDestino.codigo)) {
       if (hasDb() && pc.require_s3_subordinates !== false) {
         const { data: teamData } = await supabase.from('usuarios').select('nivel_id').eq('invitado_por', user.id);
-        const s3Level = niveles.find(l => l.codigo === 'S3');
+        const s3Level = niveles.find(l => l.codigo === 'Global 3');
         const s3Count = (teamData || []).filter(u => String(u.nivel_id) === String(s3Level?.id)).length;
 
         if (s3Count < 20) {
-          return res.status(400).json({ error: `Para ascender a ${nivelDestino.nombre} necesitas al menos 20 subordinados de nivel S3. Actualmente tienes ${s3Count}.` });
+          return res.status(400).json({ error: `Para ascender a ${nivelDestino.nombre} necesitas al menos 20 subordinados de nivel Global 3. Actualmente tienes ${s3Count}.` });
         }
       }
     }

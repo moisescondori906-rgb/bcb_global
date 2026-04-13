@@ -3,15 +3,15 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const levels = [
   { id: 'l1', codigo: 'pasante', nombre: 'pasante', deposito: 0, ingreso_diario: 7.20, num_tareas_diarias: 4, comision_por_tarea: 1.80, orden: 0, activo: true },
-  { id: 'l2', codigo: 'S1', nombre: 'S1', deposito: 200, ingreso_diario: 7.20, num_tareas_diarias: 4, comision_por_tarea: 1.80, orden: 1, activo: true },
-  { id: 'l3', codigo: 'S2', nombre: 'S2', deposito: 720, ingreso_diario: 25.76, num_tareas_diarias: 8, comision_por_tarea: 3.22, orden: 2, activo: true },
-  { id: 'l4', codigo: 'S3', nombre: 'S3', deposito: 2830, ingreso_diario: 101.40, num_tareas_diarias: 15, comision_por_tarea: 6.76, orden: 3, activo: true },
-  { id: 'l5', codigo: 'S4', nombre: 'S4', deposito: 9150, ingreso_diario: 339.90, num_tareas_diarias: 30, comision_por_tarea: 11.33, orden: 4, activo: false },
-  { id: 'l6', codigo: 'S5', nombre: 'S5', deposito: 28200, ingreso_diario: 1045.80, num_tareas_diarias: 60, comision_por_tarea: 17.43, orden: 5, activo: false },
-  { id: 'l7', codigo: 'S6', nombre: 'S6', deposito: 58000, ingreso_diario: 2235, num_tareas_diarias: 100, comision_por_tarea: 22.35, orden: 6, activo: false },
-  { id: 'l8', codigo: 'S7', nombre: 'S7', deposito: 124000, ingreso_diario: 4961.60, num_tareas_diarias: 160, comision_por_tarea: 31.01, orden: 7, activo: false },
-  { id: 'l9', codigo: 'S8', nombre: 'S8', deposito: 299400, ingreso_diario: 11977.50, num_tareas_diarias: 250, comision_por_tarea: 47.91, orden: 8, activo: false },
-  { id: 'l10', codigo: 'S9', nombre: 'S9', deposito: 541600, ingreso_diario: 23548, num_tareas_diarias: 400, comision_por_tarea: 58.87, orden: 9, activo: false },
+  { id: 'l2', codigo: 'Global 1', nombre: 'Global 1', deposito: 200, ingreso_diario: 7.20, num_tareas_diarias: 4, comision_por_tarea: 1.80, orden: 1, activo: true },
+  { id: 'l3', codigo: 'Global 2', nombre: 'Global 2', deposito: 720, ingreso_diario: 25.76, num_tareas_diarias: 8, comision_por_tarea: 3.22, orden: 2, activo: true },
+  { id: 'l4', codigo: 'Global 3', nombre: 'Global 3', deposito: 2830, ingreso_diario: 101.40, num_tareas_diarias: 15, comision_por_tarea: 6.76, orden: 3, activo: true },
+  { id: 'l5', codigo: 'Global 4', nombre: 'Global 4', deposito: 9150, ingreso_diario: 339.90, num_tareas_diarias: 30, comision_por_tarea: 11.33, orden: 4, activo: false },
+  { id: 'l6', codigo: 'Global 5', nombre: 'Global 5', deposito: 28200, ingreso_diario: 1045.80, num_tareas_diarias: 60, comision_por_tarea: 17.43, orden: 5, activo: false },
+  { id: 'l7', codigo: 'Global 6', nombre: 'Global 6', deposito: 58000, ingreso_diario: 2235, num_tareas_diarias: 100, comision_por_tarea: 22.35, orden: 6, activo: false },
+  { id: 'l8', codigo: 'Global 7', nombre: 'Global 7', deposito: 124000, ingreso_diario: 4961.60, num_tareas_diarias: 160, comision_por_tarea: 31.01, orden: 7, activo: false },
+  { id: 'l9', codigo: 'Global 8', nombre: 'Global 8', deposito: 299400, ingreso_diario: 11977.50, num_tareas_diarias: 250, comision_por_tarea: 47.91, orden: 8, activo: false },
+  { id: 'l10', codigo: 'Global 9', nombre: 'Global 9', deposito: 541600, ingreso_diario: 23548, num_tareas_diarias: 400, comision_por_tarea: 58.87, orden: 9, activo: false },
 ];
 
 export async function initStore() {
@@ -38,7 +38,7 @@ export async function initStore() {
 
   const user1 = {
     id: user1Id,
-    telefono: '+59163907641',
+    telefono: '+59174344916',
     nombre_usuario: 'alexj',
     nombre_real: 'Alexander Jimenez',
     password_hash: hash,
@@ -60,11 +60,11 @@ export async function initStore() {
     { id: uuidv4(), nivel_id: 'pasante', nombre: 'Chanel Classic', recompensa: 1.80, video_url: '/video/chanel1.mp4', descripcion: 'Elegancia atemporal Chanel', pregunta: '¿Qué marca viste?', respuesta_correcta: 'CHANEL', opciones: ['CHANEL', 'DIOR', 'GUCCI', 'PRADA'] },
     { id: uuidv4(), nivel_id: 'pasante', nombre: 'Dior Fashion', recompensa: 1.80, video_url: '/video/dior1.mp4', descripcion: 'Alta costura con Dior', pregunta: '¿Qué marca viste?', respuesta_correcta: 'DIOR', opciones: ['DIOR', 'CHANEL', 'HERMES', 'PRADA'] },
     
-    // Tareas S1
-    { id: uuidv4(), nivel_id: 'S1', nombre: 'Nike Air Max', recompensa: 1.80, video_url: '/video/nike1.mp4', descripcion: 'Innovación en cada paso', pregunta: '¿Qué marca viste?', respuesta_correcta: 'NIKE', opciones: ['NIKE', 'ADIDAS', 'PUMA', 'REEBOK'] },
-    { id: uuidv4(), nivel_id: 'S1', nombre: 'Puma Speed', recompensa: 1.80, video_url: '/video/puma1.mp4', descripcion: 'Diseño y velocidad Puma', pregunta: '¿Qué marca viste?', respuesta_correcta: 'PUMA', opciones: ['PUMA', 'NIKE', 'ADIDAS', 'REEBOK'] },
-    { id: uuidv4(), nivel_id: 'S1', nombre: 'Rolex Luxury', recompensa: 1.80, video_url: '/video/rolex1.mp4', descripcion: 'Precisión y prestigio Rolex', pregunta: '¿Qué marca viste?', respuesta_correcta: 'ROLEX', opciones: ['ROLEX', 'OMEGA', 'CASIO', 'CARTIER'] },
-    { id: uuidv4(), nivel_id: 'S1', nombre: 'Ferrari F8', recompensa: 1.80, video_url: '/video/lamborghini1.mp4', descripcion: 'Potencia pura en pista', pregunta: '¿Qué marca viste?', respuesta_correcta: 'LAMBORGHINI', opciones: ['LAMBORGHINI', 'FERRARI', 'PORSCHE', 'MCLAREN'] },
+    // Tareas Global 1
+    { id: uuidv4(), nivel_id: 'Global 1', nombre: 'Nike Air Max', recompensa: 1.80, video_url: '/video/nike1.mp4', descripcion: 'Innovación en cada paso', pregunta: '¿Qué marca viste?', respuesta_correcta: 'NIKE', opciones: ['NIKE', 'ADIDAS', 'PUMA', 'REEBOK'] },
+    { id: uuidv4(), nivel_id: 'Global 1', nombre: 'Puma Speed', recompensa: 1.80, video_url: '/video/puma1.mp4', descripcion: 'Diseño y velocidad Puma', pregunta: '¿Qué marca viste?', respuesta_correcta: 'PUMA', opciones: ['PUMA', 'NIKE', 'ADIDAS', 'REEBOK'] },
+    { id: uuidv4(), nivel_id: 'Global 1', nombre: 'Rolex Luxury', recompensa: 1.80, video_url: '/video/rolex1.mp4', descripcion: 'Precisión y prestigio Rolex', pregunta: '¿Qué marca viste?', respuesta_correcta: 'ROLEX', opciones: ['ROLEX', 'OMEGA', 'CASIO', 'CARTIER'] },
+    { id: uuidv4(), nivel_id: 'Global 1', nombre: 'Ferrari F8', recompensa: 1.80, video_url: '/video/lamborghini1.mp4', descripcion: 'Potencia pura en pista', pregunta: '¿Qué marca viste?', respuesta_correcta: 'LAMBORGHINI', opciones: ['LAMBORGHINI', 'FERRARI', 'PORSCHE', 'MCLAREN'] },
   ];
 
   const banners = [
@@ -76,12 +76,30 @@ export async function initStore() {
     { id: uuidv4(), nombre_titular: 'Global Oficial', imagen_qr_url: '', imagen_base64: null, activo: true, orden: 0 },
   ];
 
+  const mensajesGlobales = [
+    { 
+      id: uuidv4(), 
+      titulo: 'Bienvenida a BCB Global v7.0.0', 
+      contenido: 'Estamos emocionados de lanzar nuestra nueva plataforma institucional con sede en Colorado, USA. Disfruta de una experiencia premium y segura.', 
+      imagen_url: '/imag/noticia1.jpeg',
+      fecha: new Date().toISOString() 
+    },
+    { 
+      id: uuidv4(), 
+      titulo: 'Nuevo Sistema de Retiros', 
+      contenido: 'Recuerda que los retiros ahora se procesan según tu nivel Global: Martes (G1), Miércoles (G2), Jueves (G3), Viernes (G4), Sábado y Domingo (G5+).', 
+      imagen_url: null,
+      fecha: new Date(Date.now() - 86400000).toISOString() 
+    }
+  ];
+
   return {
     users: [admin, user1],
     levels,
     tasks,
     metodosQr,
     banners,
+    mensajesGlobales,
     tarjetas: [],
     retiros: [],
     recargas: [],

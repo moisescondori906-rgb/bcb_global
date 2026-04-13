@@ -158,6 +158,7 @@ export const api = {
     addTarjeta: (data) => request('/users/tarjetas', { method: 'POST', body: JSON.stringify(data) }),
     deleteTarjeta: (id) => request(`/users/tarjetas/${id}`, { method: 'DELETE' }),
     notificaciones: () => request('/users/notificaciones'),
+    mensajes: () => request('/users/mensajes'),
     changePassword: (data) => request('/users/change-password', { method: 'POST', body: JSON.stringify(data) }),
     changeFundPassword: (data) => request('/users/change-fund-password', { method: 'POST', body: JSON.stringify(data) }),
   },
@@ -221,5 +222,8 @@ export const api = {
     regalarTickets: (data) => request('/admin/regalar-tickets', { method: 'POST', body: JSON.stringify(data) }),
     publicContent: () => request('/admin/public-content'),
     updatePublicContent: (data) => request('/admin/public-content', { method: 'PUT', body: JSON.stringify(data) }),
+    mensajes: () => request('/admin/mensajes'),
+    crearMensaje: (data) => request('/admin/mensajes', { method: 'POST', body: JSON.stringify(data) }),
+    eliminarMensaje: (id) => request(`/admin/mensajes/${id}`, { method: 'DELETE' }),
   },
 };

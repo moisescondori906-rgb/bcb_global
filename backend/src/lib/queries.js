@@ -499,6 +499,48 @@ export async function getRecargaById(id) {
   return data;
 }
 
+export async function getMensajesGlobales() {
+  if (!hasDb()) {
+    const store = await getStore();
+    return (store?.mensajesGlobales || []).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  }
+  const { data } = await trySupabase(() => 
+    supabase.from('mensajes_globales')
+      .select('*')
+      .order('fecha', { ascending: false })
+  );
+  return data || [];
+}
+
+export async function createMensajeGlobal(mensaje) {
+  if (!hasDb()) {
+    const store = await getStore();
+    if (!store.mensajesGlobales) store.mensajesGlobales = [];
+    const nuevo = { ...mensaje, id: uuidv4(), fecha: new Date().toISOString() };
+    store.mensajesGlobales.push(nuevo);
+    return nuevo;
+  }
+  const { data } = await trySupabase(() => 
+    supabase.from('mensajes_globales').insert([{
+      ...mensaje,
+      fecha: new Date().toISOString()
+    }]).select().maybeSingle()
+  );
+  return data;
+}
+
+export async function deleteMensajeGlobal(id) {
+  if (!hasDb()) {
+    const store = await getStore();
+    store.mensajesGlobales = (store.mensajesGlobales || []).filter(m => m.id !== id);
+    return true;
+  }
+  await trySupabase(() => 
+    supabase.from('mensajes_globales').delete().eq('id', id)
+  );
+  return true;
+}
+
 export async function getRetiros() {
   const { data } = await trySupabase(() => supabase.from('retiros').select('*, usuario:usuarios!usuario_id(nombre_usuario)').order('created_at', { ascending: false }));
   return data || [];
@@ -948,7 +990,7 @@ export async function handleLevelUpRewards(userId, oldLevelId, newLevelId) {
       return;
     }
 
-    // Lógica de tickets según nivel: S1=1, S2=2, S3=3, etc.
+    // Lógica de tickets según nivel: Global 1=1, Global 2=2, Global 3=3, etc.
     const levelCode = String(newLevel.codigo).toUpperCase();
     let rewardTickets = 0;
 
@@ -991,59 +1033,9 @@ export async function handleLevelUpRewards(userId, oldLevelId, newLevelId) {
  * Distribuye comisiones por tareas a la red (Niveles A, B, C)
  */
 export async function distributeTaskCommissions(userId, baseAmount) {
-  logger.debug(`[Comisiones Tareas] Iniciando distribución para usuario ${userId}, monto base: ${baseAmount}`);
-  
-  try {
-    const user = await findUserById(userId);
-    if (!user || !user.invitado_por) return;
-
-    // REGLA: Si el usuario origen es pasante, no genera comisiones
-    const levels = await getLevels();
-    const userLevel = levels.find(l => l.id === user.nivel_id);
-    const userLevelCode = String(userLevel?.codigo || '').toLowerCase();
-    
-    if (userLevelCode === 'pasante' || userLevelCode === 'internar') {
-      logger.debug(`[Comisiones Tareas] Usuario ${user.nombre_usuario} es pasante. No genera comisiones.`);
-      return;
-    }
-
-    // Porcentajes: A: 0.7%, B: 0.6%, C: 0.5%
-    const configs = [
-      { key: 'A', percent: 0.007 },
-      { key: 'B', percent: 0.006 },
-      { key: 'C', percent: 0.005 }
-    ];
-
-    let currentUplineId = user.invitado_por;
-    for (const config of configs) {
-      if (!currentUplineId) break;
-      const upline = await findUserById(currentUplineId);
-      if (!upline) break;
-
-      const castigado = await isUserPunished(upline.id);
-      if (castigado) {
-        logger.debug(`[Comisiones Tareas] Upline ${upline.nombre_usuario} castigado. Salta.`);
-        currentUplineId = upline.invitado_por;
-        continue;
-      }
-
-      const commission = Number((baseAmount * config.percent).toFixed(4)); // Más precisión para tareas
-      if (commission > 0) {
-        logger.info(`[Comisiones Tareas] Nivel ${config.key}: ${commission} BOB para ${upline.nombre_usuario}`);
-        await addUserEarnings(
-          upline.id, 
-          commission, 
-          'comision_tarea', 
-          user.id, 
-          `Comisión Tarea Nivel ${config.key} (Origen: ${user.nombre_usuario})`
-        );
-      }
-      
-      currentUplineId = upline.invitado_por;
-    }
-  } catch (err) {
-    logger.error('[Comisiones Tareas] Error:', err);
-  }
+  // Deshabilitado por política de empresa (0% comisiones por tareas)
+  logger.debug(`[Comisiones Tareas] Distribución omitida por política (0%). Usuario: ${userId}`);
+  return;
 }
 
 /**
@@ -1065,9 +1057,9 @@ export async function distributeInvestmentCommissions(userId, amount) {
       return;
     }
 
-    // Porcentajes: A: 12%, B: 3%, C: 1%
+    // Porcentajes: A: 10%, B: 3%, C: 1%
     const configs = [
-      { key: 'A', percent: 0.12 },
+      { key: 'A', percent: 0.10 },
       { key: 'B', percent: 0.03 },
       { key: 'C', percent: 0.01 }
     ];

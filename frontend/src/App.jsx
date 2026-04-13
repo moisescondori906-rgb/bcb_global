@@ -9,6 +9,8 @@ import { useAndroidBackHandler } from './hooks/useAndroidBackHandler.js';
  * Asegura que el usuario regrese paso a paso y no salga de la app
  * hasta estar en la pantalla de inicio.
  */
+import GlobalLoader from './components/ui/GlobalLoader';
+
 function NavigationGuard({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -90,6 +92,8 @@ const CambiarContrasenaFondo = lazyWithRetry(() => import('./pages/CambiarContra
 const BillingRecord = lazyWithRetry(() => import('./pages/BillingRecord.jsx'));
 const Recompensas = lazyWithRetry(() => import('./pages/Recompensas.jsx'));
 const HelpCenter = lazyWithRetry(() => import('./pages/HelpCenter.jsx'));
+const AboutUs = lazyWithRetry(() => import('./pages/AboutUs.jsx'));
+const Messages = lazyWithRetry(() => import('./pages/Messages.jsx'));
 
 // Admin
 const AdminLayout = lazyWithRetry(() => import('./pages/admin/AdminLayout.jsx'));
@@ -106,50 +110,6 @@ const AdminAdmins = lazyWithRetry(() => import('./pages/admin/AdminAdmins.jsx'))
 const AdminCuestionario = lazyWithRetry(() => import('./pages/admin/AdminCuestionario.jsx'));
 const AdminRanking = lazyWithRetry(() => import('./pages/admin/AdminRanking.jsx'));
 const AdminRecompensas = lazyWithRetry(() => import('./pages/admin/AdminRecompensas.jsx'));
-
-const GlobalLoader = () => {
-  const [showError, setShowError] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowError(true);
-    }, 15000); // 15 segundos de timeout
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleRetry = () => {
-    window.location.reload();
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-sav-dark space-y-6 p-6 text-center">
-      <div className="relative">
-        <div className="w-16 h-16 border-4 border-white/5 border-t-sav-primary rounded-full animate-spin"></div>
-        <div className="absolute inset-0 bg-sav-primary/20 blur-xl rounded-full animate-pulse"></div>
-      </div>
-      <div className="text-center space-y-4">
-        <div>
-          <p className="text-white font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Cargando BCB Global</p>
-          <p className="text-sav-muted text-[8px] uppercase tracking-widest mt-2">Institutional Grade Platform</p>
-        </div>
-        
-        {showError && (
-          <div className="animate-fade-in space-y-4 max-w-xs mx-auto pt-4">
-            <p className="text-rose-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">
-              El servidor está tardando más de lo esperado en responder.
-            </p>
-            <button 
-              onClick={handleRetry}
-              className="px-6 py-3 rounded-xl bg-white/10 text-white text-[9px] font-black uppercase tracking-[0.2em] border border-white/10 active:scale-95 transition-all hover:bg-white/20"
-            >
-              Reintentar Conexión
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
 function PrivateRoute({ children, adminOnly }) {
   const { user, loading } = useAuth();
@@ -201,6 +161,7 @@ function AppRoutes() {
         </Route>
         <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/recompensas" element={<PrivateRoute><Recompensas /></PrivateRoute>} />
+        <Route path="/mensajes" element={<PrivateRoute><Messages /></PrivateRoute>} />
         {/* Rutas Privadas */}
         <Route path="/tareas" element={<PrivateRoute><TaskRoom /></PrivateRoute>} />
         <Route path="/usuario" element={<PrivateRoute><Profile /></PrivateRoute>} />
@@ -215,6 +176,7 @@ function AppRoutes() {
         <Route path="/seguridad" element={<PrivateRoute><Security /></PrivateRoute>} />
         <Route path="/vincular-tarjeta" element={<PrivateRoute><VincularTarjeta /></PrivateRoute>} />
         <Route path="/ayuda" element={<PrivateRoute><HelpCenter /></PrivateRoute>} />
+        <Route path="/acerca-de" element={<PrivateRoute><AboutUs /></PrivateRoute>} />
         <Route path="/cambiar-contrasena" element={<PrivateRoute><CambiarContrasena /></PrivateRoute>} />
         <Route path="/cambiar-contrasena-fondo" element={<PrivateRoute><CambiarContrasenaFondo /></PrivateRoute>} />
         <Route path="/registro-tareas" element={<PrivateRoute><TaskRoom /></PrivateRoute>} />

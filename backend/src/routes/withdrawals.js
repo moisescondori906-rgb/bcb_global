@@ -57,7 +57,36 @@ router.post('/', authenticate, attachRequestUser, async (req, res) => {
     // Validar horario por nivel (lista en memoria / caché)
     const niveles = await getLevels();
     const userLevel = niveles.find(n => String(n.id) === String(user.nivel_id));
+    const userLevelCode = String(userLevel?.codigo || '').toUpperCase();
     
+    // REGLA: Pasante no puede retirar
+    if (userLevelCode === 'PASANTE') {
+      return res.status(403).json({ error: 'Como Pasante no puedes realizar retiros. Debes subir de nivel primero.' });
+    }
+
+    // REGLA: Días de retiro por nivel
+    // Global 1: Martes(2), Global 2: Miércoles(3), Global 3: Jueves(4), Global 4: Viernes(5), Global 5+: Sábado(6)
+    const day = boliviaTime.getDay();
+    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    
+    let allowedDay = -1;
+    let levelName = '';
+
+    if (userLevelCode === 'GLOBAL 1') { allowedDay = 2; levelName = 'Global 1'; }
+    else if (userLevelCode === 'GLOBAL 2') { allowedDay = 3; levelName = 'Global 2'; }
+    else if (userLevelCode === 'GLOBAL 3') { allowedDay = 4; levelName = 'Global 3'; }
+    else if (userLevelCode === 'GLOBAL 4') { allowedDay = 5; levelName = 'Global 4'; }
+    else if (userLevelCode.startsWith('GLOBAL')) { 
+      const levelNum = parseInt(userLevelCode.replace('GLOBAL ', ''));
+      if (levelNum >= 5) { allowedDay = 6; levelName = `Global ${levelNum}`; }
+    }
+
+    if (allowedDay !== -1 && day !== allowedDay) {
+      return res.status(403).json({ 
+        error: `Los retiros para el nivel ${levelName} solo están permitidos los días ${dayNames[allowedDay]}. Hoy es ${dayNames[day]}.` 
+      });
+    }
+
     let sched;
     if (userLevel && userLevel.retiro_horario_habilitado) {
       // Generar array de días desde inicio a fin

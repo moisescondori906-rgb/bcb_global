@@ -1,60 +1,68 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { 
-  PlayCircle, 
-  HelpCircle, 
-  ChevronRight, 
-  Zap, 
-  ArrowUpCircle, 
-  ArrowDownCircle, 
-  ShieldCheck, 
-  Sparkles 
+  PlayCircle as PlayIcon, 
+  HelpCircle as HelpIcon, 
+  ChevronRight as ChevronIcon, 
+  Zap as ZapIcon, 
+  ArrowUpCircle as ArrowUpIcon, 
+  ArrowDownCircle as ArrowDownIcon, 
+  ShieldCheck as ShieldIcon, 
+  Sparkles as SparklesIcon,
+  MessageCircle as MessageIcon,
+  Users as UsersIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils/cn';
+import { api } from '../lib/api';
 
 export default function HelpCenter() {
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [pc, setPc] = useState(null);
+
+  useEffect(() => {
+    api.publicContent().then(setPc).catch(() => {});
+  }, []);
 
   const guides = [
     {
       id: 'recharges',
       title: 'Cómo Recargar',
       description: 'Aprende a subir de nivel y activar tu membresía Global.',
-      icon: ArrowUpCircle,
+      icon: ArrowUpIcon,
       color: 'text-sav-primary',
       bg: 'bg-sav-primary/10',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Ejemplo
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', 
     },
     {
       id: 'withdrawals',
       title: 'Cómo Retirar',
       description: 'Guía paso a paso para cobrar tus ganancias de forma segura.',
-      icon: ArrowDownCircle,
+      icon: ArrowDownIcon,
       color: 'text-emerald-400',
       bg: 'bg-emerald-500/10',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Ejemplo
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', 
     },
     {
       id: 'tasks',
       title: 'Realizar Tareas',
       description: 'Maximiza tus ingresos diarios completando tareas correctamente.',
-      icon: Zap,
+      icon: ZapIcon,
       color: 'text-amber-400',
       bg: 'bg-amber-500/10',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Ejemplo
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', 
     },
     {
       id: 'security',
       title: 'Seguridad',
       description: 'Protege tu cuenta y configura tu contraseña de fondo.',
-      icon: ShieldCheck,
+      icon: ShieldIcon,
       color: 'text-blue-400',
       bg: 'bg-blue-500/10',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Ejemplo
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', 
     }
   ];
 
@@ -91,26 +99,64 @@ export default function HelpCenter() {
                   </p>
                 </div>
                 <div className="p-2 rounded-xl bg-white/5 group-hover:bg-sav-primary group-hover:text-white transition-all">
-                  <PlayCircle size={20} />
+                  <PlayIcon size={20} />
                 </div>
               </Card>
             );
           })}
         </div>
 
-        <Card variant="premium" className="p-8 relative overflow-hidden text-center space-y-4">
+        <div className="space-y-4">
+          <h2 className="text-[11px] font-black text-white/40 uppercase tracking-[0.3em] ml-1">Contactos Directos</h2>
+          
+          <div className="grid grid-cols-1 gap-4">
+            <a href={pc?.soporte_gerente_url || '#'} target="_blank" rel="noopener noreferrer">
+              <Card className="p-6 flex items-center justify-between bg-emerald-500/5 border-emerald-500/20 hover:bg-emerald-500/10 transition-all group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                    <MessageIcon size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-white uppercase tracking-widest">WhatsApp Gerente</h3>
+                    <p className="text-[9px] text-sav-muted font-bold uppercase tracking-widest">Atención personalizada</p>
+                  </div>
+                </div>
+                <ChevronIcon size={18} className="text-sav-muted group-hover:text-white transition-colors" />
+              </Card>
+            </a>
+
+            <a href={pc?.soporte_canal_url || '#'} target="_blank" rel="noopener noreferrer">
+              <Card className="p-6 flex items-center justify-between bg-sav-primary/5 border-sav-primary/20 hover:bg-sav-primary/10 transition-all group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-sav-primary/10 flex items-center justify-center text-sav-primary group-hover:scale-110 transition-transform">
+                    <UsersIcon size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-white uppercase tracking-widest">Canal Oficial</h3>
+                    <p className="text-[9px] text-sav-muted font-bold uppercase tracking-widest">Noticias y Actualizaciones</p>
+                  </div>
+                </div>
+                <ChevronIcon size={18} className="text-sav-muted group-hover:text-white transition-colors" />
+              </Card>
+            </a>
+          </div>
+        </div>
+
+        <Card variant="premium" className="p-8 relative overflow-hidden text-center space-y-4 bg-sav-dark border-white/5 shadow-2xl">
           <div className="absolute top-0 right-0 p-6 opacity-10">
-            <Sparkles size={60} />
+            <SparklesIcon size={60} />
           </div>
           <div className="relative z-10">
-            <h3 className="text-lg font-black text-white uppercase tracking-tighter">¿Necesitas más ayuda?</h3>
+            <h3 className="text-lg font-black text-white uppercase tracking-tighter">¿Problemas Técnicos?</h3>
             <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest leading-relaxed mt-2">
-              Nuestro equipo de soporte está disponible 24/7 para resolver tus dudas.
+              Nuestro equipo de soporte está disponible 24/7 para resolver tus dudas institucionales.
             </p>
             <div className="pt-6">
-              <Button className="w-full h-12 text-[10px] font-black tracking-widest uppercase">
-                CONTACTAR SOPORTE
-              </Button>
+              <a href={pc?.soporte_gerente_url || '#'} target="_blank" rel="noopener noreferrer">
+                <Button className="w-full h-14 text-[11px] font-black tracking-[0.2em] uppercase shadow-sav-glow">
+                  SOLICITAR ASISTENCIA
+                </Button>
+              </a>
             </div>
           </div>
         </Card>

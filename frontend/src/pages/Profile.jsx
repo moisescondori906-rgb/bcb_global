@@ -8,7 +8,7 @@ import {
   User, Users, UserPlus, FileText, Gift, 
   ShieldCheck, CreditCard, ChevronRight, 
   TrendingUp, Trophy, Copy, Check, Lock, 
-  Wallet, LogOut, Settings, Bell
+  Wallet, LogOut, Settings, Bell, Info
 } from 'lucide-react';
 import { displayLevelCode } from '../lib/displayLevel.js';
 
@@ -59,6 +59,7 @@ export default function Profile() {
     { to: '/movimientos', icon: FileText, label: 'Movimientos', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     { to: '/seguridad', icon: ShieldCheck, label: 'Seguridad', color: 'text-amber-400', bg: 'bg-amber-500/10' },
     { to: '/vincular-tarjeta', icon: CreditCard, label: 'Método de Pago', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+    { to: '/acerca-de', icon: Info, label: 'Acerca de Nosotros', color: 'text-sav-primary', bg: 'bg-sav-primary/10' },
   ];
 
   return (

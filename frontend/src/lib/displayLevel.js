@@ -3,24 +3,15 @@
  * No altera nivel_id ni lógica de negocio.
  */
 const S_TO_GLOBAL = {
-  S1: 'Global',
-  S2: 'Global',
-  S3: 'Global',
-  S4: 'Global',
-  S5: 'Global',
-  S6: 'Global',
-  S7: 'Global',
-  S8: 'Global',
-  S9: 'Global',
-  GLOBAL1: 'Global',
-  GLOBAL2: 'Global',
-  GLOBAL3: 'Global',
-  GLOBAL4: 'Global',
-  GLOBAL5: 'Global',
-  GLOBAL6: 'Global',
-  GLOBAL7: 'Global',
-  GLOBAL8: 'Global',
-  GLOBAL9: 'Global',
+  S1: 'Global 1',
+  S2: 'Global 2',
+  S3: 'Global 3',
+  S4: 'Global 4',
+  S5: 'Global 5',
+  S6: 'Global 6',
+  S7: 'Global 7',
+  S8: 'Global 8',
+  S9: 'Global 9',
 };
 
 export function displayLevelCode(codigo) {

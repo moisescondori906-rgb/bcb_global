@@ -5,7 +5,14 @@ import Header from '../components/Header';
 import { api } from '../lib/api';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { ShieldCheck, User, Building2, Hash, AlertCircle, Info } from 'lucide-react';
+import { 
+  ShieldCheck as ShieldCheckIcon, 
+  User as UserIcon, 
+  Building2 as BuildingIcon, 
+  Hash as HashIcon, 
+  AlertCircle as AlertCircleIcon, 
+  Info as InfoIcon 
+} from 'lucide-react';
 import { cn } from '../lib/utils/cn';
 
 export default function VincularTarjeta() {
@@ -42,7 +49,7 @@ export default function VincularTarjeta() {
       <div className="p-6 space-y-8 animate-fade">
         <div className="flex flex-col items-center text-center space-y-4 mb-2">
           <div className="w-16 h-16 rounded-3xl bg-sav-primary/10 flex items-center justify-center text-sav-primary border border-sav-primary/20 shadow-xl">
-            <ShieldCheck size={32} />
+            <ShieldCheckIcon size={32} />
           </div>
           <div>
             <h2 className="text-xl font-black text-white uppercase tracking-tighter">Seguridad de Cobro</h2>
@@ -54,14 +61,14 @@ export default function VincularTarjeta() {
           <Card className="p-6 space-y-6 bg-white/[0.02] border-white/5 shadow-2xl">
             {error && (
               <div className="p-4 rounded-2xl bg-sav-error/10 border border-sav-error/20 flex items-center gap-3 animate-shake">
-                <AlertCircle size={18} className="text-sav-error shrink-0" />
+                <AlertCircleIcon size={18} className="text-sav-error shrink-0" />
                 <p className="text-[10px] text-sav-error font-black uppercase tracking-widest leading-relaxed">{error}</p>
               </div>
             )}
 
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">
-                <User size={12} /> Propietario de la Cuenta
+                <UserIcon size={12} /> Propietario de la Cuenta
               </label>
               <input
                 value={nombreBanco}
@@ -74,7 +81,7 @@ export default function VincularTarjeta() {
 
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">
-                <Building2 size={12} /> Banco o Plataforma
+                <BuildingIcon size={12} /> Banco o Plataforma
               </label>
               <select 
                 value={tipo} 
@@ -92,7 +99,7 @@ export default function VincularTarjeta() {
 
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">
-                <Hash size={12} /> Número de Cuenta / Celular
+                <HashIcon size={12} /> Número de Cuenta / Celular
               </label>
               <input
                 value={numero}
@@ -102,7 +109,7 @@ export default function VincularTarjeta() {
                 placeholder="Mínimo 4 dígitos"
               />
               <div className="flex items-start gap-2 mt-2 px-1">
-                <Info size={12} className="text-sav-muted mt-0.5" />
+                <InfoIcon size={12} className="text-sav-muted mt-0.5" />
                 <p className="text-[9px] text-sav-muted font-bold uppercase tracking-widest leading-relaxed">
                   Por seguridad, solo guardamos los últimos 4 dígitos para visualización.
                 </p>

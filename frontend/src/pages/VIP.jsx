@@ -155,7 +155,7 @@ export default function VIP() {
           <Card variant="outline" className="p-6 border-dashed border-sav-primary/20 space-y-6">
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: 'Nivel A', val: '12%', sub: 'Directo' },
+                { label: 'Nivel A', val: '10%', sub: 'Directo' },
                 { label: 'Nivel B', val: '3%', sub: 'Indirecto' },
                 { label: 'Nivel C', val: '1%', sub: 'Equipo' },
               ].map((item, i) => (

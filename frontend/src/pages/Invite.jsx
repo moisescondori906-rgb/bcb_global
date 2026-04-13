@@ -49,7 +49,7 @@ export default function Invite() {
   const inviteLink = `https://bcb-global.vercel.app/register?ref=${user?.codigo_invitacion || ''}`;
 
   const handleCopyCode = async () => {
-    if (!user?.codigo_invitacion || user?.nivel_codigo === 'internar' || user?.nivel_codigo === 'pasante') return;
+    if (!user?.codigo_invitacion) return;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(user.codigo_invitacion);
@@ -60,12 +60,10 @@ export default function Invite() {
       }
     } catch (err) {
       console.error('Failed to copy code:', err);
-      // Fallback manual si es necesario o aviso al usuario
     }
   };
 
   const handleCopyLink = async () => {
-    if (user?.nivel_codigo === 'internar' || user?.nivel_codigo === 'pasante') return;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(inviteLink);
@@ -114,47 +112,7 @@ export default function Invite() {
     );
   }
 
-  if (user?.nivel_codigo === 'internar' || user?.nivel_codigo === 'pasante') {
-    return (
-      <Layout>
-        <Header title="Invitar Amigos" />
-        <div className="p-8 text-center space-y-10 flex flex-col items-center justify-center min-h-[75vh] animate-fade">
-          <div className="relative group">
-            <div className="absolute -inset-4 bg-sav-primary/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative w-28 h-28 bg-white/5 text-sav-muted rounded-[3rem] flex items-center justify-center shadow-2xl border border-white/10 animate-pulse">
-              <Lock size={48} strokeWidth={1.5} />
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">Invitación<br/>No Disponible</h2>
-            <p className="text-sm text-sav-muted font-bold leading-relaxed max-w-xs mx-auto">
-              Como <span className="text-white uppercase tracking-widest font-black">{displayLevelCode(user?.nivel_codigo)}</span>, el sistema de comisiones por referidos no está activo.
-            </p>
-          </div>
-
-          <Card className="p-8 bg-gradient-to-br from-sav-primary/10 to-transparent border-sav-primary/20 text-left w-full shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Star size={40} />
-            </div>
-            <p className="text-[10px] text-sav-primary font-black uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
-              <Zap size={14} fill="currentColor" /> Beneficio VIP
-            </p>
-            <p className="text-xs text-white/80 leading-relaxed font-bold uppercase tracking-widest">
-              Sube a <span className="text-sav-primary">Global1</span> para activar tu código y ganar el <span className="text-emerald-400">15% de comisión</span> por cada amigo invitado.
-            </p>
-          </Card>
-
-          <Link to="/vip" className="w-full">
-            <Button className="w-full h-16 rounded-2xl text-[11px] font-black tracking-[0.2em] shadow-xl shadow-sav-primary/20 group">
-              ACTIVAR INVITACIONES
-              <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
-        </div>
-      </Layout>
-    );
-  }
+  const isPasante = user?.nivel_codigo === 'internar' || user?.nivel_codigo === 'pasante';
 
   return (
     <Layout>
@@ -236,8 +194,8 @@ export default function Invite() {
           </h3>
           <div className="grid grid-cols-1 gap-4">
             {[
-              { icon: TrendingUp, title: 'Comisiones Diarias', desc: 'Recibe un porcentaje de las tareas de tus referidos.', color: 'text-sav-primary', bg: 'bg-sav-primary/10' },
-              { icon: Gift, title: 'Bonos por Nivel', desc: 'Premios instantáneos cuando tu equipo sube de nivel VIP.', color: 'text-amber-400', bg: 'bg-amber-400/10' },
+              { icon: Gift, title: 'Bono de Invitación (10%)', desc: 'Gana el 10% de la inversión inicial de tus invitados directos.', color: 'text-sav-primary', bg: 'bg-sav-primary/10' },
+              { icon: TrendingUp, title: 'Crecimiento de Red', desc: 'Comisiones del 3% y 1% por referidos de segundo y tercer nivel.', color: 'text-blue-400', bg: 'bg-blue-400/10' },
               { icon: ShieldCheck, title: 'Crecimiento Seguro', desc: 'Sistema de red transparente y retiro garantizado.', color: 'text-emerald-400', bg: 'bg-emerald-400/10' }
             ].map((b, i) => (
               <Card key={i} className="flex items-center gap-5 p-5 bg-white/[0.02] border-white/5 group hover:border-white/10 transition-all duration-500">
@@ -252,6 +210,27 @@ export default function Invite() {
             ))}
           </div>
         </div>
+
+        {isPasante && (
+          <Card className="p-6 bg-sav-primary/10 border-sav-primary/30 shadow-2xl animate-pulse">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-sav-primary/20 flex items-center justify-center text-sav-primary shrink-0">
+                <Star size={24} fill="currentColor" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm font-black text-white uppercase tracking-widest">Aviso para Pasantes</h4>
+                <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest leading-relaxed">
+                  Puedes invitar amigos ahora, pero <span className="text-sav-primary">no recibirás comisiones</span> hasta que subas a un nivel VIP. ¡Sube de nivel para empezar a ganar!
+                </p>
+                <Link to="/vip" className="inline-block pt-2">
+                  <Button variant="outline" className="h-8 px-4 rounded-lg text-[8px] font-black tracking-widest uppercase border-sav-primary/30 text-sav-primary hover:bg-sav-primary hover:text-white transition-all">
+                    SUBIR A VIP AHORA
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
     </Layout>
   );

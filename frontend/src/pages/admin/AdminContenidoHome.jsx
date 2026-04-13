@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
-import { Save, Clock, Calendar, Info, ShieldCheck, Gift, Bell, Play } from 'lucide-react';
+import { Save, Clock, Calendar, Info, ShieldCheck, Gift, Bell, Play, MessageCircle, Users, Compass, Trash2, Plus, Image as ImageIcon } from 'lucide-react';
 
 function defaultHorario() {
   return {
@@ -104,12 +104,47 @@ export default function AdminContenidoHome() {
     telegram_retiros_chat_id: '',
     telegram_retiros_enabled: true,
     telegram_global_enabled: true,
+    soporte_gerente_url: '',
+    soporte_canal_url: '',
+    ruleta_activa: true,
   });
   const [saving, setSaving] = useState(false);
+  const [mensajes, setMensajes] = useState([]);
+  const [nuevoMensaje, setNuevoMensaje] = useState({ titulo: '', contenido: '', imagen_url: '' });
 
   useEffect(() => {
     api.admin.publicContent().then(setForm).catch(() => {});
+    fetchMensajes();
   }, []);
+
+  const fetchMensajes = async () => {
+    try {
+      const data = await api.admin.mensajes();
+      setMensajes(data || []);
+    } catch (e) {}
+  };
+
+  const handleCreateMensaje = async () => {
+    if (!nuevoMensaje.titulo || !nuevoMensaje.contenido) return alert('Título y contenido son obligatorios');
+    try {
+      await api.admin.crearMensaje(nuevoMensaje);
+      setNuevoMensaje({ titulo: '', contenido: '', imagen_url: '' });
+      fetchMensajes();
+      alert('Mensaje creado');
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  const handleDeleteMensaje = async (id) => {
+    if (!confirm('¿Eliminar este comunicado?')) return;
+    try {
+      await api.admin.eliminarMensaje(id);
+      fetchMensajes();
+    } catch (e) {
+      alert(e.message);
+    }
+  };
 
   const save = async () => {
     setSaving(true);
@@ -400,14 +435,144 @@ export default function AdminContenidoHome() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={save}
-          disabled={saving}
-          className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl bg-[#1a1f36] text-white font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#1a1f36]/20 active:scale-[0.98] transition-all"
-        >
-          {saving ? 'Guardando cambios...' : 'Guardar configuración global'}
-        </button>
+        <div className="pt-8 border-t border-gray-100 space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Comunicados Globales (Sección Mensajes)</h2>
+            <div className="bg-sav-primary/10 text-sav-primary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+              {mensajes.length} Publicados
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* Formulario Nuevo Mensaje */}
+            <div className="bg-gray-50/50 rounded-3xl p-6 border-2 border-dashed border-gray-200 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Título del Comunicado</label>
+                  <input
+                    type="text"
+                    value={nuevoMensaje.titulo}
+                    onChange={(e) => setNuevoMensaje({...nuevoMensaje, titulo: e.target.value})}
+                    placeholder="Ej: Mantenimiento Programado"
+                    className="w-full rounded-xl bg-white border border-gray-200 px-4 py-3 text-xs font-bold focus:border-sav-primary outline-none transition-all"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">URL de Imagen (Opcional)</label>
+                  <div className="relative">
+                    <ImageIcon size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={nuevoMensaje.imagen_url}
+                      onChange={(e) => setNuevoMensaje({...nuevoMensaje, imagen_url: e.target.value})}
+                      placeholder="https://..."
+                      className="w-full rounded-xl bg-white border border-gray-200 pl-10 pr-4 py-3 text-xs font-bold focus:border-sav-primary outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Contenido del Mensaje</label>
+                <textarea
+                  rows={3}
+                  value={nuevoMensaje.contenido}
+                  onChange={(e) => setNuevoMensaje({...nuevoMensaje, contenido: e.target.value})}
+                  placeholder="Escribe el cuerpo del mensaje aquí..."
+                  className="w-full rounded-xl bg-white border border-gray-200 px-4 py-3 text-xs font-bold focus:border-sav-primary outline-none transition-all"
+                />
+              </div>
+              <button
+                onClick={handleCreateMensaje}
+                className="w-full flex items-center justify-center gap-2 bg-sav-primary hover:bg-sav-primary/90 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-[0.98]"
+              >
+                <Plus size={16} /> Publicar Nuevo Comunicado
+              </button>
+            </div>
+
+            {/* Lista de Mensajes */}
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {mensajes.map((m) => (
+                <div key={m.id} className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-gray-100 hover:border-sav-primary/20 transition-all group">
+                  {m.imagen_url && (
+                    <img src={m.imagen_url} className="w-12 h-12 rounded-lg object-cover bg-gray-100" alt="" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-black text-gray-800 uppercase truncate">{m.titulo}</h4>
+                    <p className="text-[10px] text-gray-400 truncate">{m.contenido}</p>
+                    <p className="text-[8px] font-bold text-gray-300 uppercase mt-0.5">
+                      {new Date(m.fecha).toLocaleString()}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteMensaje(m.id)}
+                    className="p-2 rounded-lg text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-8 border-t border-gray-100 space-y-6">
+          <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-2">Soporte y Funciones Especiales</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">
+                <MessageCircle size={12} /> WhatsApp Gerente (URL)
+              </label>
+              <input
+                type="text"
+                value={form.soporte_gerente_url || ''}
+                onChange={(e) => setForm((f) => ({ ...f, soporte_gerente_url: e.target.value }))}
+                className="w-full rounded-2xl bg-gray-50 border-2 border-gray-50 px-5 py-4 text-gray-800 font-bold text-sm focus:border-sav-primary/20 transition-all outline-none"
+                placeholder="https://wa.me/..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">
+                <Users size={12} /> Canal de WhatsApp (URL)
+              </label>
+              <input
+                type="text"
+                value={form.soporte_canal_url || ''}
+                onChange={(e) => setForm((f) => ({ ...f, soporte_canal_url: e.target.value }))}
+                className="w-full rounded-2xl bg-gray-50 border-2 border-gray-50 px-5 py-4 text-gray-800 font-bold text-sm focus:border-sav-primary/20 transition-all outline-none"
+                placeholder="https://whatsapp.com/channel/..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">
+                <Compass size={12} /> Sistema de Ruleta
+              </label>
+              <label className="flex items-center gap-3 px-5 py-4 rounded-2xl bg-gray-50 border-2 border-gray-50 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={!!form.ruleta_activa}
+                  onChange={(e) => setForm((f) => ({ ...f, ruleta_activa: e.target.checked }))}
+                  className="w-5 h-5 rounded-lg border-2 border-gray-300 text-sav-primary focus:ring-0 transition-all"
+                />
+                <span className="text-xs font-black text-gray-500 uppercase tracking-widest group-hover:text-gray-800 transition-colors">
+                  Activar botón de ruleta en Home
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-10 flex justify-end">
+          <button
+            onClick={save}
+            disabled={saving}
+            className="flex items-center gap-3 bg-sav-primary hover:bg-sav-primary/90 text-white px-10 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-sav-glow active:scale-95 transition-all disabled:opacity-50"
+          >
+            <Save size={20} />
+            {saving ? 'Guardando...' : 'Guardar Cambios'}
+          </button>
+        </div>
       </div>
     </div>
   );

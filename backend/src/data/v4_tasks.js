@@ -50,10 +50,10 @@ export const v4_tasks = [
     respuesta_correcta: 'MCDONALD\'S'
   },
 
-  // --- NIVEL: S1 ---
+  // --- NIVEL: Global 1 ---
   {
     nombre: 'Nike Innovation',
-    nivel_codigo: 'S1',
+    nivel_codigo: 'Global 1',
     recompensa: 1.80,
     video_url: '/video/nike1.mp4',
     descripcion: 'Just Do It. Explore the latest Nike innovations that empower athletes across the globe to reach their peak.',
@@ -63,7 +63,7 @@ export const v4_tasks = [
   },
   {
     nombre: 'Rolex Precision',
-    nivel_codigo: 'S1',
+    nivel_codigo: 'Global 1',
     recompensa: 1.80,
     video_url: '/video/rolex1.mp4',
     descripcion: 'A crown for every achievement. Rolex timepieces represent the pinnacle of precision and horological mastery.',
@@ -73,7 +73,7 @@ export const v4_tasks = [
   },
   {
     nombre: 'Tesla Future',
-    nivel_codigo: 'S1',
+    nivel_codigo: 'Global 1',
     recompensa: 1.80,
     video_url: '/video/tesla1.mp4',
     descripcion: 'Accelerating the world\'s transition to sustainable energy through cutting-edge electric vehicle technology.',
@@ -83,7 +83,7 @@ export const v4_tasks = [
   },
   {
     nombre: 'Puma Velocity',
-    nivel_codigo: 'S1',
+    nivel_codigo: 'Global 1',
     recompensa: 1.80,
     video_url: '/video/puma1.mp4',
     descripcion: 'Forever Faster. Puma combines sport and lifestyle to create gear that moves as fast as you do.',
@@ -92,10 +92,10 @@ export const v4_tasks = [
     respuesta_correcta: 'PUMA'
   },
 
-  // --- NIVEL: S2 ---
+  // --- NIVEL: Global 2 ---
   {
     nombre: 'Lamborghini Power',
-    nivel_codigo: 'S2',
+    nivel_codigo: 'Global 2',
     recompensa: 3.22,
     video_url: '/video/lamborghini1.mp4',
     descripcion: 'Italian excellence and extreme performance. Lamborghini supercars redefine the boundaries of speed.',
@@ -105,32 +105,74 @@ export const v4_tasks = [
   },
   {
     nombre: 'Dior Couture',
-    nivel_codigo: 'S2',
+    nivel_codigo: 'Global 2',
     recompensa: 3.22,
     video_url: '/video/dior1.mp4',
-    descripcion: 'Step into the realm of Christian Dior, where fashion becomes art and beauty is a lifestyle.',
-    pregunta: 'Which fashion house is presenting its latest collection?',
-    opciones: ['DIOR', 'CHANEL', 'LV', 'GUCCI'],
+    descripcion: 'Celebrate the art of beauty and fashion with Dior, where every creation is a masterpiece of elegance.',
+    pregunta: 'Which renowned brand is showcased in this artistic commercial?',
+    opciones: ['DIOR', 'CHANEL', 'YSL', 'GIVENCHY'],
     respuesta_correcta: 'DIOR'
   },
   {
-    nombre: 'Gucci Vision',
-    nivel_codigo: 'S2',
+    nombre: 'Gucci Style',
+    nivel_codigo: 'Global 2',
     recompensa: 3.22,
     video_url: '/video/gucci1.mp4',
-    descripcion: 'Eclectic, contemporary, romantic—Gucci products represent the pinnacle of Italian craftsmanship.',
-    pregunta: 'Which iconic Italian brand is showcasing its creative vision?',
-    opciones: ['GUCCI', 'PRADA', 'ARMANI', 'VERSACE'],
+    descripcion: 'Step into the world of Gucci, a symbol of modern luxury and eclectic fashion that defines the industry.',
+    pregunta: 'Which fashion house is presenting its latest collection here?',
+    opciones: ['GUCCI', 'PRADA', 'VERSACE', 'VALENTINO'],
     respuesta_correcta: 'GUCCI'
   },
   {
-    nombre: 'Tesla Energy',
-    nivel_codigo: 'S2',
+    nombre: 'Ferrari Speed',
+    nivel_codigo: 'Global 2',
     recompensa: 3.22,
-    video_url: '/video/tesla2.mp4',
-    descripcion: 'Revolutionizing the way we power our world with sustainable and clean energy solutions.',
-    pregunta: 'Which company is leading the sustainable energy revolution?',
-    opciones: ['TESLA', 'SHELL', 'BP', 'TOYOTA'],
-    respuesta_correcta: 'TESLA'
+    video_url: '/video/ferrari1.mp4',
+    descripcion: 'Feel the thrill of speed with Ferrari, where Italian engineering meets racing passion on every road.',
+    pregunta: 'Which automotive icon is featured in this high-performance video?',
+    opciones: ['FERRARI', 'LAMBORGHINI', 'PORSCHE', 'MCLAREN'],
+    respuesta_correcta: 'FERRARI'
+  },
+
+  // --- NIVEL: Global 3 ---
+  {
+    nombre: 'Mercedes Luxury',
+    nivel_codigo: 'Global 3',
+    recompensa: 6.76,
+    video_url: '/video/mercedes1.mp4',
+    descripcion: 'The best or nothing. Mercedes-Benz represents the ultimate in automotive luxury, safety, and innovation.',
+    pregunta: 'Which car brand uses the slogan "The best or nothing"?',
+    opciones: ['MERCEDES', 'BMW', 'AUDI', 'LEXUS'],
+    respuesta_correcta: 'MERCEDES'
+  },
+  {
+    nombre: 'BMW Driving',
+    nivel_codigo: 'Global 3',
+    recompensa: 6.76,
+    video_url: '/video/bmw1.mp4',
+    descripcion: 'The ultimate driving machine. Experience the perfect balance of performance and comfort with BMW.',
+    pregunta: 'Which brand is known as "The ultimate driving machine"?',
+    opciones: ['BMW', 'MERCEDES', 'AUDI', 'PORSCHE'],
+    respuesta_correcta: 'BMW'
+  },
+  {
+    nombre: 'Audi Progress',
+    nivel_codigo: 'Global 3',
+    recompensa: 6.76,
+    video_url: '/video/audi1.mp4',
+    descripcion: 'Vorsprung durch Technik. Audi leads the way in automotive technology and sleek, modern design.',
+    pregunta: 'Which German brand is featured in this technology-focused ad?',
+    opciones: ['AUDI', 'VW', 'BMW', 'MERCEDES'],
+    respuesta_correcta: 'AUDI'
+  },
+  {
+    nombre: 'Porsche Heritage',
+    nivel_codigo: 'Global 3',
+    recompensa: 6.76,
+    video_url: '/video/porsche1.mp4',
+    descripcion: 'There is no substitute. Porsche sportscars are built on a heritage of racing excellence and engineering.',
+    pregunta: 'Which sportscar manufacturer is showcased in this video?',
+    opciones: ['PORSCHE', 'FERRARI', 'LAMBORGHINI', 'ASTON MARTIN'],
+    respuesta_correcta: 'PORSCHE'
   }
 ];

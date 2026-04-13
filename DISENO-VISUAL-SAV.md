@@ -64,7 +64,7 @@ Referencia exclusiva de **aspecto e interfaz** basada en las capturas proporcion
 - Rectángulos con bordes redondeados (12–16px)
 - Card principal oscura (azul/índigo):
   - "Activos totales (BOB)" con valor grande en blanco
-  - "Nivel actual" (ej. "pasante", "S1", "S2")
+  - "Nivel actual" (ej. "pasante", "Global 1", "Global 2")
   - Dos botones: Recargar y Retirada (verde lima)
 - Cards de estadísticas:
   - Fondo verde lima suave
@@ -73,7 +73,7 @@ Referencia exclusiva de **aspecto e interfaz** basada en las capturas proporcion
 
 ### 3.5 Sala de tareas
 - **Card de estado:**
-  - Nivel grande ("pasante", "S2")
+  - Nivel grande ("pasante", "Global 2")
   - "restantes X" / "completadas X"
   - Barra de progreso horizontal (teal/menta)
 - **Lista de tareas:**

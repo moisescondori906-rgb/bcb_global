@@ -6,10 +6,26 @@ import Header from '../components/Header';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Eye, EyeOff, Check, Upload, Info, AlertCircle, Clock, 
-  Wallet, Sparkles, CheckCircle2, ChevronRight, 
-  ArrowUpCircle, ShieldCheck, Loader2, ArrowRight,
-  TrendingUp, CreditCard, Banknote, QrCode
+  Eye as EyeIcon, 
+  EyeOff as EyeOffIcon, 
+  Check as CheckIcon, 
+  Upload as UploadIcon, 
+  Info as InfoIcon, 
+  AlertCircle as AlertCircleIcon, 
+  Clock as ClockIcon, 
+  Wallet as WalletIcon, 
+  Sparkles as SparklesIcon, 
+  CheckCircle2 as CheckCircleIcon, 
+  ChevronRight as ChevronRightIcon, 
+  ArrowUpCircle as ArrowUpCircleIcon, 
+  ShieldCheck as ShieldCheckIcon, 
+  Loader2 as LoaderIcon, 
+  ArrowRight as ArrowRightIcon,
+  TrendingUp as TrendingUpIcon, 
+  CreditCard as CreditCardIcon, 
+  Banknote as BanknoteIcon, 
+  QrCode as QrCodeIcon,
+  Lock as LockIcon
 } from 'lucide-react';
 import { isScheduleOpen } from '../lib/schedule';
 import imageCompression from 'browser-image-compression';
@@ -177,7 +193,7 @@ export default function Withdrawal() {
           {error && (
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Card className="p-5 bg-sav-error/10 border-sav-error/20 flex items-center gap-4 shadow-xl">
-                <AlertCircle size={20} className="text-sav-error shrink-0" />
+                <AlertCircleIcon size={20} className="text-sav-error shrink-0" />
                 <p className="text-[10px] text-sav-error font-black uppercase tracking-[0.2em] leading-relaxed">{error}</p>
               </Card>
             </motion.div>
@@ -188,7 +204,7 @@ export default function Withdrawal() {
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <Card variant="premium" className="p-8 border-none bg-sav-error/10 flex flex-col items-center gap-4 text-center shadow-2xl">
               <div className="w-16 h-16 rounded-2xl bg-sav-error/20 flex items-center justify-center text-sav-error shadow-inner">
-                <AlertCircle size={32} />
+                <AlertCircleIcon size={32} />
               </div>
               <div className="space-y-1">
                 <h3 className="text-sm font-black text-white uppercase tracking-widest">Retiros Bloqueados</h3>
@@ -202,7 +218,7 @@ export default function Withdrawal() {
 
         {hasWithdrawalToday && (
           <Card className="p-6 border-amber-500/20 bg-amber-500/5 flex items-center gap-4">
-            <Clock size={24} className="text-amber-500 shrink-0" />
+            <ClockIcon size={24} className="text-amber-500 shrink-0" />
             <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-relaxed">
               Ya has realizado un retiro hoy. Intenta de nuevo mañana.
             </p>
@@ -214,45 +230,48 @@ export default function Withdrawal() {
           <section className="space-y-6">
             <div className="flex items-center gap-3 px-1">
               <div className="w-8 h-8 rounded-xl bg-sav-primary/10 flex items-center justify-center text-sav-primary border border-sav-primary/20 shadow-lg">
-                <Wallet size={16} />
+                <WalletIcon size={16} />
               </div>
               <h2 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">1. Origen de Fondos</h2>
             </div>
             
             <div className="grid grid-cols-1 gap-4">
               {[
-                { id: 'principal', label: 'Saldo Principal', val: saldoPrincipal, icon: Banknote },
-                { id: 'comisiones', label: 'Billetera Comisiones', val: saldoComisiones, icon: TrendingUp }
-              ].map(b => (
-                <Card 
-                  key={b.id}
-                  variant={tipoBilletera === b.id ? 'premium' : 'flat'}
-                  className={cn(
-                    "p-6 flex items-center justify-between cursor-pointer border transition-all duration-500",
-                    tipoBilletera === b.id ? "border-sav-primary/40 bg-sav-primary/10 scale-[1.02] shadow-2xl" : "border-white/5 bg-white/[0.02] hover:bg-white/5"
-                  )}
-                  onClick={() => setTipoBilletera(b.id)}
-                >
-                  <div className="flex items-center gap-5">
+                { id: 'principal', label: 'Saldo Principal', val: saldoPrincipal, icon: BanknoteIcon },
+                { id: 'comisiones', label: 'Billetera Comisiones', val: saldoComisiones, icon: TrendingUpIcon }
+              ].map(b => {
+                const Icon = b.icon;
+                return (
+                  <Card 
+                    key={b.id}
+                    variant={tipoBilletera === b.id ? 'premium' : 'flat'}
+                    className={cn(
+                      "p-6 flex items-center justify-between cursor-pointer border transition-all duration-500",
+                      tipoBilletera === b.id ? "border-sav-primary/40 bg-sav-primary/10 scale-[1.02] shadow-2xl" : "border-white/5 bg-white/[0.02] hover:bg-white/5"
+                    )}
+                    onClick={() => setTipoBilletera(b.id)}
+                  >
+                    <div className="flex items-center gap-5">
+                      <div className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner",
+                        tipoBilletera === b.id ? "bg-white/10 text-white" : "bg-sav-primary/5 text-sav-primary"
+                      )}>
+                        <Icon size={24} />
+                      </div>
+                      <div className="space-y-1">
+                        <p className={cn("text-[9px] font-black uppercase tracking-widest", tipoBilletera === b.id ? "text-white/60" : "text-sav-muted")}>{b.label}</p>
+                        <p className="text-2xl font-black text-white tracking-tighter">{b.val.toLocaleString()} <span className="text-[10px] text-white/40 uppercase">BOB</span></p>
+                      </div>
+                    </div>
                     <div className={cn(
-                      "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner",
-                      tipoBilletera === b.id ? "bg-white/10 text-white" : "bg-sav-primary/5 text-sav-primary"
+                      "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all", 
+                      tipoBilletera === b.id ? "border-white bg-white text-sav-primary" : "border-white/10"
                     )}>
-                      <b.icon size={24} />
+                      {tipoBilletera === b.id && <CheckIcon size={14} strokeWidth={4} />}
                     </div>
-                    <div className="space-y-1">
-                      <p className={cn("text-[9px] font-black uppercase tracking-widest", tipoBilletera === b.id ? "text-white/60" : "text-sav-muted")}>{b.label}</p>
-                      <p className="text-2xl font-black text-white tracking-tighter">{b.val.toLocaleString()} <span className="text-[10px] text-white/40 uppercase">BOB</span></p>
-                    </div>
-                  </div>
-                  <div className={cn(
-                    "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all", 
-                    tipoBilletera === b.id ? "border-white bg-white text-sav-primary" : "border-white/10"
-                  )}>
-                    {tipoBilletera === b.id && <Check size={14} strokeWidth={4} />}
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </div>
           </section>
 
@@ -261,7 +280,7 @@ export default function Withdrawal() {
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-sav-accent/10 flex items-center justify-center text-sav-accent border border-sav-accent/20 shadow-lg">
-                  <Banknote size={16} />
+                  <BanknoteIcon size={16} />
                 </div>
                 <h2 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">2. Monto a Retirar</h2>
               </div>
@@ -291,7 +310,7 @@ export default function Withdrawal() {
           <section className="space-y-6">
             <div className="flex items-center gap-3 px-1">
               <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-lg">
-                <QrCode size={16} />
+                <QrCodeIcon size={16} />
               </div>
               <h2 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">3. Verificación QR</h2>
             </div>
@@ -319,7 +338,7 @@ export default function Withdrawal() {
               ) : (
                 <>
                   <div className="w-20 h-20 rounded-3xl bg-white/5 flex items-center justify-center text-sav-muted group-hover:bg-sav-primary group-hover:text-white transition-all duration-500 shadow-inner border border-white/5">
-                    {isOptimizing ? <Loader2 size={32} className="animate-spin" /> : <Upload size={32} />}
+                    {isOptimizing ? <LoaderIcon size={32} className="animate-spin" /> : <UploadIcon size={32} />}
                   </div>
                   <div className="space-y-2">
                     <p className="text-xs font-black text-sav-muted uppercase tracking-[0.2em] group-hover:text-white transition-colors">Sube tu código de cobro</p>
@@ -334,7 +353,7 @@ export default function Withdrawal() {
           <section className="space-y-6">
             <div className="flex items-center gap-3 px-1">
               <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-lg">
-                <Lock size={16} />
+                <LockIcon size={16} />
               </div>
               <h2 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">4. Confirmación Segura</h2>
             </div>
@@ -344,7 +363,7 @@ export default function Withdrawal() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               showPasswordToggle
-              icon={ShieldCheck}
+              icon={ShieldCheckIcon}
               className="h-16 rounded-2xl bg-white/[0.02] border-white/5"
             />
           </section>
@@ -361,7 +380,7 @@ export default function Withdrawal() {
           </div>
 
           <Card className="p-6 bg-sav-primary/5 border-sav-primary/10 rounded-[2rem] flex items-start gap-4">
-            <Info size={20} className="text-sav-primary shrink-0" />
+            <InfoIcon size={20} className="text-sav-primary shrink-0" />
             <div className="space-y-1">
               <p className="text-[10px] font-black text-white uppercase tracking-widest">Información de Procesamiento</p>
               <p className="text-[9px] text-sav-muted font-bold uppercase tracking-[0.1em] leading-relaxed">
