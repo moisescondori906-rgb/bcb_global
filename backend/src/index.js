@@ -17,9 +17,8 @@ import withdrawalRoutes from './routes/withdrawals.js';
 import adminRoutes from './routes/admin.js';
 import sorteoRoutes from './routes/sorteo.js';
 import telegramWebhookRoutes from './routes/telegram_webhook.js';
-import { getPublicContent, getBanners, preloadConfig, preloadLevels } from './lib/queries.js';
-import { mergePublicContent } from './data/publicContentDefaults.js';
-import { startTelegramPolling as startPollingEngine } from './lib/telegram_polling.js';
+import { preloadConfig, preloadLevels } from './lib/queries.js';
+import { query } from './config/db.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -134,27 +133,53 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/api/banners', async (req, res) => {
-  const banners = await getBanners();
-  res.json(banners);
+  try {
+    const { getBanners } = await import('./lib/queries.js');
+    const banners = await getBanners();
+    res.json(banners);
+  } catch (err) {
+    res.json([]);
+  }
 });
 
 app.get('/api/public-content', async (req, res) => {
-  const config = await getPublicContent();
-  res.json(mergePublicContent(config));
+  try {
+    const { getPublicContent } = await import('./lib/queries.js');
+    const config = await getPublicContent();
+    res.json(config);
+  } catch (err) {
+    res.status(500).json({ error: 'Error loading config' });
+  }
 });
 
 const startServer = async () => {
   try {
-    // 1. Precargar configuración y niveles en memoria (sin lecturas por request en camino feliz)
-    await preloadConfig();
-    await preloadLevels();
+    // 1. Probar conexión a MySQL
+    try {
+      await query('SELECT 1');
+      logger.info('[DATABASE] MySQL conectado exitosamente (Pool OK)');
+    } catch (dbErr) {
+      logger.warn('[DATABASE] No se pudo conectar a MySQL. El sistema funcionará en MODO DEMO para el usuario de prueba.');
+    }
+
+    // 2. Precargar configuración y niveles en memoria
+    await preloadConfig().catch(() => logger.warn('[PRELOAD] No se pudo cargar configuración inicial (DB Offline)'));
+    await preloadLevels().catch(() => logger.warn('[PRELOAD] No se pudo cargar niveles iniciales (DB Offline)'));
+    
     setInterval(() => {
       preloadConfig().catch(() => {});
       preloadLevels().catch(() => {});
     }, 5 * 60 * 1000);
     
-    // 2. Iniciar polling de Telegram
-    startPollingEngine();
+    // 3. Iniciar polling de Telegram (Solo si hay token configurado)
+    try {
+      const { getPublicContent } = await import('./lib/queries.js');
+      const config = await getPublicContent();
+      if (config.telegram_recargas_token) {
+        const { startTelegramPolling } = await import('./lib/telegram_polling.js');
+        startTelegramPolling();
+      }
+    } catch (e) {}
     
     app.listen(PORT, async () => {
       console.log(`\n[SUCCESS] ¡Servidor Global API escuchando en http://localhost:${PORT}!\n`);

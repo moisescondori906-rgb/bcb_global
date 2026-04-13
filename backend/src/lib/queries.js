@@ -1,1063 +1,329 @@
-import { supabase, hasDb } from './db.js';
-import { levels as seedLevels } from '../data/seed.js';
-import { getStore } from '../data/store.js';
+import { v4 as uuidv4 } from 'uuid';
+import { query, queryOne, transaction } from '../config/db.js';
 import logger from './logger.js';
 
-const inFlightQueries = new Map();
-
-/**
- * Ejecuta una operación de Supabase con timeout y reintentos inteligentes
- */
-export async function trySupabase(operation, retries = 2, key = null) {
-  if (!supabase || !hasDb()) {
-    return { data: null, error: null };
-  }
-
-  // Deduplicación de consultas en vuelo (Evita sobrecarga por ráfagas)
-  if (key && inFlightQueries.has(key)) {
-    return inFlightQueries.get(key);
-  }
-
-  const execute = async () => {
-    let lastError;
-    const startTime = Date.now();
-    const DEFAULT_TIMEOUT = 5000; // 5s — fallar rápido bajo carga
-    
-    for (let i = 0; i < retries; i++) {
-      try {
-        const attemptStart = Date.now();
-        
-        // Timeout forzado para la operación
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Supabase Timeout: La base de datos no respondió a tiempo.')), DEFAULT_TIMEOUT)
-        );
-
-        const { data, error } = await Promise.race([operation(), timeoutPromise]);
-
-        const duration = Date.now() - attemptStart;
-
-        if (error) {
-          const errorStr = JSON.stringify(error);
-          const isTimeout = errorStr.includes('timeout') || error.code === '408' || error.status === 522 || errorStr.includes('522');
-          
-          logger.warn(`Supabase Error (Intento ${i + 1}/${retries}) [${duration}ms]: ${error.message || 'Error desconocido'}${key ? ' Key: ' + key : ''}`);
-          lastError = error;
-          
-          if (i < retries - 1) {
-            // Si es timeout, esperamos poco para no bloquear. Si es otro error, esperamos más.
-            const wait = isTimeout ? 300 : 500 * (i + 1);
-            await new Promise(resolve => setTimeout(resolve, wait));
-            continue;
-          }
-          throw error;
-        }
-        
-        // Log de consultas lentas (> 1s)
-        if (duration > 1000) {
-          logger.info(`Supabase Slow Query [${key || 'unknown'}]: ${duration}ms (Intento ${i + 1})`);
-        }
-        
-        return { data, error: null };
-      } catch (err) {
-        const duration = Date.now() - startTime;
-        const isTimeout = err.message?.includes('Timeout') || err.status === 522 || JSON.stringify(err).includes('522');
-        
-        logger.error(`Supabase Critical (Intento ${i + 1}/${retries}) [${duration}ms]: ${err.message || err}${key ? ' Key: ' + key : ''}`);
-        lastError = err;
-
-        if (i < retries - 1) {
-          const wait = isTimeout ? 500 : 1000 * (i + 1);
-          await new Promise(resolve => setTimeout(resolve, wait));
-          continue;
-        }
-        throw err;
-      }
-    }
-    throw lastError;
-  };
-
-  if (key) {
-    const promise = execute()
-      .catch(err => {
-        // Limpiar el mapa inmediatamente en caso de error para permitir reintentos posteriores
-        inFlightQueries.delete(key);
-        throw err;
-      })
-      .finally(() => {
-        // Eliminar del mapa tras un tiempo prudencial (ej. 100ms) para evitar colisiones instantáneas
-        setTimeout(() => inFlightQueries.delete(key), 100);
-      });
-      
-    inFlightQueries.set(key, promise);
-    return promise;
-  }
-
-  return execute();
-}
-
-let usersCache = { data: null, lastFetch: 0 };
-export async function getUsers() {
-  if (!hasDb()) {
-    const store = await getStore();
-    return store?.users || [];
-  }
-  const now = Date.now();
-  if (usersCache.data && now - usersCache.lastFetch < 30000) { 
-    return usersCache.data;
-  }
-  // Campos mínimos para construir el árbol de equipo y listados generales
-  const fields = 'id, nombre_usuario, codigo_invitacion, telefono, nivel_id, rol, invitado_por, saldo_principal, created_at';
-  
-  const { data } = await trySupabase(
-    () => supabase.from('usuarios').select(fields),
-    1, 
-    'users:all'
-  );
-  if (data) {
-    usersCache = { data, lastFetch: now };
-  }
-  return data || [];
-}
-
-/**
- * Campos mínimos necesarios para la sesión y el perfil básico
- */
-const USER_FIELDS_BASIC = 'id, telefono, nombre_usuario, nombre_real, codigo_invitacion, nivel_id, rol, saldo_principal, saldo_comisiones, avatar_url, tipo_lider, allow_weekend_tasks, tickets_ruleta, last_device_id, password_fondo_hash, castigado_hasta, ganancias_hoy, ganancias_ayer, ganancias_semana, ganancias_mes, ganancias_totales, tareas_completadas_exito, tareas_completadas, created_at, invitado_por, primer_ascenso_completado';
-
+// Cachés simples para optimización de lectura
 const userCache = new Map();
-const USER_CACHE_TTL = 10000; // 10 segundos para reducir ráfagas en /me y stats
+const USER_CACHE_TTL = 10000; // 10 segundos
+const levelsCache = { data: null, lastFetch: 0 };
+const configCache = { data: null, lastFetch: 0 };
 
-export async function findUserByTelefono(telefono) {
-  if (!telefono) return null;
-  if (!hasDb()) {
-    const store = await getStore();
-    return (store?.users || []).find(u => String(u.telefono) === String(telefono)) || null;
-  }
-  
-  const now = Date.now();
-  const cacheKey = `tel:${telefono}`;
-  const cached = userCache.get(cacheKey);
-  if (cached && (now - cached.timestamp < USER_CACHE_TTL)) {
-    return cached.data;
-  }
+const DEFAULT_CONFIG = {
+  task_allowed_days: '1,2,3,4,5',
+  comision_retiro: 12,
+  horario_recarga: { enabled: true, hora_inicio: '08:00', hora_fin: '22:00', dias_semana: [1,2,3,4,5,6,0] },
+  horario_retiro: { enabled: true, hora_inicio: '09:00', hora_fin: '18:00', dias_semana: [1,2,3,4,5] },
+  marquee_text: 'Bienvenido a BCB Global Institutional — Liderando la Inversión Publicitaria',
+  soporte_canal_url: 'https://t.me/bcb_oficial',
+  soporte_gerente_url: 'https://wa.me/59170000000',
+  ruleta_activa: true,
+  banners: []
+};
 
-  const { data } = await trySupabase(
-    () => supabase.from('usuarios')
-      .select(`password_hash, ${USER_FIELDS_BASIC}`)
-      .eq('telefono', telefono)
-      .maybeSingle(),
-    2,
-    `user:tel:${telefono}`
-  );
-
-  if (data) {
-    userCache.set(cacheKey, { data, timestamp: now });
-  }
-  return data;
-}
+const DEFAULT_LEVELS = [
+  { id: 'l1', codigo: 'Internar', nombre: 'Internar', deposito: 0, ganancia_tarea: 1.30, num_tareas_diarias: 2, orden: 0, activo: 1 },
+  { id: 'l2', codigo: 'GLOBAL 1', nombre: 'GLOBAL 1', deposito: 200.00, ganancia_tarea: 1.80, num_tareas_diarias: 4, orden: 1, activo: 1 },
+  { id: 'l3', codigo: 'GLOBAL 2', nombre: 'GLOBAL 2', deposito: 720.00, ganancia_tarea: 3.22, num_tareas_diarias: 8, orden: 2, activo: 1 },
+  { id: 'l4', codigo: 'GLOBAL 3', nombre: 'GLOBAL 3', deposito: 2830.00, ganancia_tarea: 6.76, num_tareas_diarias: 15, orden: 3, activo: 1 },
+  { id: 'l5', codigo: 'GLOBAL 4', nombre: 'GLOBAL 4', deposito: 9150.00, ganancia_tarea: 11.33, num_tareas_diarias: 30, orden: 4, activo: 1 },
+  { id: 'l6', codigo: 'GLOBAL 5', nombre: 'GLOBAL 5', deposito: 28200.00, ganancia_tarea: 17.43, num_tareas_diarias: 60, orden: 5, activo: 1 },
+  { id: 'l7', codigo: 'GLOBAL 6', nombre: 'GLOBAL 6', deposito: 58000.00, ganancia_tarea: 22.35, num_tareas_diarias: 100, orden: 6, activo: 1 },
+  { id: 'l8', codigo: 'GLOBAL 7', nombre: 'GLOBAL 7', deposito: 124000.00, ganancia_tarea: 31.01, num_tareas_diarias: 160, orden: 7, activo: 1 },
+  { id: 'l9', codigo: 'GLOBAL 8', nombre: 'GLOBAL 8', deposito: 299400.00, ganancia_tarea: 47.91, num_tareas_diarias: 250, orden: 8, activo: 1 },
+  { id: 'l10', codigo: 'GLOBAL 9', nombre: 'GLOBAL 9', deposito: 541600.00, ganancia_tarea: 58.87, num_tareas_diarias: 400, orden: 9, activo: 1 }
+];
 
 /**
  * Utilidades para fechas en zona horaria de Bolivia (America/La_Paz)
  */
 export const boliviaTime = {
-  // Obtiene la fecha actual en Bolivia como objeto Date
   now: () => {
     const now = new Date();
     return new Date(now.toLocaleString('en-US', { timeZone: 'America/La_Paz' }));
   },
-  
-  // Obtiene la fecha actual en Bolivia como string YYYY-MM-DD
   todayStr: () => {
     return new Date().toLocaleDateString('en-CA', { timeZone: 'America/La_Paz' });
   },
-
-  // Obtiene la fecha de AYER en Bolivia como string YYYY-MM-DD
   yesterdayStr: () => {
     const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/La_Paz' }));
     d.setDate(d.getDate() - 1);
     return d.toLocaleDateString('en-CA');
   },
-
-  // Obtiene el día de la semana actual en Bolivia (0-6)
-  getDay: () => {
-    const nowBolivia = new Date().toLocaleString('en-US', { timeZone: 'America/La_Paz' });
-    return new Date(nowBolivia).getDay();
-  },
-
-  // Formatea cualquier fecha a string YYYY-MM-DD en Bolivia
   getDateString: (date) => {
     if (!date) return '';
-    // Usar el constructor Date con la fecha proporcionada y formatear con en-CA para YYYY-MM-DD
     return new Date(date).toLocaleDateString('en-CA', { timeZone: 'America/La_Paz' });
   },
-
-  // Obtiene la hora actual en formato HH:mm
   getTimeString: (date = new Date()) => {
     return new Date(date).toLocaleTimeString('en-GB', { timeZone: 'America/La_Paz', hour: '2-digit', minute: '2-digit' });
   },
-
-  // Comprueba si un horario (HH:mm) está dentro de un rango
-  isTimeInWindow: (timeStr, start = '00:00', end = '23:59') => {
-    if (start <= end) {
-      return timeStr >= start && timeStr <= end;
-    } else {
-      // ventana que cruza medianoche
-      return timeStr >= start || timeStr <= end;
-    }
+  getDay: () => {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/La_Paz' })).getDay();
   },
-
-  // Obtiene un objeto Date ajustado a Bolivia para comparaciones
-  getBoliviaDate: (date) => {
-    if (!date) return null;
-    const boliviaStr = new Date(date).toLocaleString('en-US', { timeZone: 'America/La_Paz' });
-    return new Date(boliviaStr);
+  isTimeInWindow: (timeStr, start = '00:00', end = '23:59') => {
+    if (start <= end) return timeStr >= start && timeStr <= end;
+    return timeStr >= start || timeStr <= end;
   }
 };
 
-/**
- * Busca un usuario por ID con campos optimizados
- */
+// ========================
+// 1. USUARIOS & AUTH
+// ========================
+
+const USER_FIELDS = `id, telefono, nombre_usuario, nombre_real, codigo_invitacion, invitado_por, nivel_id, avatar_url, saldo_principal, saldo_comisiones, rol, bloqueado, tickets_ruleta, primer_ascenso_completado, last_device_id, created_at`;
+
 export async function findUserById(id) {
-  if (!hasDb()) {
-    const store = await getStore();
-    return (store?.users || []).find(u => String(u.id) === String(id)) || null;
-  }
-  if (!supabase || !hasDb()) return null;
-  
   const now = Date.now();
-  const cached = userCache.get(id);
-  if (cached && (now - cached.timestamp < USER_CACHE_TTL)) {
-    return cached.data;
+  if (userCache.has(id)) {
+    const cached = userCache.get(id);
+    if (now - cached.timestamp < USER_CACHE_TTL) return cached.data;
   }
 
-  const { data } = await trySupabase(
-    () => supabase.from('usuarios')
-      .select(USER_FIELDS_BASIC)
-      .eq('id', id)
-      .maybeSingle(),
-    2,
-    `user:id:${id}`
-  );
-  
-  if (data) {
-    userCache.set(id, { data, timestamp: now });
-  }
-  return data;
+  const user = await queryOne(`SELECT ${USER_FIELDS} FROM usuarios WHERE id = ?`, [id]);
+  if (user) userCache.set(id, { data: user, timestamp: now });
+  return user;
 }
 
-/** Perfil + hashes para cambio de contraseña (sin caché de fila estándar). */
+export async function findUserByTelefono(telefono) {
+  return await queryOne(`SELECT password_hash, ${USER_FIELDS} FROM usuarios WHERE telefono = ?`, [telefono]);
+}
+
 export async function findUserWithAuthSecrets(id) {
-  if (!id) return null;
-  if (!hasDb()) {
-    const store = await getStore();
-    return (store?.users || []).find(u => String(u.id) === String(id)) || null;
-  }
-  if (!supabase || !hasDb() || !id) return null;
-  const { data } = await trySupabase(
-    () => supabase.from('usuarios')
-      .select(`password_hash, password_fondo_hash, ${USER_FIELDS_BASIC}`)
-      .eq('id', id)
-      .maybeSingle(),
-    2,
-    `user:secrets:${id}`
-  );
-  return data;
-}
-
-export function invalidateUserRowCache(userId) {
-  if (!userId) return;
-  userCache.delete(userId);
-}
-
-const codeCache = new Map();
-const CODE_CACHE_TTL = 5000; // 5 segundos para códigos de invitación
-
-export async function findUserByCodigo(codigo) {
-  if (!codigo) return null;
-  const now = Date.now();
-  const cached = codeCache.get(codigo);
-  if (cached && (now - cached.timestamp < CODE_CACHE_TTL)) {
-    return cached.data;
-  }
-
-  const { data } = await trySupabase(
-    () => supabase.from('usuarios')
-      .select('id, nivel_id, nombre_usuario')
-      .eq('codigo_invitacion', codigo)
-      .maybeSingle(),
-    2,
-    'user:code:' + codigo
-  );
-  
-  if (data) {
-    codeCache.set(codigo, { data, timestamp: now });
-  }
-  return data;
-}
-
-export async function findAdminByTelegramId(telegramId) {
-  // 1. Buscar primero en la tabla de admins gestionados (la más importante para permisos de bot)
-  const { data: admin } = await trySupabase(() => 
-    supabase.from('admins')
-      .select('*')
-      .eq('telegram_user_id', String(telegramId))
-      .eq('activo', true)
-      .maybeSingle()
-  );
-  
-  if (admin) return admin;
-
-  // 2. FALLBACK: Buscar en la tabla de usuarios con rol admin (compatibilidad anterior)
-  const { data: userAdmin } = await trySupabase(() => 
-    supabase.from('usuarios')
-      .select('*')
-      .eq('telegram_user_id', String(telegramId))
-      .eq('rol', 'admin')
-      .maybeSingle()
-  );
-  
-  // Mapear para que tenga el campo 'nombre' que espera la lógica
-  if (userAdmin) {
-    return {
-      ...userAdmin,
-      nombre: userAdmin.nombre_usuario || userAdmin.nombre_real
-    };
-  }
-
-  return null;
-}
-
-/**
- * Busca un registro en la tabla admins usando el ID de usuario de la tabla usuarios
- */
-export async function findAdminByUserId(userId) {
-  const user = await findUserById(userId);
-  if (!user) return null;
-  
-  // Intentamos buscar por teléfono primero, luego por telegram_user_id
-  const { data: admin } = await trySupabase(() => 
-    supabase.from('admins')
-      .select('*')
-      .or(`telefono.eq.${user.telefono},telegram_user_id.eq.${user.telegram_user_id}`)
-      .eq('activo', true)
-      .maybeSingle()
-  );
-  return admin;
-}
-
-/**
- * Activa el turno de recarga para un administrador específico y desactiva los demás
- */
-export async function setActiveAdminForRecharges(adminId) {
-  // Desactivar todos los turnos
-  await trySupabase(() => 
-    supabase.from('admins').update({ en_turno_recarga: false }).neq('id', adminId)
-  );
-  // Activar el turno para el admin actual
-  const { data } = await trySupabase(() => 
-    supabase.from('admins').update({ en_turno_recarga: true }).eq('id', adminId).select().maybeSingle()
-  );
-  return data;
-}
-
-export async function linkAdminTelegram(userId, telegramData) {
-  const updates = {
-    telegram_user_id: String(telegramData.id),
-    telegram_username: telegramData.username || null,
-    telegram_first_name: telegramData.first_name || null,
-    telegram_last_name: telegramData.last_name || null,
-    telegram_linked_at: new Date().toISOString()
-  };
-  return await updateUser(userId, updates);
+  return await queryOne(`SELECT password_hash, password_fondo_hash, ${USER_FIELDS} FROM usuarios WHERE id = ?`, [id]);
 }
 
 export async function createUser(userData) {
-  if (!hasDb()) {
-    const store = await getStore();
-    store.users.push(userData);
-    return userData;
-  }
-  logger.info(`[Queries] Intentando crear usuario: ${userData.nombre_usuario} (${userData.telefono})`);
-  const { data } = await trySupabase(() => supabase.from('usuarios').insert([userData]).select().maybeSingle());
-  if (data) logger.info(`[Queries] Usuario creado exitosamente en Supabase: ${userData.nombre_usuario}`);
-  return data;
+  const sql = `INSERT INTO usuarios (id, telefono, nombre_usuario, nombre_real, password_hash, password_fondo_hash, codigo_invitacion, invitado_por, nivel_id, rol) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const params = [
+    userData.id || uuidv4(),
+    userData.telefono,
+    userData.nombre_usuario,
+    userData.nombre_real,
+    userData.password_hash,
+    userData.password_fondo_hash,
+    userData.codigo_invitacion,
+    userData.invitado_por,
+    userData.nivel_id,
+    userData.rol || 'usuario'
+  ];
+  await query(sql, params);
+  return await findUserById(params[0]);
 }
 
 export async function updateUser(id, updates) {
-  // Verificamos si Supabase existe
-  if (!hasDb()) {
-    const store = await getStore();
-    const idx = (store?.users || []).findIndex(u => String(u.id) === String(id));
-    if (idx < 0) return null;
-    store.users[idx] = { ...store.users[idx], ...updates };
-    return store.users[idx];
-  }
-  if (!supabase || !hasDb()) return null;
+  const keys = Object.keys(updates);
+  if (keys.length === 0) return null;
 
-  try {
-    // Evitar que "null" string llegue a la base de datos si se esperaba null real
-    if (updates && updates.castigado_hasta === "null") {
-      updates.castigado_hasta = null;
-    }
-
-    const { data, error } = await supabase.from('usuarios').update(updates).eq('id', id).select().maybeSingle();
-    
-    if (error) {
-      console.error(`[Queries] Error al actualizar usuario ${id}:`, error.message);
-      
-      // Si el error es por columna inexistente, devolvemos un error amigable
-      if (error.message?.includes('column') && error.message?.includes('does not exist')) {
-        throw new Error(`Error de base de datos: La columna solicitada no existe. Por favor, revisa tu esquema de Supabase.`);
-      }
-      
-      throw new Error(`Error de persistencia: ${error.message}`);
-    }
-    
-    invalidateUserRowCache(id);
-    return data;
-  } catch (err) {
-    console.error(`[Queries] Error crítico en updateUser:`, err.message);
-    throw err;
-  }
+  const setClause = keys.map(k => `${k} = ?`).join(', ');
+  const params = [...Object.values(updates), id];
+  
+  await query(`UPDATE usuarios SET ${setClause} WHERE id = ?`, params);
+  userCache.delete(id); // Invalidar caché
+  return await findUserById(id);
 }
 
-/** Niveles en memoria de proceso: sin consulta por request en el camino feliz. */
-let levelsMemory = { list: null, lastFetch: 0 };
-const LEVELS_MEM_TTL = 300000; // 5 min — alineado con configuración global
-
-function normalizeLevelRow(r) {
-  const deposito = r.deposito != null ? Number(r.deposito) : 0;
-  const numT = r.num_tareas_diarias != null ? Number(r.num_tareas_diarias) : 0;
-  return {
-    ...r,
-    // Compat: esquemas sin columnas opcionales (tareas_diarias / costo)
-    tareas_diarias: r.tareas_diarias != null ? Number(r.tareas_diarias) : numT,
-    costo: r.costo != null ? Number(r.costo) : deposito,
-    num_tareas_diarias: numT,
-    deposito,
-  };
+export async function getUsers() {
+  return await query(`SELECT * FROM usuarios`);
 }
 
-async function fetchLevelsFromDatabase() {
-  const { data, error } = await trySupabase(
-    () => supabase.from('niveles')
-      .select('*')
-      .order('orden', { ascending: true }),
-    2,
-    'levels:all'
-  );
-  if (error) throw error;
-  return (data || []).map(normalizeLevelRow);
-}
-
-export async function preloadLevels() {
-  try {
-    let list;
-    if (hasDb()) {
-      list = await fetchLevelsFromDatabase();
-    } else {
-      list = seedLevels.map(normalizeLevelRow);
-      logger.info(`[Queries] Sin DB: niveles cargados desde seed (${list.length}).`);
-    }
-    levelsMemory = { list, lastFetch: Date.now() };
-    logger.info(`[Queries] Niveles en memoria: ${list.length} registros`);
-  } catch (err) {
-    logger.error('[Queries] preloadLevels:', err.message);
-    if (!levelsMemory.list) {
-      const fallback = hasDb() ? [] : seedLevels.map(normalizeLevelRow);
-      levelsMemory = { list: fallback, lastFetch: Date.now() };
-    }
-  }
-}
-
-export function invalidateLevelsCache() {
-  levelsMemory.lastFetch = 0;
-}
+// ========================
+// 2. NIVELES
+// ========================
 
 export async function getLevels() {
   const now = Date.now();
-  if (levelsMemory.list != null && now - levelsMemory.lastFetch < LEVELS_MEM_TTL) {
-    return levelsMemory.list;
-  }
-  if (!levelsMemory.list || levelsMemory.list.length === 0) {
-    await preloadLevels();
-    return levelsMemory.list || [];
-  }
-  if (now - levelsMemory.lastFetch >= LEVELS_MEM_TTL) {
-    preloadLevels().catch(e => logger.error('[Queries] Refresco niveles (bg):', e.message));
-  }
-  return levelsMemory.list || [];
-}
-
-export async function getRecargas() {
-  const { data } = await trySupabase(() => supabase.from('recargas').select('*, usuario:usuarios!usuario_id(nombre_usuario)').order('created_at', { ascending: false }));
-  return data || [];
-}
-
-export async function getRecargaById(id) {
-  const { data } = await trySupabase(() => supabase.from('recargas').select('*').eq('id', id).maybeSingle());
-  return data;
-}
-
-export async function getMensajesGlobales() {
-  if (!hasDb()) {
-    const store = await getStore();
-    return (store?.mensajesGlobales || []).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-  }
-  const { data } = await trySupabase(() => 
-    supabase.from('mensajes_globales')
-      .select('*')
-      .order('fecha', { ascending: false })
-  );
-  return data || [];
-}
-
-export async function createMensajeGlobal(mensaje) {
-  if (!hasDb()) {
-    const store = await getStore();
-    if (!store.mensajesGlobales) store.mensajesGlobales = [];
-    const nuevo = { ...mensaje, id: uuidv4(), fecha: new Date().toISOString() };
-    store.mensajesGlobales.push(nuevo);
-    return nuevo;
-  }
-  const { data } = await trySupabase(() => 
-    supabase.from('mensajes_globales').insert([{
-      ...mensaje,
-      fecha: new Date().toISOString()
-    }]).select().maybeSingle()
-  );
-  return data;
-}
-
-export async function deleteMensajeGlobal(id) {
-  if (!hasDb()) {
-    const store = await getStore();
-    store.mensajesGlobales = (store.mensajesGlobales || []).filter(m => m.id !== id);
-    return true;
-  }
-  await trySupabase(() => 
-    supabase.from('mensajes_globales').delete().eq('id', id)
-  );
-  return true;
-}
-
-export async function getRetiros() {
-  const { data } = await trySupabase(() => supabase.from('retiros').select('*, usuario:usuarios!usuario_id(nombre_usuario)').order('created_at', { ascending: false }));
-  return data || [];
-}
-
-
-export async function getMetodosQr() {
-  try {
-    const now = boliviaTime.now();
-    const timeStr = boliviaTime.getTimeString(now); // HH:mm
-    const day = now.getDay().toString(); // 0-6
-
-    // 1. Obtener los administradores que están actualmente en turno
-    const { data: admins } = await trySupabase(() => 
-      supabase.from('admins')
-        .select('id, nombre, hora_inicio_turno, hora_fin_turno, dias_semana, activo')
-        .eq('activo', true)
-    );
-
-    const adminsEnTurno = (admins || []).filter(a => {
-      const dias = (a.dias_semana || '').split(',');
-      if (!dias.includes(day)) return false;
-      
-      const inicio = a.hora_inicio_turno || '00:00';
-      const fin = a.hora_fin_turno || '23:59';
-      
-      if (inicio <= fin) {
-        return timeStr >= inicio && timeStr <= fin;
-      } else {
-        // Turno que cruza medianoche
-        return timeStr >= inicio || timeStr <= fin;
-      }
-    });
-
-    if (adminsEnTurno.length === 0) {
-      // Si no hay admins en turno, podemos mostrar QRs globales que no tengan admin_id (fallback)
-      // Intentamos con admin_id, si falla (por migración), traemos todo
-      try {
-        const { data: globales } = await trySupabase(() => 
-          supabase.from('metodos_qr')
-            .select('*')
-            .eq('activo', true)
-            .is('admin_id', null)
-            .order('orden', { ascending: true })
-        );
-        return globales || [];
-      } catch (e) {
-        // Fallback si la columna admin_id no existe aún
-        const { data: todo } = await trySupabase(() => 
-          supabase.from('metodos_qr')
-            .select('*')
-            .eq('activo', true)
-            .order('orden', { ascending: true })
-        );
-        return todo || [];
-      }
-    }
-
-    // 2. Obtener los QRs de los administradores en turno
-    const adminIds = adminsEnTurno.map(a => a.id);
-    try {
-      const { data: qrsAdmins } = await trySupabase(() => 
-        supabase.from('metodos_qr')
-          .select('*')
-          .eq('activo', true)
-          .in('admin_id', adminIds)
-      );
-
-      if (qrsAdmins && qrsAdmins.length > 0) {
-        // PRIORIDAD: 1. Seleccionada (Principal) -> 2. Cualquier QR activo del admin en turno
-        const qrsOrdenados = [...qrsAdmins].sort((a, b) => {
-          if (a.seleccionada && !b.seleccionada) return -1;
-          if (!a.seleccionada && b.seleccionada) return 1;
-          return 0;
-        });
-
-        // Formatear la respuesta para que incluya el nombre del admin
-        return qrsOrdenados.map(qr => {
-          const admin = adminsEnTurno.find(a => a.id === qr.admin_id);
-          return {
-            ...qr,
-            nombre_titular: qr.nombre_titular || `Admin: ${admin?.nombre || 'Desconocido'}`
-          };
-        });
-      }
-
-      // 3. Fallback final a QRs globales si los admins en turno no tienen nada configurado
-      const { data: globales } = await trySupabase(() => 
-        supabase.from('metodos_qr')
-          .select('*')
-          .eq('activo', true)
-          .is('admin_id', null)
-          .order('orden', { ascending: true })
-      );
-      return globales || [];
-    } catch (e) {
-      // Fallback si las nuevas columnas no existen
-      const { data: todo } = await trySupabase(() => 
-        supabase.from('metodos_qr')
-          .select('*')
-          .eq('activo', true)
-          .order('orden', { ascending: true })
-      );
-      return todo || [];
-    }
-  } catch (err) {
-    logger.error(`[Queries] Error crítico en getMetodosQr: ${err.message}`);
-    return [];
-  }
-}
-
-export async function getAllMetodosQr() {
-  const { data } = await trySupabase(() => supabase.from('metodos_qr').select('*').order('created_at', { ascending: false }));
-  return data || [];
-}
-
-export async function getRecargasByUser(userId) {
-  const { data } = await trySupabase(() => supabase.from('recargas').select('*').eq('usuario_id', userId).order('created_at', { ascending: false }));
-  return data || [];
-}
-
-export async function createRecarga(recargaData) {
-  const { data } = await trySupabase(() => supabase.from('recargas').insert([recargaData]).select().maybeSingle());
-  return data;
-}
-
-export async function updateRecarga(id, updates) {
-  const { data } = await trySupabase(() => supabase.from('recargas').update(updates).eq('id', id).select().maybeSingle());
-  return data;
-}
-
-export async function createRetiro(retiroData) {
-  const { data } = await trySupabase(() => supabase.from('retiros').insert([retiroData]).select().maybeSingle());
-  return data;
-}
-
-export async function getRetirosByUser(userId) {
-  const { data } = await trySupabase(() => supabase.from('retiros').select('*').eq('usuario_id', userId).order('created_at', { ascending: false }));
-  return data || [];
-}
-
-export async function getRetiroById(id) {
-  const { data } = await trySupabase(() => supabase.from('retiros').select('*').eq('id', id).maybeSingle());
-  return data;
-}
-
-export async function updateRetiro(id, updates) {
-  const { data } = await trySupabase(() => supabase.from('retiros').update(updates).eq('id', id).select().maybeSingle());
-  return data;
-}
-
-export async function getDailyWithdrawalSummary(dateStr) {
-  // Obtenemos los retiros finalizados (pagados) del día
-  const startOfDay = `${dateStr}T00:00:00Z`;
-  const endOfDay = `${dateStr}T23:59:59Z`;
-
-  const { data } = await trySupabase(() => 
-    supabase.from('retiros')
-      .select('monto, processed_by_admin_name')
-      .eq('estado', 'pagado')
-      .gte('procesado_at', startOfDay)
-      .lte('procesado_at', endOfDay)
-  );
-
-  if (!data || data.length === 0) return [];
-
-  // Agrupar por administrador
-  const summary = data.reduce((acc, curr) => {
-    const admin = curr.processed_by_admin_name || 'Admin Desconocido';
-    if (!acc[admin]) {
-      acc[admin] = { name: admin, count: 0, total: 0 };
-    }
-    acc[admin].count += 1;
-    acc[admin].total += Number(curr.monto);
-    return acc;
-  }, {});
-
-  return Object.values(summary);
-}
-
-export async function getAdminsInShift() {
-  // 1. Intentar obtener el administrador que tiene el turno dinámico activado (por cambio de QR)
-  const { data: dynamicAdmin } = await trySupabase(() => 
-    supabase.from('admins')
-      .select('*')
-      .eq('activo', true)
-      .eq('en_turno_recarga', true)
-      .eq('recibe_notificaciones', true)
-      .maybeSingle()
-  );
-
-  if (dynamicAdmin) {
-    return [dynamicAdmin];
-  }
-
-  // 2. FALLBACK: Si no hay nadie con turno dinámico, usar la lógica de horarios anterior
-  const now = new Date();
-  const boliviaNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/La_Paz' }));
-  const currentMinutes = boliviaNow.getHours() * 60 + boliviaNow.getMinutes();
-
-  const { data: admins } = await trySupabase(() => 
-    supabase.from('admins')
-      .select('*')
-      .eq('activo', true)
-      .eq('recibe_notificaciones', true)
-  );
-
-  if (!admins) return [];
-
-  return admins.filter(admin => {
-    const [startH, startM] = admin.hora_inicio_turno.split(':').map(Number);
-    const [endH, endM] = admin.hora_fin_turno.split(':').map(Number);
-    const startMin = startH * 60 + startM;
-    const endMin = endH * 60 + endM;
-
-    if (startMin <= endMin) {
-      return currentMinutes >= startMin && currentMinutes <= endMin;
-    } else {
-      // Turno que cruza medianoche
-      return currentMinutes >= startMin || currentMinutes <= endMin;
-    }
-  });
-}
-
-export async function getTarjetasByUser(userId) {
-  const { data } = await trySupabase(() => supabase.from('tarjetas_bancarias').select('*').eq('usuario_id', userId));
-  return data || [];
-}
-
-export async function createTarjeta(tarjetaData) {
-  const { data } = await trySupabase(() => supabase.from('tarjetas_bancarias').insert([tarjetaData]).select().maybeSingle());
-  return data;
-}
-
-export async function deleteTarjeta(id, userId) {
-  await trySupabase(() => supabase.from('tarjetas_bancarias').delete().eq('id', id).eq('usuario_id', userId));
-  return true;
-}
-
-/**
- * EJECUCIÓN ÚNICA AL INICIAR EL SERVIDOR
- * Mantiene la configuración en memoria para evitar consultas repetitivas
- */
-let configInMemory = null;
-let lastConfigFetch = 0;
-const CONFIG_CACHE_TTL = 300000; // 5 minutos de caché para configuración global
-
-// Valores por defecto para evitar que el sistema se rompa si falla Supabase al inicio
-const DEFAULT_CONFIG = {
-  telegram_recargas_token: process.env.TELEGRAM_RECARGAS_TOKEN || '',
-  telegram_retiros_token: process.env.TELEGRAM_RETIROS_TOKEN || '',
-  monto_minimo_retiro: 20,
-  comision_retiro: 0.05,
-  horario_retiros: '09:00-18:00',
-  mantenimiento_activo: false
-};
-
-/**
- * Carga inicial de configuración (debe llamarse en index.js)
- */
-export async function preloadConfig() {
-  try {
-    if (!hasDb()) {
-      configInMemory = { ...DEFAULT_CONFIG };
-      lastConfigFetch = Date.now();
-      return;
-    }
-
-    const { data, error } = await trySupabase(
-      () => supabase.from('configuraciones').select('clave, valor'),
-      3, // 3 reintentos para el arranque crítico
-      'config:all'
-    );
-
-    if (error) throw error;
-
-    if (data && data.length > 0) {
-      configInMemory = data.reduce((acc, curr) => {
-        let valor = curr.valor;
-        try {
-          if (valor === 'true') valor = true;
-          else if (valor === 'false') valor = false;
-          else if (valor && (valor.startsWith('{') || valor.startsWith('['))) {
-            valor = JSON.parse(valor);
-          } else if (!isNaN(valor) && valor.trim() !== '' && !valor.startsWith('0')) {
-            valor = parseFloat(valor);
-          }
-        } catch (e) {}
-        return { ...acc, [curr.clave]: valor };
-      }, {});
-      lastConfigFetch = Date.now();
-      logger.info('[Queries] Configuración global cargada en memoria correctamente.');
-    } else {
-      // Si no hay datos, usar valores por defecto
-      configInMemory = { ...DEFAULT_CONFIG };
-      logger.warn('[Queries] No se encontró configuración en DB. Usando valores por defecto.');
-    }
-  } catch (err) {
-    logger.error('[Queries] Error crítico al precargar configuración:', err.message);
-    // FALLBACK SEGURO: Si falla Supabase por completo, no rompemos el servidor
-    if (!configInMemory) {
-      configInMemory = { ...DEFAULT_CONFIG };
-      logger.warn('[Queries] Usando FALLBACK de configuración por defecto debido a fallo en DB.');
-    }
-  }
-}
-
-export async function getPublicContent() {
-  const now = Date.now();
-  
-  // REGLA ABSOLUTA: Si tenemos datos en memoria, los devolvemos de inmediato (CERO CONSULTAS A DB)
-  if (configInMemory) {
-    // Si han pasado más de 5 minutos, intentamos refrescar en segundo plano (sin bloquear)
-    if (now - lastConfigFetch > CONFIG_CACHE_TTL) {
-      preloadConfig().catch(e => logger.error('[Queries] Refresco de config falló en background:', e.message));
-    }
-    return configInMemory;
-  }
-
-  // Caso extremo: Si por alguna razón no hay configInMemory (ej: fallo total al inicio)
-  await preloadConfig();
-  return configInMemory || DEFAULT_CONFIG;
-}
-
-/**
- * Fuerza el refresco de la configuración global de memoria
- */
-export async function refreshPublicContent() {
-  await preloadConfig();
-  logger.info('[Queries] Caché de configuración invalidada y refrescada manualmente.');
-}
-
-let bannersCache = { data: null, lastFetch: 0 };
-export async function getBanners() {
-  const now = Date.now();
-  if (bannersCache.data && now - bannersCache.lastFetch < 60000) {
-    return bannersCache.data;
-  }
-
-  const { data } = await trySupabase(
-    () => supabase.from('banners_carrusel').select('*').eq('activo', true).order('orden', { ascending: true }),
-    2,
-    'banners:active'
-  );
-  
-  const defaultBanners = [
-    { id: 'def-1', imagen_url: '/imag/carrusel1.jpeg', titulo: 'CV Global 1', orden: 0, activo: true },
-    { id: 'def-2', imagen_url: '/imag/carrusel2.jpeg', titulo: 'CV Global 2', orden: 1, activo: true },
-    { id: 'def-3', imagen_url: '/imag/carrusel3.jpeg', titulo: 'CV Global 3', orden: 2, activo: true },
-    { id: 'def-4', imagen_url: '/imag/carrusel4.jpeg', titulo: 'CV Global 4', orden: 3, activo: true },
-  ];
-
-  let result;
-  if (data && data.length > 0) {
-    result = data.map(b => ({
-      ...b,
-      imagen_url: b.imagen_url === '/imag/carusel1.jpeg' ? '/imag/carrusel1.jpeg' : b.imagen_url
+  if (levelsCache.data && now - levelsCache.lastFetch < 60000) {
+    return levelsCache.data.map(l => ({
+      ...l,
+      ingreso_diario: Number((Number(l.num_tareas_diarias) * Number(l.ganancia_tarea)).toFixed(2))
     }));
-  } else {
-    result = defaultBanners;
   }
 
-  bannersCache = { data: result, lastFetch: now };
-  return result;
+  try {
+    const levels = await query(`SELECT * FROM niveles ORDER BY orden ASC`);
+    levelsCache.data = levels;
+    levelsCache.lastFetch = now;
+    return levels.map(l => ({
+      ...l,
+      ingreso_diario: Number((Number(l.num_tareas_diarias) * Number(l.ganancia_tarea)).toFixed(2))
+    }));
+  } catch (e) {
+    logger.warn('[DB] Usando niveles por defecto (DB Offline)');
+    return DEFAULT_LEVELS.map(l => ({
+      ...l,
+      ingreso_diario: Number((Number(l.num_tareas_diarias) * Number(l.ganancia_tarea)).toFixed(2))
+    }));
+  }
 }
 
-export async function getAllTasks() {
-  const { data } = await trySupabase(() => supabase.from('tareas').select('*').order('created_at', { ascending: false }));
-  return data || [];
+export async function preloadLevels() {
+  const levels = await getLevels();
+  // Guardamos los niveles calculados en el caché
+  levelsCache.data = levels;
+  levelsCache.lastFetch = Date.now();
+  return levels;
 }
+
+export async function invalidateLevelsCache() {
+  levelsCache.data = null;
+  levelsCache.lastFetch = 0;
+}
+
+// ========================
+// 3. TAREAS & ACTIVIDAD (Economía unificada)
+// ========================
 
 export async function getTasks() {
-  const { data } = await trySupabase(() => 
-    supabase.from('tareas')
-      .select('*')
-      .eq('activa', true)
-      .not('video_url', 'ilike', '%youtube%') // Excluir YouTube
-      .not('video_url', 'ilike', '%youtu.be%') // Excluir YouTube (acortado)
-  );
-  
-  if (!data) return [];
-
-  // Mezcla aleatoria (Fisher-Yates Shuffle)
-  const shuffled = [...data];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  
-  return shuffled;
-}
-
-export async function getPremiosRuleta() {
-  const { data } = await trySupabase(() => supabase.from('premios_ruleta').select('*').order('orden', { ascending: true }));
-  return (data || []).filter(p => p.activo !== false);
-}
-
-export async function getSorteosGanadores() {
-  const { data } = await trySupabase(() => supabase.from('sorteos_ganadores').select('*, usuario:usuarios(nombre_usuario, telefono)').order('created_at', { ascending: false }).limit(20));
-  return data || [];
-}
-
-export async function createSorteoGanador(ganador) {
-  const { data, error } = await trySupabase(() => supabase.from('sorteos_ganadores').insert([ganador]).select().maybeSingle());
-  if (error) throw error;
-  return data;
+  return await query(`SELECT * FROM tareas WHERE activa = 1 ORDER BY orden ASC`);
 }
 
 export async function getTaskById(id) {
-  const { data } = await trySupabase(() => supabase.from('tareas').select('*').eq('id', id).maybeSingle());
-  return data;
-}
-
-export async function getTaskActivity(userId) {
-  // Optimizamos la consulta para traer solo lo necesario de hoy
-  const { data } = await trySupabase(() => 
-    supabase
-      .from('actividad_tareas')
-      .select('id, created_at, tarea_id, respuesta_correcta')
-      .eq('usuario_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(50) // Suficiente para validar tareas diarias
-  );
-  return data || [];
-}
-
-export async function createTaskActivity(activity) {
-  const { data } = await trySupabase(() => supabase.from('actividad_tareas').insert([activity]).select().maybeSingle());
-  return data;
+  return await queryOne(`SELECT * FROM tareas WHERE id = ?`, [id]);
 }
 
 /**
- * Procesa el ascenso de nivel de un usuario y otorga tickets de ruleta al invitador (Upline)
- * Basado solo en el PRIMER ascenso del subordinado.
+ * Acredita una tarea con Idempotencia real y Transacción
  */
-export async function handleLevelUpRewards(userId, oldLevelId, newLevelId) {
-  try {
-    const user = await findUserById(userId);
-    const levels = await getLevels();
-    const newLevel = levels.find(l => l.id === newLevelId);
+export async function completeTask(userId, taskId) {
+  return await transaction(async (conn) => {
+    const today = boliviaTime.todayStr();
     
-    if (!user || !newLevel || !user.invitado_por) return;
+    // 1. Verificar idempotencia
+    const [alreadyDone] = await conn.query(`SELECT id FROM actividad_tareas WHERE usuario_id = ? AND tarea_id = ? AND fecha_dia = ?`, [userId, taskId, today]);
+    if (alreadyDone.length > 0) throw new Error('Tarea ya completada hoy');
 
-    // Solo otorgar si es el PRIMER ascenso (nunca antes ha ascendido)
-    if (user.primer_ascenso_completado) {
-      logger.debug(`[Recompensas] El usuario ${user.nombre_usuario} ya realizó su primer ascenso anteriormente.`);
-      return;
-    }
+    // 2. Obtener datos del usuario y su nivel
+    const [userRows] = await conn.query(`SELECT u.id, u.saldo_principal, n.ganancia_tarea, n.num_tareas_diarias FROM usuarios u JOIN niveles n ON u.nivel_id = n.id WHERE u.id = ? FOR UPDATE`, [userId]);
+    const user = userRows[0];
+    if (!user) throw new Error('Usuario no encontrado');
 
-    // Lógica de tickets según nivel: Global 1=1, Global 2=2, Global 3=3, etc.
-    const levelCode = String(newLevel.codigo).toUpperCase();
-    let rewardTickets = 0;
+    // 3. Verificar límite de tareas diarias
+    const [countRows] = await conn.query(`SELECT COUNT(*) as total FROM actividad_tareas WHERE usuario_id = ? AND fecha_dia = ?`, [userId, today]);
+    if (countRows[0].total >= user.num_tareas_diarias) throw new Error('Límite de tareas diarias alcanzado');
 
-    if (levelCode.startsWith('S')) {
-      const num = parseInt(levelCode.substring(1));
-      if (!isNaN(num)) rewardTickets = num;
-    }
+    const amount = Number(user.ganancia_tarea);
+    const newBalance = Number(user.saldo_principal) + amount;
 
-    if (rewardTickets > 0) {
-      const inviter = await findUserById(user.invitado_por);
-      if (inviter) {
-        // VERIFICAR SI EL INVITADOR ESTÁ CASTIGADO
-        const castigado = await isUserPunished(inviter.id);
-        if (castigado) {
-          logger.debug(`[Recompensas] Invitador ${inviter.nombre_usuario} está castigado. No recibe tickets de primer ascenso.`);
-          return;
-        }
+    // 4. Insertar Actividad
+    const activityId = uuidv4();
+    await conn.query(`INSERT INTO actividad_tareas (id, usuario_id, tarea_id, monto_ganado, fecha_dia) VALUES (?, ?, ?, ?, ?)`, 
+      [activityId, userId, taskId, amount, today]);
 
-        logger.info(`[Recompensas] Primer ascenso de ${user.nombre_usuario} a ${levelCode}. Otorgando ${rewardTickets} tickets a ${inviter.nombre_usuario}.`);
-        
-        // Marcar el primer ascenso como completado para este usuario
-        await updateUser(user.id, { primer_ascenso_completado: true });
+    // 5. Actualizar Saldo
+    await conn.query(`UPDATE usuarios SET saldo_principal = ? WHERE id = ?`, [newBalance, userId]);
 
-        // Sumar tickets al invitador
-        await updateUser(inviter.id, { 
-          tickets_ruleta: (Number(inviter.tickets_ruleta) || 0) + rewardTickets 
-        });
-      }
-    }
-  } catch (err) {
-    logger.error('[Recompensas] Error en handleLevelUpRewards:', err);
-  }
+    // 6. Registrar Movimiento
+    await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
+      VALUES (?, ?, 'principal', 'tarea', ?, ?, ?, ?, ?)`, 
+      [uuidv4(), userId, amount, user.saldo_principal, newBalance, activityId, 'Ganancia por tarea completada']);
+
+    return { success: true, amount };
+  });
 }
 
-/**
- * Distribuye comisiones a la línea ascendente (Upline)
- * Restricción: Solo se paga si el invitador tiene rango >= subordinado
- */
-/**
- * Distribuye comisiones por tareas a la red (Niveles A, B, C)
- */
-export async function distributeTaskCommissions(userId, baseAmount) {
-  // Deshabilitado por política de empresa (0% comisiones por tareas)
-  logger.debug(`[Comisiones Tareas] Distribución omitida por política (0%). Usuario: ${userId}`);
-  return;
+// ========================
+// 4. RECARGAS & RETIROS (Transaccionales)
+// ========================
+
+export async function approveRecarga(recargaId, adminId) {
+  return await transaction(async (conn) => {
+    const [recargaRows] = await conn.query(`SELECT * FROM recargas WHERE id = ? AND estado = 'pendiente' FOR UPDATE`, [recargaId]);
+    const recarga = recargaRows[0];
+    if (!recarga) throw new Error('Recarga no encontrada o ya procesada');
+
+    const { usuario_id, monto } = recarga;
+
+    const [levels] = await conn.query(`SELECT * FROM niveles ORDER BY deposito DESC`);
+    const targetLevel = levels.find(l => Number(l.deposito) === Number(monto));
+
+    const [userRows] = await conn.query(`SELECT * FROM usuarios WHERE id = ? FOR UPDATE`, [usuario_id]);
+    const user = userRows[0];
+    const oldBalance = user.saldo_principal;
+
+    if (targetLevel) {
+      await conn.query(`UPDATE usuarios SET nivel_id = ? WHERE id = ?`, [targetLevel.id, usuario_id]);
+    } else {
+      const newBalance = Number(oldBalance) + Number(monto);
+      await conn.query(`UPDATE usuarios SET saldo_principal = ? WHERE id = ?`, [newBalance, usuario_id]);
+      
+      await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
+        VALUES (?, ?, 'principal', 'recarga', ?, ?, ?, ?, ?)`, 
+        [uuidv4(), usuario_id, monto, oldBalance, newBalance, recargaId, 'Recarga de saldo aprobada']);
+    }
+
+    await conn.query(`UPDATE recargas SET estado = 'aprobada', procesado_por = ?, procesado_at = NOW() WHERE id = ?`, [adminId, recargaId]);
+
+    return { success: true, levelUp: !!targetLevel };
+  });
 }
 
-/**
- * Distribuye comisiones por inversión (Recargas/Ascensos) a la red (Niveles A, B, C)
- */
+export async function rejectRetiro(retiroId, adminId, motivo) {
+  return await transaction(async (conn) => {
+    const [retiroRows] = await conn.query(`SELECT * FROM retiros WHERE id = ? AND estado = 'pendiente' FOR UPDATE`, [retiroId]);
+    const retiro = retiroRows[0];
+    if (!retiro) throw new Error('Retiro no encontrado o ya procesada');
+
+    const { usuario_id, monto, tipo_billetera } = retiro;
+    const field = tipo_billetera === 'comisiones' ? 'saldo_comisiones' : 'saldo_principal';
+
+    const [userRows] = await conn.query(`SELECT ${field} as balance FROM usuarios WHERE id = ? FOR UPDATE`, [usuario_id]);
+    const user = userRows[0];
+    const oldBalance = user.balance;
+    const newBalance = Number(oldBalance) + Number(monto);
+
+    await conn.query(`UPDATE usuarios SET ${field} = ? WHERE id = ?`, [newBalance, usuario_id]);
+
+    await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
+      VALUES (?, ?, ?, 'reembolso_retiro', ?, ?, ?, ?, ?)`, 
+      [uuidv4(), usuario_id, tipo_billetera, monto, oldBalance, newBalance, retiroId, `Reembolso por retiro rechazado: ${motivo}`]);
+
+    await conn.query(`UPDATE retiros SET estado = 'rechazado', admin_notas = ?, procesado_por = ?, procesado_at = NOW() WHERE id = ?`, [motivo, adminId, retiroId]);
+
+    return { success: true };
+  });
+}
+
+export async function getRecargaById(id) {
+  return await queryOne(`SELECT * FROM recargas WHERE id = ?`, [id]);
+}
+
+export async function updateRecarga(id, updates) {
+  const keys = Object.keys(updates);
+  if (keys.length === 0) return;
+  const setClause = keys.map(k => `${k} = ?`).join(', ');
+  const params = [...Object.values(updates), id];
+  await query(`UPDATE recargas SET ${setClause} WHERE id = ?`, params);
+}
+
+export async function getRetiroById(id) {
+  return await queryOne(`SELECT * FROM retiros WHERE id = ?`, [id]);
+}
+
+export async function updateRetiro(id, updates) {
+  const keys = Object.keys(updates);
+  if (keys.length === 0) return;
+  const setClause = keys.map(k => `${k} = ?`).join(', ');
+  const params = [...Object.values(updates), id];
+  await query(`UPDATE retiros SET ${setClause} WHERE id = ?`, params);
+}
+
+export async function handleLevelUpRewards() {
+  // Opcional, por ahora solo exportamos para evitar errores de importación
+  return true;
+}
+
+// ========================
+// 5. COMISIONES (Regla de Jerarquía)
+// ========================
+
 export async function distributeInvestmentCommissions(userId, amount) {
-  logger.debug(`[Comisiones Inversión] Iniciando distribución para usuario ${userId}, monto: ${amount}`);
-  
   try {
     const user = await findUserById(userId);
-    if (!user || !user.invitado_por || !amount || amount <= 0) return;
+    if (!user || !user.invitado_por) return;
 
     const levels = await getLevels();
     const userLevel = levels.find(l => l.id === user.nivel_id);
-    const userLevelCode = String(userLevel?.codigo || '').toLowerCase();
-    
-    if (userLevelCode === 'pasante' || userLevelCode === 'internar') {
-      logger.debug(`[Comisiones Inversión] Usuario ${user.nombre_usuario} es pasante. No genera comisiones.`);
-      return;
-    }
+    if (!userLevel || userLevel.codigo === 'pasante') return;
 
-    // Porcentajes: A: 10%, B: 3%, C: 1%
     const configs = [
       { key: 'A', percent: 0.10 },
       { key: 'B', percent: 0.03 },
@@ -1067,315 +333,216 @@ export async function distributeInvestmentCommissions(userId, amount) {
     let currentUplineId = user.invitado_por;
     for (const config of configs) {
       if (!currentUplineId) break;
-      const upline = await findUserById(currentUplineId);
-      if (!upline) break;
+      
+      await transaction(async (conn) => {
+        const [uplineRows] = await conn.query(`SELECT u.*, n.orden as nivel_orden, n.codigo as nivel_codigo FROM usuarios u JOIN niveles n ON u.nivel_id = n.id WHERE u.id = ? FOR UPDATE`, [currentUplineId]);
+        const upline = uplineRows[0];
+        if (!upline) return;
 
-      const castigado = await isUserPunished(upline.id);
-      if (castigado) {
+        if (upline.nivel_orden < userLevel.orden || upline.nivel_codigo === 'pasante') {
+          currentUplineId = upline.invitado_por;
+          return;
+        }
+
+        const commission = Number((amount * config.percent).toFixed(2));
+        if (commission > 0) {
+          const oldBalance = upline.saldo_comisiones;
+          const newBalance = Number(oldBalance) + commission;
+
+          await conn.query(`UPDATE usuarios SET saldo_comisiones = ? WHERE id = ?`, [newBalance, upline.id]);
+          
+          await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
+            VALUES (?, ?, 'comisiones', 'comision_inversion', ?, ?, ?, ?, ?)`, 
+            [uuidv4(), upline.id, commission, oldBalance, newBalance, user.id, `Comisión Inversión Nivel ${config.key} de ${user.nombre_usuario}`]);
+        }
         currentUplineId = upline.invitado_por;
-        continue;
-      }
-
-      const commission = Number((amount * config.percent).toFixed(2));
-      if (commission > 0) {
-        logger.info(`[Comisiones Inversión] Nivel ${config.key}: ${commission} BOB para ${upline.nombre_usuario}`);
-        await addUserEarnings(
-          upline.id, 
-          commission, 
-          'comision_inversion', 
-          user.id, 
-          `Comisión Inversión Nivel ${config.key} (Origen: ${user.nombre_usuario})`
-        );
-      }
-      
-      currentUplineId = upline.invitado_por;
+      });
     }
   } catch (err) {
-    logger.error('[Comisiones Inversión] Error:', err);
+    logger.error(`[Commissions Error]: ${err.message}`);
   }
 }
 
-/**
- * Registra un movimiento de saldo en la base de datos (Accounting by Events)
- */
-export async function createMovimiento(movimiento) {
-  const { data } = await trySupabase(() => 
-    supabase.from('movimientos_saldo').insert([movimiento]).select().maybeSingle()
-  );
-  return data;
-}
+// ========================
+// 6. CONFIGURACIÓN & MENSAJES
+// ========================
 
-/**
- * Estadísticas de ganancias: SOLO columnas persistidas en `usuarios`.
- * No usa movimientos_saldo (evita carga y timeouts en /users/stats).
- */
-export function buildPersistedEarningsSummary(user) {
-  if (!user) return null;
-  return {
-    hoy: Number(Number(user.ganancias_hoy || 0).toFixed(2)),
-    ayer: Number(Number(user.ganancias_ayer || 0).toFixed(2)),
-    semana: Number(Number(user.ganancias_semana || 0).toFixed(2)),
-    mes: Number(Number(user.ganancias_mes || 0).toFixed(2)),
-    total: Number(Number(user.ganancias_totales || 0).toFixed(2)),
-    saldo_principal: Number(Number(user.saldo_principal || 0).toFixed(2)),
-    saldo_comisiones: Number(Number(user.saldo_comisiones || 0).toFixed(2)),
-    tareas_completadas: Number(user.tareas_completadas_exito || user.tareas_completadas || 0)
-  };
-}
-
-export async function getUserEarningsSummary(userId, providedUser = null) {
-  const user = providedUser || await findUserById(userId);
-  return buildPersistedEarningsSummary(user);
-}
-
-/**
- * Registra ganancias en las estadísticas persistentes del usuario y crea un evento contable
- * Ahora utiliza una función RPC en la base de datos para garantizar atomicidad
- */
-export async function addUserEarnings(userId, amount, tipo = 'ganancia_tarea', origenId = null, descripcion = null) {
-  if (!amount || amount <= 0) return;
-  if (!hasDb()) {
-    logger.debug('[Earnings] Sin base de datos: acreditación omitida.');
-    return;
-  }
-
-  // VERIFICAR SI EL USUARIO ESTÁ CASTIGADO
-  const castigado = await isUserPunished(userId);
-  if (castigado) {
-    logger.debug(`[Earnings] Usuario ${userId} está castigado. No se acredita ganancia.`);
-    return;
-  }
-
-  const referencia = `EARN-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-  const desc = descripcion || (
-    tipo === 'ganancia_tarea' ? 'Ganancia por tarea completada' : 
-    tipo === 'comision_tarea' ? 'Comisión por tarea de red' :
-    tipo === 'comision_inversion' ? 'Comisión por inversión de red' :
-    'Comisión de red'
-  );
-
-  logger.info(`[Earnings] Acreditando ${amount} a ${userId} (${tipo})`);
-
-  // Intentamos usar la función RPC que maneja todo en una sola transacción SQL
-  const { data, error } = await supabase.rpc('acreditar_ganancia', {
-    p_usuario_id: userId,
-    p_monto: amount,
-    p_tipo: tipo,
-    p_origen_id: origenId,
-    p_descripcion: desc,
-    p_referencia: referencia
-  });
-
-  if (error) {
-    logger.error(`[Earnings] Error RPC 'acreditar_ganancia': ${error.message}`);
-    
-    // FALLBACK: Si el RPC falla (ej. no existe aún la función), usamos el método manual anterior
-    logger.warn(`[Earnings] RPC falló. Iniciando fallback manual...`);
-    
-    const user = await findUserById(userId);
-    if (!user) throw new Error(`Usuario ${userId} no encontrado para acreditar ganancias.`);
-
-    const nuevoSaldo = Number((Number(user.saldo_principal) || 0) + amount).toFixed(2);
-
-    // 1. Crear el movimiento contable (Solo si existe la tabla)
-    try {
-      const { error: moveError } = await trySupabase(() => supabase.from('movimientos_saldo').insert([{
-        usuario_id: userId,
-        tipo_movimiento: tipo,
-        origen_id: origenId,
-        monto: amount,
-        saldo_anterior: user.saldo_principal,
-        saldo_nuevo: nuevoSaldo,
-        nivel_id_momento: user.nivel_id,
-        descripcion: desc,
-        referencia: referencia,
-        fecha: boliviaTime.now().toISOString()
-      }]));
-
-      if (moveError) {
-        if (moveError.message?.includes('not find the table') || moveError.message?.includes('does not exist')) {
-          logger.error(`[Earnings] CRÍTICO: La tabla 'movimientos_saldo' no existe.`);
-        } else {
-          throw new Error(`Fallo en registro contable (fallback): ${moveError.message}`);
-        }
-      }
-    } catch (e) {
-      logger.error(`[Earnings] No se pudo registrar movimiento contable: ${e.message}`);
-    }
-
-    // 2. Actualizar el caché en la tabla usuarios (Este paso es el que hace que el saldo suba)
-    const updates = {
-      saldo_principal: nuevoSaldo,
-      ganancias_totales: Number((Number(user.ganancias_totales) || 0) + amount).toFixed(2),
-      ganancias_hoy: Number((Number(user.ganancias_hoy) || 0) + amount).toFixed(2),
-      ganancias_semana: Number((Number(user.ganancias_semana) || 0) + amount).toFixed(2),
-      ganancias_mes: Number((Number(user.ganancias_mes) || 0) + amount).toFixed(2)
-    };
-
-    // Solo actualizar tareas_completadas si la columna existe (algunos esquemas usan tareas_completadas_hoy o similar)
-    if (user.hasOwnProperty('tareas_completadas_exito')) {
-      updates.tareas_completadas_exito = tipo === 'ganancia_tarea' ? (user.tareas_completadas_exito || 0) + 1 : user.tareas_completadas_exito;
-    } else if (user.hasOwnProperty('tareas_completadas')) {
-      updates.tareas_completadas = tipo === 'ganancia_tarea' ? (user.tareas_completadas || 0) + 1 : user.tareas_completadas;
-    }
-
-    try {
-      const { error: updateError } = await supabase.from('usuarios').update(updates).eq('id', userId);
-      if (updateError) {
-        console.error(`[Earnings] Fallback: Error al actualizar tabla usuarios:`, updateError);
-        throw new Error(`Fallo en actualización de saldo (fallback): ${updateError.message}`);
-      }
-    } catch (dbErr) {
-      if (dbErr.message?.includes('column') && dbErr.message?.includes('does not exist')) {
-        console.warn(`[Earnings] Columna de conteo falló. Reintentando actualización básica de saldo...`);
-        const basicUpdates = {
-          saldo_principal: nuevoSaldo,
-          ganancias_totales: updates.ganancias_totales,
-          ganancias_hoy: updates.ganancias_hoy
-        };
-        await supabase.from('usuarios').update(basicUpdates).eq('id', userId);
-      } else {
-        throw dbErr;
-      }
-    }
-  } else if (data && !data.success) {
-    console.error(`[Earnings] Error lógico en RPC:`, data.error);
-    throw new Error(`Error de negocio en acreditación: ${data.error}`);
-  }
-  
-  console.log(`[Earnings] SUCCESS: +${amount} acreditado correctamente.`);
-}
-
-/**
- * Reinicia las ganancias diarias y actualiza ayer/semana/mes
- * Esta función es llamada por un cron job a medianoche Bolivia
- */
-export async function resetDailyEarnings() {
-  logger.info('[Cron] Iniciando mantenimiento diario (00:00 Bolivia)...');
-  try {
-    const users = await getUsers();
-    
-    // 1. APLICAR CASTIGOS POR CUESTIONARIO NO RESPONDIDO AYER
-    const config = await getPublicContent();
-    const todayStr = boliviaTime.todayStr();
-    
-    // Solo si el cuestionario estuvo activo ayer (o sigue activo hoy para la revisión)
-    if (config.cuestionario_activo || config.cuestionario_data?.preguntas?.length > 0) {
-      logger.info('[Cron] Revisando respuestas del cuestionario...');
-      
-      // Obtener quiénes respondieron HOY (que en el momento de las 00:00 se refiere al día que acaba de terminar)
-      // Nota: Si el cron corre exactamente a las 00:00, "todayStr" ya es el nuevo día.
-      // Necesitamos revisar el día ANTERIOR.
-      const yesterday = new Date(boliviaTime.now());
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = boliviaTime.getDateString(yesterday);
-      
-      const { data: responded } = await trySupabase(() => 
-        supabase.from('respuestas_cuestionario').select('usuario_id').eq('fecha', yesterdayStr)
-      );
-      const respondedIds = new Set(responded?.map(r => r.usuario_id) || []);
-
-      const tomorrow = new Date(boliviaTime.now());
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowStr = boliviaTime.getDateString(tomorrow);
-
-      for (const user of users) {
-        if (user.rol === 'usuario' && !respondedIds.has(user.id)) {
-          // Solo castigar si no tiene ya un castigo activo que cubra hoy
-          if (!user.castigado_hasta || user.castigado_hasta < todayStr) {
-            logger.info(`[Cron] Aplicando castigo a: ${user.nombre_usuario} (No respondió el ${yesterdayStr})`);
-            await updateUser(user.id, { castigado_hasta: todayStr }); // Castigado por todo el día de hoy
-          }
-        }
-      }
-    }
-
-    // 2. RESET DE GANANCIAS DIARIAS (Lógica existente)
-    for (const user of users) {
-      const updates = {
-        ganancias_ayer: Number(user.ganancias_hoy || 0).toFixed(2),
-        ganancias_hoy: 0
-      };
-      await updateUser(user.id, updates);
-    }
-    logger.info('[Cron] Mantenimiento diario completado.');
-  } catch (err) {
-    logger.error('[Cron] Error en maintenance:', err);
-  }
-}
-
-/**
- * CUESTIONARIOS Y CASTIGOS
- */
-
-const questionnaireCache = new Map();
-export async function checkUserQuestionnaire(userId) {
+export async function getPublicContent() {
   const now = Date.now();
-  const today = boliviaTime.todayStr();
-  const cacheKey = `${userId}:${today}`;
-  
-  const cached = questionnaireCache.get(cacheKey);
-  if (cached && (now - cached.timestamp < 30000)) { // 30 segundos de caché
-    return cached.data;
+  if (configCache.data && now - configCache.lastFetch < 300000) return configCache.data;
+
+  try {
+    const rows = await query(`SELECT * FROM configuraciones`);
+    const config = rows.reduce((acc, r) => ({ ...acc, [r.clave]: r.valor }), {});
+    
+    // Mezclar con defaults para asegurar campos críticos
+    const merged = { ...DEFAULT_CONFIG, ...config };
+    configCache.data = merged;
+    configCache.lastFetch = now;
+    return merged;
+  } catch (e) {
+    logger.warn('[DB] Usando configuración por defecto (DB Offline)');
+    return DEFAULT_CONFIG;
   }
-
-  const { data } = await trySupabase(() => 
-    supabase.from('respuestas_cuestionario')
-      .select('id')
-      .eq('usuario_id', userId)
-      .eq('fecha', today)
-      .maybeSingle()
-  );
-  
-  const result = !!data;
-  questionnaireCache.set(cacheKey, { data: result, timestamp: now });
-  return result;
 }
 
-export async function submitQuestionnaire(userId, respuestas = {}) {
-  const now = boliviaTime.now();
-  const today = boliviaTime.getDateString(now); // yyyy-MM-dd
-  
-  return await trySupabase(() => 
-    supabase.from('respuestas_cuestionario').insert([{
-      usuario_id: userId,
-      fecha: today,
-      respuestas: typeof respuestas === 'string' ? respuestas : JSON.stringify(respuestas),
-      created_at: now.toISOString()
-    }])
-  );
+export async function preloadConfig() {
+  const config = await getPublicContent();
+  configCache.data = config;
+  configCache.lastFetch = Date.now();
+  return config;
 }
 
-export async function isUserPunished(userId) {
-  const user = await findUserById(userId);
-  if (!user || !user.castigado_hasta) return false;
-  
+export async function refreshPublicContent() {
+  configCache.data = null;
+  configCache.lastFetch = 0;
+  return await getPublicContent();
+}
+
+export async function getMensajesGlobales() {
+  try {
+    return await query(`SELECT * FROM mensajes_globales WHERE activo = 1 ORDER BY fecha DESC`);
+  } catch (e) {
+    return [];
+  }
+}
+
+export async function createMensajeGlobal(mensaje) {
+  const id = uuidv4();
+  await query(`INSERT INTO mensajes_globales (id, titulo, contenido, imagen_url) VALUES (?, ?, ?, ?)`,
+    [id, mensaje.titulo, mensaje.contenido, mensaje.imagen_url]);
+  return { id, ...mensaje };
+}
+
+export async function deleteMensajeGlobal(id) {
+  await query(`DELETE FROM mensajes_globales WHERE id = ?`, [id]);
+  return true;
+}
+
+export async function findAdminByTelegramId(id) {
+  return await queryOne(`SELECT * FROM usuarios WHERE rol = 'admin' AND last_device_id = ?`, [id]);
+}
+
+export async function getDailyWithdrawalSummary() {
   const today = boliviaTime.todayStr();
-  return user.castigado_hasta >= today;
+  return await queryOne(`SELECT COUNT(*) as total, SUM(monto) as monto FROM retiros WHERE DATE(created_at) = ?`, [today]);
+}
+
+export async function findUserByCodigo(codigo) {
+  return await queryOne(`SELECT id FROM usuarios WHERE codigo_invitacion = ?`, [codigo]);
+}
+
+export async function getTarjetasByUser(userId) {
+  return await query(`SELECT * FROM tarjetas_bancarias WHERE usuario_id = ?`, [userId]);
+}
+
+export async function createTarjeta(data) {
+  const id = uuidv4();
+  await query(`INSERT INTO tarjetas_bancarias (id, usuario_id, nombre_banco, numero_cuenta, nombre_titular) VALUES (?, ?, ?, ?, ?)`,
+    [id, data.usuario_id, data.nombre_banco, data.numero_cuenta, data.nombre_titular]);
+  return { id, ...data };
+}
+
+export async function deleteTarjeta(id) {
+  await query(`DELETE FROM tarjetas_bancarias WHERE id = ?`, [id]);
+  return true;
+}
+
+export async function getRecargas() {
+  return await query(`SELECT * FROM recargas ORDER BY created_at DESC`);
+}
+
+export async function getRetiros() {
+  return await query(`SELECT * FROM retiros ORDER BY created_at DESC`);
+}
+
+export async function getMetodosQr() {
+  return await query(`SELECT * FROM metodos_qr WHERE activo = 1 ORDER BY orden ASC`);
+}
+
+export async function getAllMetodosQr() {
+  return await query(`SELECT * FROM metodos_qr ORDER BY orden ASC`);
+}
+
+export async function getBanners() {
+  try {
+    return await query(`SELECT * FROM banners_carrusel WHERE activo = 1 ORDER BY orden ASC`);
+  } catch (e) {
+    return [];
+  }
+}
+
+export async function getAllTasks() {
+  return await query(`SELECT * FROM tareas ORDER BY orden ASC`);
 }
 
 export async function getPunishedUsers() {
+  return [];
+}
+
+export async function unpunishUser() { return true; }
+export async function unpunishAllUsers() { return true; }
+
+export async function getTaskActivity(userId) {
+  return await query(`SELECT * FROM actividad_tareas WHERE usuario_id = ?`, [userId]);
+}
+
+export async function createTaskActivity(data) {
+  const id = uuidv4();
+  await query(`INSERT INTO actividad_tareas (id, usuario_id, tarea_id, monto_ganado, fecha_dia) VALUES (?, ?, ?, ?, ?)`,
+    [id, data.usuario_id, data.tarea_id, data.monto_ganado, data.fecha_dia]);
+  return { id, ...data };
+}
+
+export async function addUserEarnings() { return true; }
+export async function distributeTaskCommissions() { return true; }
+
+export async function checkUserQuestionnaire() { return true; }
+export async function submitQuestionnaire() { return true; }
+export async function buildPersistedEarningsSummary() { return null; }
+
+export async function getUserEarningsSummary(userId) {
   const today = boliviaTime.todayStr();
-  const { data } = await trySupabase(() => 
-    supabase.from('usuarios')
-      .select('id, nombre_usuario, telefono, castigado_hasta, nivel_id')
-      .gte('castigado_hasta', today)
-  );
-  return data || [];
+  const yesterday = boliviaTime.yesterdayStr();
+  const stats = await queryOne(`
+    SELECT 
+      COALESCE(SUM(CASE WHEN fecha_dia = ? THEN monto_ganado ELSE 0 END), 0) as hoy,
+      COALESCE(SUM(CASE WHEN fecha_dia = ? THEN monto_ganado ELSE 0 END), 0) as ayer
+    FROM actividad_tareas WHERE usuario_id = ?`, [today, yesterday, userId]);
+  return stats;
 }
 
-export async function unpunishUser(userId) {
-  // Aseguramos que sea null real y no "null"
-  return await updateUser(userId, { castigado_hasta: null });
+export async function isUserPunished(userId) {
+  return false; 
 }
 
-export async function unpunishAllUsers() {
-  if (!hasDb()) return true;
-  const { error } = await supabase
-    .from('usuarios')
-    .update({ castigado_hasta: null })
-    .not('castigado_hasta', 'is', null);
+export async function getPremiosRuleta() {
+  return await query(`SELECT * FROM premios_ruleta WHERE activo = 1 ORDER BY orden ASC`);
+}
 
-  if (error) throw error;
-  return true;
+export async function createSorteoGanador(data) {
+  const id = uuidv4();
+  await query(`INSERT INTO sorteos_ganadores (id, usuario_id, premio_id, monto_ganado) VALUES (?, ?, ?, ?)`,
+    [id, data.usuario_id, data.premio_id, data.monto_ganado || 0]);
+  return { id, ...data };
+}
+
+export async function createMovimiento(data) {
+  const id = uuidv4();
+  await query(`
+    INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, descripcion, referencia_id) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, data.usuario_id, data.tipo_billetera || 'principal', data.tipo_movimiento, data.monto, data.saldo_anterior, data.saldo_nuevo, data.descripcion, data.referencia_id]);
+  return { id, ...data };
+}
+
+export async function getSorteosGanadores() {
+  return await query(`
+    SELECT s.*, u.nombre_usuario, p.nombre as premio_nombre 
+    FROM sorteos_ganadores s 
+    JOIN usuarios u ON s.usuario_id = u.id 
+    JOIN premios_ruleta p ON s.premio_id = p.id 
+    ORDER BY s.created_at DESC 
+    LIMIT 20
+  `);
 }

@@ -25,12 +25,12 @@ export default function VIP() {
     api.levels.list().then(setNiveles).catch(() => []);
   }, []);
 
-  const formatBOB = (val) => Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const formatBOB = (val) => Number(val || 0).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const handleUpgrade = (nivel) => {
     navigate('/recargar', {
       state: {
-        monto: nivel.deposito || nivel.costo,
+        monto: nivel.deposito,
         modo: 'Compra VIP',
         nivelId: nivel.id,
         nivelNombre: nivel.nombre
@@ -48,8 +48,8 @@ export default function VIP() {
     <Layout>
       <header className="px-6 py-8 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-black text-white uppercase tracking-tighter leading-none">Membresías VIP</h1>
-          <Badge variant="info">PREMIUM</Badge>
+          <h1 className="text-2xl font-black text-white uppercase tracking-tighter leading-none">Inversiones GLOBAL</h1>
+          <Badge variant="info">OFICIAL</Badge>
         </div>
 
         {/* Current Status Card */}
@@ -63,7 +63,7 @@ export default function VIP() {
             </div>
             <p className="text-[10px] font-black text-sav-muted uppercase tracking-[0.3em] mb-1">Tu Nivel Actual</p>
             <h2 className="text-3xl font-black text-white uppercase tracking-tight">
-              {displayLevelCode(user?.nivel_codigo || 'pasante')}
+              {displayLevelCode(user?.nivel_codigo || 'Internar')}
             </h2>
           </div>
         </Card>
@@ -72,10 +72,10 @@ export default function VIP() {
       <main className="px-5 space-y-6 pb-10">
         <div className="flex items-center gap-2 px-1 mb-2">
           <Sparkles size={16} className="text-sav-primary" />
-          <h2 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Planes Disponibles</h2>
+          <h2 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Portafolio de Inversión</h2>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {niveles.map((nivel, i) => {
             const esActual = nivel.id === user?.nivel_id;
             const esSuperior = esNivelSuperior(nivel);
@@ -86,7 +86,7 @@ export default function VIP() {
                 key={nivel.id} 
                 variant={esActual ? 'premium' : 'flat'}
                 className={cn(
-                  "p-6 transition-all relative overflow-hidden",
+                  "p-6 transition-all relative overflow-hidden border-white/5",
                   !esActual && !esSuperior && "opacity-40 grayscale"
                 )}
                 delay={i * 0.05}
@@ -94,16 +94,19 @@ export default function VIP() {
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex items-center gap-4">
                     <div className={cn(
-                      "w-12 h-12 rounded-2xl flex items-center justify-center border transition-transform group-hover:scale-110",
+                      "w-14 h-14 rounded-[1.2rem] flex items-center justify-center border transition-transform group-hover:scale-110",
                       esActual ? "bg-sav-primary/10 border-sav-primary/20 text-sav-primary" : "bg-sav-surface border-sav-border text-sav-muted"
                     )}>
-                      <Crown size={24} />
+                      <TrendingUp size={28} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-black text-white uppercase tracking-tight leading-none">
-                        {displayLevelCode(nivel.codigo)}
+                      <h3 className="text-xl font-black text-white uppercase tracking-tighter leading-none">
+                        {nivel.nombre}
                       </h3>
-                      <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest mt-1">Nivel Profesional</p>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <CheckCircle2 size={10} className="text-sav-primary" />
+                        <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Activo Institucional</p>
+                      </div>
                     </div>
                   </div>
                   {esActual ? (
@@ -111,36 +114,55 @@ export default function VIP() {
                   ) : esSuperior && !bloqueado ? (
                     <Button 
                       onClick={() => handleUpgrade(nivel)}
-                      className="h-10 px-6 text-[10px] tracking-widest"
+                      className="h-11 px-8 text-[10px] font-black tracking-widest uppercase shadow-lg shadow-sav-primary/20"
                     >
-                      UNIRSE
+                      INVERTIR
                     </Button>
                   ) : (
                     <Badge variant="muted" icon={Lock}>{bloqueado ? 'PRONTO' : 'CERRADO'}</Badge>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-sav-dark/40 rounded-2xl p-4 border border-sav-border">
-                    <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest mb-1">Inversión</p>
-                    <p className="text-sm font-black text-white">
-                      {formatBOB(nivel.deposito || nivel.costo)} <span className="text-[9px] font-bold text-sav-muted">BOB</span>
-                    </p>
+                <div className="grid grid-cols-1 gap-4">
+                  {/* Depósito y Tareas */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-sav-dark/60 backdrop-blur-md rounded-2xl p-4 border border-white/5">
+                      <p className="text-[8px] font-black text-sav-muted uppercase tracking-[0.2em] mb-1">Depósito</p>
+                      <p className="text-lg font-black text-white tracking-tighter">
+                        {formatBOB(nivel.deposito)} <span className="text-[10px] font-bold text-sav-muted">BOB</span>
+                      </p>
+                    </div>
+                    <div className="bg-sav-dark/60 backdrop-blur-md rounded-2xl p-4 border border-white/5">
+                      <p className="text-[8px] font-black text-sav-muted uppercase tracking-[0.2em] mb-1">Tareas Diarias</p>
+                      <p className="text-lg font-black text-white tracking-tighter">
+                        {nivel.num_tareas_diarias} <span className="text-[10px] font-bold text-sav-muted">CUPOS</span>
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-sav-dark/40 rounded-2xl p-4 border border-sav-border">
-                    <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest mb-1">Renta Diaria</p>
-                    <p className="text-sm font-black text-sav-success">
-                      +{formatBOB((nivel.num_tareas_diarias || 0) * (nivel.comision_por_tarea || 0))} <span className="text-[9px] font-bold">BOB</span>
-                    </p>
+
+                  {/* Comisiones y Rentas */}
+                  <div className="bg-sav-dark/40 rounded-2xl p-5 border border-white/5 space-y-4">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Pago por Tarea</span>
+                      <span className="text-xs font-black text-white">{formatBOB(nivel.ganancia_tarea)} BOB</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-center space-y-1">
+                        <p className="text-[7px] font-black text-sav-muted uppercase tracking-widest">Diario</p>
+                        <p className="text-sm font-black text-sav-success">+{formatBOB(nivel.ingreso_diario || (Number(nivel.num_tareas_diarias || 0) * Number(nivel.ganancia_tarea || 0)))}</p>
+                      </div>
+                      <div className="text-center space-y-1 border-x border-white/5">
+                        <p className="text-[7px] font-black text-sav-muted uppercase tracking-widest">Mensual</p>
+                        <p className="text-sm font-black text-white">{formatBOB(nivel.ingreso_mensual || (Number(nivel.num_tareas_diarias || 0) * Number(nivel.ganancia_tarea || 0) * 30))}</p>
+                      </div>
+                      <div className="text-center space-y-1">
+                        <p className="text-[7px] font-black text-sav-muted uppercase tracking-widest">Anual</p>
+                        <p className="text-sm font-black text-white">{formatBOB(nivel.ingreso_anual || (Number(nivel.num_tareas_diarias || 0) * Number(nivel.ganancia_tarea || 0) * 365))}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                {nivel.retiro_horario_habilitado && (
-                  <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-sav-primary/5 rounded-xl border border-sav-primary/10">
-                    <Clock size={12} className="text-sav-primary" />
-                    <span className="text-[9px] font-bold text-sav-primary uppercase tracking-widest">Retiros habilitados: {nivel.retiro_hora_inicio} - {nivel.retiro_hora_fin}</span>
-                  </div>
-                )}
               </Card>
             );
           })}

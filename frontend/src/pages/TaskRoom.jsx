@@ -8,7 +8,8 @@ import { supabase } from '../lib/supabase.js';
 import { 
   ShieldCheck, Play, Check, Clock, Wallet, 
   ArrowRight, X, Sparkles, AlertCircle, 
-  ClipboardList, Trophy, Target, TrendingUp 
+  ClipboardList, Trophy, Target, TrendingUp,
+  ChevronRight
 } from 'lucide-react';
 import { useAndroidBackHandler } from '../hooks/useAndroidBackHandler.js';
 import { cn } from '../lib/utils/cn';
@@ -22,6 +23,7 @@ export default function TaskRoom() {
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
   const [data, setData] = useState(null);
+  const [niveles, setNiveles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTask, setActiveTask] = useState(null);
@@ -40,8 +42,12 @@ export default function TaskRoom() {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const res = await api.tasks.list();
+      const [res, nivelesData] = await Promise.all([
+        api.tasks.list(),
+        api.levels.list()
+      ]);
       setData(res);
+      setNiveles(nivelesData || []);
       if (res.error) setError(res.error);
     } catch (err) {
       setError(err.message || 'Error de conexión.');
@@ -326,6 +332,49 @@ export default function TaskRoom() {
             </div>
           )}
         </div>
+
+        {/* Visibility Everywhere - Investment Opportunities */}
+        <section className="space-y-4 pt-6">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={16} className="text-sav-primary" />
+              <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Sube de Nivel</h3>
+            </div>
+            <Link to="/vip" className="text-[9px] font-black text-sav-primary uppercase tracking-widest flex items-center gap-1">
+              Ver VIP <ChevronRight size={12} />
+            </Link>
+          </div>
+
+          <div className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar snap-x">
+            {niveles.filter(n => (n.deposito || n.costo) > 0).map((n, i) => {
+              const esActual = n.id === user?.nivel_id;
+              return (
+                <Link 
+                  key={n.id} 
+                  to="/vip"
+                  className={cn(
+                    "min-w-[150px] p-5 rounded-[2rem] border transition-all snap-start relative overflow-hidden group",
+                    esActual ? "bg-sav-primary/10 border-sav-primary/30" : "bg-white/5 border-white/5"
+                  )}
+                >
+                  <div className="space-y-3 relative z-10">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[10px] font-black text-white/90 uppercase tracking-tighter">{n.nombre}</span>
+                      {esActual && <div className="w-1.5 h-1.5 rounded-full bg-sav-success animate-pulse" />}
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest leading-none">Ganancia Diaria</p>
+                      <p className="text-lg font-black text-white">+{Number(n.ingreso_diario || (Number(n.num_tareas_diarias || 0) * Number(n.ganancia_tarea || 0))).toFixed(2)}</p>
+                    </div>
+                  </div>
+                  <div className="absolute right-[-10px] bottom-[-10px] opacity-[0.05] rotate-12 group-hover:rotate-[25deg] transition-transform duration-700">
+                    <TrendingUp size={50} />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       </main>
     </Layout>
   );

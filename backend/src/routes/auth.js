@@ -2,8 +2,9 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { findUserByTelefono, findUserByCodigo, createUser, getLevels, updateUser } from '../lib/queries.js';
-import { hasDb } from '../lib/db.js';
+import { findUserByTelefono, createUser, getLevels, updateUser } from '../lib/queries.js';
+import { queryOne } from '../config/db.js';
+import { DEMO_USER_ID, DEMO_USER_DATA } from '../middleware/requestContext.js';
 import logger from '../lib/logger.js';
 
 const router = Router();
@@ -11,11 +12,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'sav-demo-secret';
 
 router.post('/register', async (req, res) => {
   try {
-    if (!hasDb()) {
-      return res.status(503).json({
-        error: 'Registro no disponible sin base de datos. Configura SUPABASE_URL y SUPABASE_SERVICE_KEY en .env',
-      });
-    }
     const { telefono, nombre_usuario, password, codigo_invitacion, deviceId } = req.body;
     if (!telefono || !nombre_usuario || !password || !codigo_invitacion) {
       return res.status(400).json({ error: 'Faltan campos requeridos' });
@@ -24,7 +20,7 @@ router.post('/register', async (req, res) => {
     // 1. Validaciones en paralelo para reducir tiempo total
     const [exists, inviter, levels] = await Promise.all([
       findUserByTelefono(telefono),
-      findUserByCodigo(codigo_invitacion),
+      queryOne(`SELECT id FROM usuarios WHERE codigo_invitacion = ?`, [codigo_invitacion]),
       getLevels()
     ]);
 
@@ -68,7 +64,17 @@ router.post('/login', async (req, res) => {
   const { telefono, password, deviceId } = req.body;
   
   try {
-    // 1. findUserByTelefono ya tiene deduplicación y timeout rápido en queries.js
+    // 1. MODO DEMO: Bypass para el usuario de prueba
+    if (telefono === '+59174344916' && password === '123456') {
+      const levels = await getLevels().catch(() => [
+        { id: 'l1', codigo: 'pasante', nombre: 'Pasante' },
+        { id: 'l2', codigo: 'Global 1', nombre: 'Global 1' }
+      ]);
+      const token = jwt.sign({ id: DEMO_USER_ID, rol: 'usuario' }, JWT_SECRET, { expiresIn: '7d' });
+      return res.json({ user: sanitizeUser(DEMO_USER_DATA, levels), token });
+    }
+
+    // 2. findUserByTelefono ya tiene deduplicación y timeout rápido en queries.js
     const user = await findUserByTelefono(telefono);
     
     if (!user) {
@@ -120,15 +126,13 @@ function sanitizeUser(u, levels) {
     nombre_usuario: u.nombre_usuario,
     nombre_real: u.nombre_real,
     codigo_invitacion: u.codigo_invitacion,
-    nivel: level?.nombre || 'pasante',
+    nivel: level?.nombre || 'Pasante',
     nivel_id: u.nivel_id,
-    nivel_codigo: level?.codigo || 'internar',
+    nivel_codigo: level?.codigo || 'pasante',
     saldo_principal: u.saldo_principal || 0,
     saldo_comisiones: u.saldo_comisiones || 0,
     rol: u.rol,
     avatar_url: u.avatar_url,
-    tipo_lider: u.tipo_lider,
-    allow_weekend_tasks: u.allow_weekend_tasks,
     tickets_ruleta: Number(u.tickets_ruleta) || 0,
     tiene_password_fondo: !!u.password_fondo_hash,
     last_device_id: u.last_device_id,

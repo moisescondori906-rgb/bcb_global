@@ -8,7 +8,8 @@ import {
   User, Users, UserPlus, FileText, Gift, 
   ShieldCheck, CreditCard, ChevronRight, 
   TrendingUp, Trophy, Copy, Check, Lock, 
-  Wallet, LogOut, Settings, Bell, Info
+  Wallet, LogOut, Settings, Bell, Info,
+  Sparkles, Zap
 } from 'lucide-react';
 import { displayLevelCode } from '../lib/displayLevel.js';
 
@@ -23,12 +24,17 @@ export default function Profile() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [niveles, setNiveles] = useState([]);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const data = await api.users.stats();
-        setStats(data);
+        const [statsData, nivelesData] = await Promise.all([
+          api.users.stats(),
+          api.levels.list()
+        ]);
+        setStats(statsData);
+        setNiveles(nivelesData || []);
       } catch (err) {
         console.error(err);
       }
@@ -133,6 +139,67 @@ export default function Profile() {
       </header>
 
       <main className="px-5 space-y-6 pb-10">
+        {/* Investment Opportunities - Added for Visibility */}
+        <section className="relative z-10 space-y-4 pt-4">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <Sparkles size={16} className="text-sav-primary animate-pulse" />
+              <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Oportunidades GLOBAL</h3>
+            </div>
+            <Link to="/vip" className="text-[9px] font-black text-sav-primary uppercase tracking-widest flex items-center gap-1">
+              Ver Catálogo <ChevronRight size={12} />
+            </Link>
+          </div>
+
+          <div className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar snap-x">
+            {niveles.filter(n => (n.deposito || n.costo) > 0).map((n, i) => {
+              const esActual = n.id === user?.nivel_id;
+              const esSiguiente = n.orden === (niveles.find(l => l.id === user?.nivel_id)?.orden || 0) + 1;
+              const rentaDiaria = n.ingreso_diario || (Number(n.num_tareas_diarias || 0) * Number(n.ganancia_tarea || 0));
+
+              return (
+                <motion.div
+                  key={n.id}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate('/vip')}
+                  className={cn(
+                    "min-w-[160px] p-5 rounded-[2rem] border transition-all snap-start relative overflow-hidden group cursor-pointer",
+                    esActual 
+                      ? "bg-sav-primary/10 border-sav-primary/30" 
+                      : esSiguiente 
+                        ? "bg-white/10 border-sav-primary/40 shadow-[0_10px_30px_-5px_rgba(220,38,38,0.2)]"
+                        : "bg-white/5 border-white/5"
+                  )}
+                >
+                  <div className="space-y-3 relative z-10">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[10px] font-black text-white/90 uppercase tracking-tighter">{n.nombre}</span>
+                      {esActual && (
+                        <div className="flex items-center gap-1 bg-sav-success/20 px-1.5 py-0.5 rounded-full border border-sav-success/30">
+                          <div className="w-1 h-1 rounded-full bg-sav-success animate-pulse" />
+                          <span className="text-[7px] font-black text-sav-success">ACTIVO</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest leading-none">Renta Diaria</p>
+                      <p className="text-lg font-black text-white">+{Number(rentaDiaria).toFixed(2)}</p>
+                    </div>
+                    <div className="pt-3 border-t border-white/5 flex justify-between items-center">
+                      <span className="text-[8px] font-bold text-sav-muted uppercase">Inversión</span>
+                      <span className="text-[10px] font-black text-white">{Number(n.deposito).toLocaleString()} BOB</span>
+                    </div>
+                  </div>
+                  {/* Decor */}
+                  <div className="absolute right-[-10px] bottom-[-10px] opacity-[0.05] rotate-12 group-hover:rotate-[25deg] transition-transform duration-700">
+                    <TrendingUp size={60} />
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Summary Card */}
         <Card className="p-6 space-y-6">
           <div className="flex items-center gap-2 px-1">

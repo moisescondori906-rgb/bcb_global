@@ -227,56 +227,89 @@ export default function Recharge() {
               <Badge variant="info" className="bg-white/5 border-white/10 px-3 py-1 text-[10px] font-black">BCB GLOBAL</Badge>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {niveles.filter(n => (n.deposito || n.costo) > 0).map((n, i) => {
+            <div className="space-y-4">
+              {niveles.filter(n => (n.deposito || n.costo) >= 0).map((n, i) => {
                 const isActive = monto === (n.deposito || n.costo).toString();
                 const isLocked = n.bloqueado;
+                const isCurrent = n.id === user?.nivel_id;
                 
                 return (
                   <motion.button
                     key={n.id}
                     type="button"
-                    disabled={isLocked}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    disabled={isLocked || isCurrent}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
                     onClick={() => {
                       setMonto((n.deposito || n.costo).toString());
                       setModo('Compra VIP');
                     }}
                     className={cn(
-                      "relative p-6 rounded-[2rem] border transition-all duration-500 flex flex-col items-center gap-2 group overflow-hidden",
+                      "w-full text-left p-5 rounded-[2rem] border transition-all duration-500 relative overflow-hidden group",
                       isActive 
                         ? "bg-sav-primary border-sav-primary shadow-[0_20px_40px_rgba(220,38,38,0.3)] scale-[1.02]" 
                         : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20 shadow-xl",
-                      isLocked && "opacity-40 grayscale cursor-not-allowed"
+                      (isLocked || isCurrent) && "opacity-40 grayscale cursor-not-allowed"
                     )}
                   >
-                    {/* Active Glow */}
-                    {isActive && <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />}
-                    
-                    <span className={cn(
-                      "text-[10px] font-black uppercase tracking-widest transition-colors z-10",
-                      isActive ? "text-white/80" : "text-sav-muted group-hover:text-white/60"
+                    <div className="flex justify-between items-center relative z-10">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "text-xs font-black uppercase tracking-widest",
+                            isActive ? "text-white" : "text-white/90"
+                          )}>
+                            {displayLevelCode(n.nombre)}
+                          </span>
+                          {isCurrent && <Badge variant="success" className="text-[7px] py-0">ACTUAL</Badge>}
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className={cn(
+                            "text-2xl font-black tracking-tighter",
+                            isActive ? "text-white" : "text-white"
+                          )}>
+                            {Number(n.deposito || n.costo).toLocaleString('es-BO')}
+                          </span>
+                          <span className="text-[10px] font-bold opacity-60">BOB</span>
+                        </div>
+                      </div>
+
+                      <div className="text-right space-y-1">
+                        <p className={cn("text-[8px] font-black uppercase tracking-widest", isActive ? "text-white/60" : "text-sav-muted")}>Renta Diaria</p>
+                        <p className={cn("text-sm font-black", isActive ? "text-white" : "text-sav-success")}>
+                          +{Number(n.ingreso_diario || (Number(n.num_tareas_diarias || 0) * Number(n.ganancia_tarea || 0))).toLocaleString('es-BO', { minimumFractionDigits: 2 })} <span className="text-[8px]">BOB</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className={cn(
+                      "mt-4 pt-4 border-t flex justify-between items-center relative z-10",
+                      isActive ? "border-white/10" : "border-white/5"
                     )}>
-                      {displayLevelCode(n.nombre)}
-                    </span>
-                    <span className={cn(
-                      "text-xl font-black tracking-tighter z-10",
-                      isActive ? "text-white" : "text-white/90"
-                    )}>
-                      {n.deposito || n.costo} <span className="text-[10px] opacity-60">BOB</span>
-                    </span>
-                    
-                    {isActive && (
-                      <motion.div 
-                        layoutId="active-check"
-                        className="absolute -top-1 -right-1 bg-white text-sav-primary p-1.5 rounded-full shadow-lg border-2 border-sav-primary"
-                      >
-                        <CheckCircle2 size={12} />
-                      </motion.div>
-                    )}
-                    {isLocked && <Lock size={12} className="mt-1 text-white/20 z-10" />}
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col">
+                          <span className={cn("text-[7px] font-black uppercase tracking-widest", isActive ? "text-white/60" : "text-sav-muted")}>Tareas</span>
+                          <span className="text-[10px] font-black text-white">{n.num_tareas_diarias} Cupos</span>
+                        </div>
+                        <div className="w-px h-6 bg-white/10" />
+                        <div className="flex flex-col">
+                          <span className={cn("text-[7px] font-black uppercase tracking-widest", isActive ? "text-white/60" : "text-sav-muted")}>Pago/Tarea</span>
+                          <span className="text-[10px] font-black text-white">{Number(n.ganancia_tarea || 0).toFixed(2)} BOB</span>
+                        </div>
+                      </div>
+                      
+                      {isActive && (
+                        <div className="bg-white text-sav-primary p-1 rounded-full shadow-lg border border-sav-primary">
+                          <CheckCircle2 size={10} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Decorative Background Icon */}
+                    <div className="absolute right-[-10px] bottom-[-10px] opacity-[0.03] rotate-12 group-hover:rotate-[20deg] transition-transform duration-700">
+                      <TrendingUp size={100} />
+                    </div>
                   </motion.button>
                 );
               })}

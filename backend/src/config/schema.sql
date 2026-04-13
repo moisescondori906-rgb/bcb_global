@@ -1,21 +1,25 @@
--- SAV - Schema de MySQL (Traducción Completa Automática)
+-- SAV - MySQL Production Schema (Optimized for High Concurrency)
+-- Generated for Contabo Server
 
-CREATE TABLE niveles (
-  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  codigo VARCHAR(20) UNIQUE NOT NULL,
-  nombre VARCHAR(50) NOT NULL,
-  deposito DECIMAL(12,2) DEFAULT 0,
-  ingreso_diario DECIMAL(12,2) DEFAULT 0,
-  num_tareas_diarias INT DEFAULT 4,
-  comision_por_tarea DECIMAL(12,2) DEFAULT 1.80,
-  ingreso_mensual DECIMAL(12,2),
-  ingreso_anual DECIMAL(12,2),
-  orden INT DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+SET FOREIGN_KEY_CHECKS = 0;
 
-CREATE TABLE usuarios (
-  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+-- 1. NIVELES (Fuente de verdad económica)
+CREATE TABLE IF NOT EXISTS niveles (
+  id VARCHAR(36) PRIMARY KEY,
+  codigo VARCHAR(50) UNIQUE NOT NULL, -- pasante, Global 1, Global 2...
+  nombre VARCHAR(100) NOT NULL,
+  deposito DECIMAL(20, 2) DEFAULT 0.00,
+  ganancia_tarea DECIMAL(20, 2) DEFAULT 0.00, -- Unificado: Pago por tarea según nivel
+  num_tareas_diarias INT DEFAULT 0,
+  orden INT DEFAULT 0, -- Para jerarquía (S1 < S2...)
+  activo TINYINT(1) DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_niveles_orden (orden)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. USUARIOS
+CREATE TABLE IF NOT EXISTS usuarios (
+  id VARCHAR(36) PRIMARY KEY,
   telefono VARCHAR(20) UNIQUE NOT NULL,
   nombre_usuario VARCHAR(100) NOT NULL,
   nombre_real VARCHAR(200),
@@ -25,115 +29,199 @@ CREATE TABLE usuarios (
   invitado_por VARCHAR(36),
   nivel_id VARCHAR(36),
   avatar_url TEXT,
-  saldo_principal DECIMAL(12,2) DEFAULT 0,
-  saldo_comisiones DECIMAL(12,2) DEFAULT 0,
-  rol VARCHAR(20) DEFAULT 'usuario',
+  saldo_principal DECIMAL(20, 2) DEFAULT 0.00,
+  saldo_comisiones DECIMAL(20, 2) DEFAULT 0.00,
+  rol ENUM('usuario', 'admin') DEFAULT 'usuario',
   bloqueado TINYINT(1) DEFAULT 0,
-  oportunidades_sorteo INT DEFAULT 0,
+  tickets_ruleta INT DEFAULT 0,
+  primer_ascenso_completado TINYINT(1) DEFAULT 0,
   last_device_id TEXT,
-  intentos_login INT DEFAULT 0,
-  bloqueado_hasta DATETIME,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (invitado_por) REFERENCES usuarios(id),
-  FOREIGN KEY (nivel_id) REFERENCES niveles(id)
-);
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (invitado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+  FOREIGN KEY (nivel_id) REFERENCES niveles(id) ON DELETE SET NULL,
+  INDEX idx_usuarios_telefono (telefono),
+  INDEX idx_usuarios_invitado_por (invitado_por),
+  INDEX idx_usuarios_codigo_inv (codigo_invitacion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE tarjetas_bancarias (
-  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  usuario_id VARCHAR(36),
-  tipo VARCHAR(50) NOT NULL,
-  numero_masked VARCHAR(50),
-  nombre_banco VARCHAR(100),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+-- 3. TAREAS (Contenido Visual Global)
+CREATE TABLE IF NOT EXISTS tareas (
+  id VARCHAR(36) PRIMARY KEY,
+  nombre VARCHAR(200) NOT NULL,
+  descripcion TEXT,
+  video_url TEXT NOT NULL,
+  pregunta TEXT,
+  opciones JSON, -- ["Opción A", "Opción B"...]
+  respuesta_correcta TEXT,
+  activa TINYINT(1) DEFAULT 1,
+  orden INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 4. ACTIVIDAD TAREAS (Idempotencia y Registro)
+CREATE TABLE IF NOT EXISTS actividad_tareas (
+  id VARCHAR(36) PRIMARY KEY,
+  usuario_id VARCHAR(36) NOT NULL,
+  tarea_id VARCHAR(36) NOT NULL,
+  monto_ganado DECIMAL(20, 2) NOT NULL,
+  fecha_dia DATE NOT NULL, -- Para limitar tareas diarias (YYYY-MM-DD)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  FOREIGN KEY (tarea_id) REFERENCES tareas(id) ON DELETE CASCADE,
+  INDEX idx_actividad_usuario_dia (usuario_id, fecha_dia),
+  -- Evitar doble acreditación de la misma tarea para el mismo usuario el mismo día
+  UNIQUE KEY unique_user_task_day (usuario_id, tarea_id, fecha_dia)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 5. MOVIMIENTOS SALDO (Trazabilidad Total)
+CREATE TABLE IF NOT EXISTS movimientos_saldo (
+  id VARCHAR(36) PRIMARY KEY,
+  usuario_id VARCHAR(36) NOT NULL,
+  tipo_billetera ENUM('principal', 'comisiones') NOT NULL,
+  tipo_movimiento VARCHAR(50) NOT NULL, -- tarea, inversion_red, tarea_red, retiro, recarga, ajuste
+  monto DECIMAL(20, 2) NOT NULL,
+  saldo_anterior DECIMAL(20, 2) NOT NULL,
+  saldo_nuevo DECIMAL(20, 2) NOT NULL,
+  descripcion TEXT,
+  referencia_id VARCHAR(36), -- ID de recarga, retiro, tarea o usuario que generó comisión
+  fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  INDEX idx_movimientos_usuario_fecha (usuario_id, fecha),
+  INDEX idx_movimientos_tipo (tipo_movimiento)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 6. RECARGAS
+CREATE TABLE IF NOT EXISTS recargas (
+  id VARCHAR(36) PRIMARY KEY,
+  usuario_id VARCHAR(36) NOT NULL,
+  monto DECIMAL(20, 2) NOT NULL,
+  comprobante_url TEXT,
+  metodo_pago VARCHAR(50),
+  estado ENUM('pendiente', 'aprobada', 'rechazada') DEFAULT 'pendiente',
+  admin_notas TEXT,
+  procesado_por VARCHAR(36),
+  procesado_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  FOREIGN KEY (procesado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+  INDEX idx_recargas_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 7. RETIROS
+CREATE TABLE IF NOT EXISTS retiros (
+  id VARCHAR(36) PRIMARY KEY,
+  usuario_id VARCHAR(36) NOT NULL,
+  monto DECIMAL(20, 2) NOT NULL,
+  monto_neto DECIMAL(20, 2) NOT NULL, -- Monto menos comisión
+  comision_aplicada DECIMAL(20, 2) NOT NULL,
+  tipo_billetera ENUM('principal', 'comisiones') NOT NULL,
+  estado ENUM('pendiente', 'aprobado', 'rechazado', 'pagado') DEFAULT 'pendiente',
+  datos_bancarios JSON, -- Copia de la tarjeta al momento del retiro
+  admin_notas TEXT,
+  procesado_por VARCHAR(36),
+  procesado_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  FOREIGN KEY (procesado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
+  INDEX idx_retiros_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. TARJETAS BANCARIAS
+CREATE TABLE IF NOT EXISTS tarjetas_bancarias (
+  id VARCHAR(36) PRIMARY KEY,
+  usuario_id VARCHAR(36) NOT NULL,
+  nombre_banco VARCHAR(100) NOT NULL,
+  tipo_cuenta VARCHAR(50),
+  numero_cuenta VARCHAR(100) NOT NULL,
+  nombre_titular VARCHAR(200) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE metodos_qr (
-  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+-- 9. CONFIGURACIÓN GLOBAL (Unificada)
+CREATE TABLE IF NOT EXISTS configuraciones (
+  clave VARCHAR(100) PRIMARY KEY,
+  valor JSON NOT NULL,
+  descripcion TEXT,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 10. MENSAJES GLOBALES
+CREATE TABLE IF NOT EXISTS mensajes_globales (
+  id VARCHAR(36) PRIMARY KEY,
+  titulo VARCHAR(200) NOT NULL,
+  contenido TEXT NOT NULL,
+  imagen_url TEXT,
+  activo TINYINT(1) DEFAULT 1,
+  fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 11. METODOS QR (Admin)
+CREATE TABLE IF NOT EXISTS metodos_qr (
+  id VARCHAR(36) PRIMARY KEY,
   nombre_titular VARCHAR(200) NOT NULL,
   imagen_qr_url TEXT,
   activo TINYINT(1) DEFAULT 1,
   orden INT DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE tareas (
-  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  nivel_id VARCHAR(36),
-  nombre VARCHAR(200) NOT NULL,
-  descripcion TEXT,
-  recompensa DECIMAL(12,2) DEFAULT 1.80,
-  activa TINYINT(1) DEFAULT 1,
-  orden INT DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (nivel_id) REFERENCES niveles(id)
-);
-
-CREATE TABLE videos (
-  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  tarea_id VARCHAR(36),
-  nivel_id VARCHAR(36),
-  url TEXT NOT NULL,
+-- 12. BANNERS CARRUSEL
+CREATE TABLE IF NOT EXISTS banners_carrusel (
+  id VARCHAR(36) PRIMARY KEY,
+  imagen_url TEXT NOT NULL,
   titulo VARCHAR(200),
-  duracion_segundos INT,
+  link_url TEXT,
+  activo TINYINT(1) DEFAULT 1,
   orden INT DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (tarea_id) REFERENCES tareas(id),
-  FOREIGN KEY (nivel_id) REFERENCES niveles(id)
-);
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE recargas (
-  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  usuario_id VARCHAR(36),
-  metodo_qr_id VARCHAR(36),
-  monto DECIMAL(12,2) NOT NULL,
-  comprobante_url TEXT,
-  modo VARCHAR(50),
-  estado VARCHAR(20) DEFAULT 'pendiente',
-  admin_notas TEXT,
-  procesado_por VARCHAR(36),
-  procesado_at DATETIME,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-  FOREIGN KEY (metodo_qr_id) REFERENCES metodos_qr(id),
-  FOREIGN KEY (procesado_por) REFERENCES usuarios(id)
-);
+-- 13. PREMIOS RULETA
+CREATE TABLE IF NOT EXISTS premios_ruleta (
+  id VARCHAR(36) PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  tipo ENUM('saldo', 'comision', 'tickets', 'nada') NOT NULL,
+  valor DECIMAL(20, 2) DEFAULT 0.00,
+  probabilidad INT DEFAULT 10, -- 0 a 100
+  activo TINYINT(1) DEFAULT 1,
+  orden INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE retiros (
-  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  usuario_id VARCHAR(36),
-  tarjeta_id VARCHAR(36),
-  monto DECIMAL(12,2) NOT NULL,
-  tipo_billetera VARCHAR(20),
-  estado VARCHAR(20) DEFAULT 'pendiente',
-  admin_notas TEXT,
-  procesado_por VARCHAR(36),
-  procesado_at DATETIME,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-  FOREIGN KEY (tarjeta_id) REFERENCES tarjetas_bancarias(id),
-  FOREIGN KEY (procesado_por) REFERENCES usuarios(id)
-);
+-- 14. SORTEOS GANADORES
+CREATE TABLE IF NOT EXISTS sorteos_ganadores (
+  id VARCHAR(36) PRIMARY KEY,
+  usuario_id VARCHAR(36) NOT NULL,
+  premio_id VARCHAR(36) NOT NULL,
+  monto_ganado DECIMAL(20, 2) DEFAULT 0.00,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  FOREIGN KEY (premio_id) REFERENCES premios_ruleta(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE transacciones (
-  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  usuario_id VARCHAR(36),
-  tipo VARCHAR(50) NOT NULL,
-  concepto VARCHAR(200),
-  monto DECIMAL(12,2) NOT NULL,
-  referencia_id VARCHAR(36),
-  referencia_tipo VARCHAR(50),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-);
+-- 15. RESPUESTAS CUESTIONARIO
+CREATE TABLE IF NOT EXISTS respuestas_cuestionario (
+  id VARCHAR(36) PRIMARY KEY,
+  usuario_id VARCHAR(36) NOT NULL,
+  respuestas JSON NOT NULL,
+  fecha_dia DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_user_questionnaire_day (usuario_id, fecha_dia)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE logs (
-  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  accion VARCHAR(100) NOT NULL,
-  usuario_id VARCHAR(36),
-  detalle JSON,
-  ip VARCHAR(50),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- 16. NOTIFICACIONES
+CREATE TABLE IF NOT EXISTS notificaciones (
+  id VARCHAR(36) PRIMARY KEY,
+  usuario_id VARCHAR(36) NOT NULL,
+  titulo VARCHAR(200) NOT NULL,
+  mensaje TEXT NOT NULL,
+  leida TINYINT(1) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  INDEX idx_notif_usuario_leida (usuario_id, leida)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET FOREIGN_KEY_CHECKS = 1;

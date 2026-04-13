@@ -1,231 +1,103 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
-import { getRetirosByUser, createRetiro, updateRetiro, getTarjetasByUser, getPublicContent, updateUser, boliviaTime, getLevels, isUserPunished } from '../lib/queries.js';
+import { 
+  getPublicContent, getLevels, boliviaTime, findUserWithAuthSecrets
+} from '../lib/queries.js';
+import { query, queryOne, transaction } from '../config/db.js';
 import { authenticate } from '../middleware/auth.js';
 import { attachRequestUser } from '../middleware/requestContext.js';
-import { mergePublicContent } from '../data/publicContentDefaults.js';
-import { isScheduleOpen } from '../lib/schedule.js';
-import { telegram } from '../lib/telegram.js';
 import logger from '../lib/logger.js';
 
 const router = Router();
 
-// In-memory lock to prevent duplicate withdrawal requests
-const withdrawalLocks = new Set();
+router.use(authenticate);
+router.use(attachRequestUser);
 
-const MONTOS = [25, 100, 500, 1500, 5000, 10000];
+const MONTOS_PERMITIDOS = [25, 100, 500, 1500, 5000, 10000];
 
 router.get('/montos', (req, res) => {
-  res.json(MONTOS);
+  res.json(MONTOS_PERMITIDOS);
 });
 
-router.get('/', authenticate, attachRequestUser, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const list = await getRetirosByUser(req.user.id);
+    const list = await query(`SELECT * FROM retiros WHERE usuario_id = ? ORDER BY created_at DESC`, [req.user.id]);
     res.json(list);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener tus retiros' });
   }
 });
 
-router.post('/', authenticate, attachRequestUser, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const { monto, tipo_billetera, password_fondo, qr_retiro, tarjeta_id } = req.body;
+    const { monto, tipo_billetera, password_fondo, tarjeta_id } = req.body;
     const user = req.requestUser;
-    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-    // --- BLOQUEO ANTI-DUPLICADO (Race Condition Prevention) ---
-    const lockKey = `withdraw:${user.id}`;
-    if (withdrawalLocks.has(lockKey)) {
-      logger.warn(`[BLOQUEO] Petición duplicada de retiro detectada para ${lockKey}.`);
-      return res.status(429).json({ error: 'Procesando tu solicitud de retiro anterior. Por favor, espera.' });
-    }
+    // 1. Validaciones básicas
+    const m = parseFloat(monto);
+    if (!MONTOS_PERMITIDOS.includes(m)) return res.status(400).json({ error: 'Monto no permitido' });
+
+    // 2. Verificar contraseña de fondo
+    const userAuth = await findUserWithAuthSecrets(user.id);
+    if (!userAuth.password_fondo_hash) return res.status(400).json({ error: 'Configura tu contraseña de fondo primero.' });
+    const passOk = await bcrypt.compare(password_fondo, userAuth.password_fondo_hash);
+    if (!passOk) return res.status(401).json({ error: 'Contraseña de fondo incorrecta.' });
+
+    // 3. Reglas de Negocio (Días de retiro por nivel)
+    const levels = await getLevels();
+    const userLevel = levels.find(l => String(l.id) === String(user.nivel_id));
+    const day = boliviaTime.getDay(); // 0=Dom, 1=Lun, 2=Mar...
     
-    withdrawalLocks.add(lockKey);
-    const lockTimeout = setTimeout(() => withdrawalLocks.delete(lockKey), 30000);
+    const rules = {
+      'Global 1': 2, // Martes
+      'Global 2': 3, // Miércoles
+      'Global 3': 4, // Jueves
+      'Global 4': 5, // Viernes
+      'Global 5': 6, // Sábado
+    };
 
-    try {
-      // VERIFICAR CASTIGO ACTIVO (Bloqueo de retiros)
-      const castigado = await isUserPunished(user.id);
-      if (castigado) {
-        return res.status(403).json({ 
-          error: 'No puedes realizar retiros mientras tengas un castigo activo por no responder el cuestionario.' 
-        });
-      }
-
-    // Validar horario por nivel (lista en memoria / caché)
-    const niveles = await getLevels();
-    const userLevel = niveles.find(n => String(n.id) === String(user.nivel_id));
-    const userLevelCode = String(userLevel?.codigo || '').toUpperCase();
-    
-    // REGLA: Pasante no puede retirar
-    if (userLevelCode === 'PASANTE') {
-      return res.status(403).json({ error: 'Como Pasante no puedes realizar retiros. Debes subir de nivel primero.' });
+    const allowedDay = rules[userLevel?.codigo];
+    if (allowedDay !== undefined && day !== allowedDay) {
+      return res.status(403).json({ error: `Tu nivel solo permite retirar los días asignados.` });
     }
 
-    // REGLA: Días de retiro por nivel
-    // Global 1: Martes(2), Global 2: Miércoles(3), Global 3: Jueves(4), Global 4: Viernes(5), Global 5+: Sábado(6)
-    const day = boliviaTime.getDay();
-    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    
-    let allowedDay = -1;
-    let levelName = '';
+    // 4. Ejecución Transaccional del Retiro
+    const result = await transaction(async (conn) => {
+      // Bloquear usuario para evitar race conditions de saldo
+      const [u] = await conn.query(`SELECT saldo_principal, saldo_comisiones FROM usuarios WHERE id = ? FOR UPDATE`, [user.id]);
+      const field = tipo_billetera === 'comisiones' ? 'saldo_comisiones' : 'saldo_principal';
+      const saldoActual = Number(u[0][field]);
 
-    if (userLevelCode === 'GLOBAL 1') { allowedDay = 2; levelName = 'Global 1'; }
-    else if (userLevelCode === 'GLOBAL 2') { allowedDay = 3; levelName = 'Global 2'; }
-    else if (userLevelCode === 'GLOBAL 3') { allowedDay = 4; levelName = 'Global 3'; }
-    else if (userLevelCode === 'GLOBAL 4') { allowedDay = 5; levelName = 'Global 4'; }
-    else if (userLevelCode.startsWith('GLOBAL')) { 
-      const levelNum = parseInt(userLevelCode.replace('GLOBAL ', ''));
-      if (levelNum >= 5) { allowedDay = 6; levelName = `Global ${levelNum}`; }
-    }
+      if (saldoActual < m) throw new Error('Saldo insuficiente');
 
-    if (allowedDay !== -1 && day !== allowedDay) {
-      return res.status(403).json({ 
-        error: `Los retiros para el nivel ${levelName} solo están permitidos los días ${dayNames[allowedDay]}. Hoy es ${dayNames[day]}.` 
-      });
-    }
-
-    let sched;
-    if (userLevel && userLevel.retiro_horario_habilitado) {
-      // Generar array de días desde inicio a fin
-      const diasHabilitados = [];
-      let currentDay = userLevel.retiro_dia_inicio;
-      const endDay = userLevel.retiro_dia_fin;
-      
-      if (currentDay <= endDay) {
-        for (let i = currentDay; i <= endDay; i++) diasHabilitados.push(i);
-      } else {
-        // Rango que cruza el fin de semana (ej: Viernes a Lunes)
-        for (let i = currentDay; i <= 6; i++) diasHabilitados.push(i);
-        for (let i = 0; i <= endDay; i++) diasHabilitados.push(i);
-      }
-
-      sched = isScheduleOpen({
-        enabled: true,
-        dias_semana: diasHabilitados,
-        hora_inicio: userLevel.retiro_hora_inicio?.substring(0, 5), // Quitar segundos si los tiene
-        hora_fin: userLevel.retiro_hora_fin?.substring(0, 5)
-      });
-    } else {
-      // Usar horario global
+      // Calcular comisión (12% por defecto)
       const config = await getPublicContent();
-      const pc = mergePublicContent(config);
-      sched = isScheduleOpen(pc.horario_retiro);
-    }
+      const pct = parseFloat(config.comision_retiro || 12);
+      const comision = Number((m * (pct / 100)).toFixed(2));
+      const neto = m - comision;
 
-    if (!sched.ok) {
-      return res.status(400).json({
-        error: `Intento de retiro fuera del horario permitido para tu nivel: ${sched.message}`,
-      });
-    }
+      const newBalance = saldoActual - m;
+      const id = uuidv4();
 
-    if (!user.password_fondo_hash) return res.status(400).json({ error: 'Debes configurar la contraseña del fondo' });
-    const ok = await bcrypt.compare(password_fondo || '', user.password_fondo_hash);
-    if (!ok) return res.status(400).json({ error: 'La contraseña de fondos es incorrecta, por favor confirma' });
-    if (!qr_retiro) return res.status(400).json({ error: 'Debes subir tu QR para el retiro' });
+      // Descontar saldo
+      await conn.query(`UPDATE usuarios SET ${field} = ? WHERE id = ?`, [newBalance, user.id]);
 
-    // Validar un solo retiro por día (Horario Bolivia)
-    const userWithdrawals = await getRetirosByUser(user.id);
-    const todayStr = boliviaTime.todayStr();
-    
-    const hasWithdrawalToday = userWithdrawals.some(w => {
-      // Solo contamos retiros que no estén rechazados
-      return w.estado !== 'rechazado' && boliviaTime.getDateString(w.created_at) === todayStr;
+      // Crear registro de retiro
+      await conn.query(`INSERT INTO retiros (id, usuario_id, monto, monto_neto, comision_aplicada, tipo_billetera, estado) 
+        VALUES (?, ?, ?, ?, ?, ?, 'pendiente')`, [id, user.id, m, neto, comision, tipo_billetera]);
+
+      // Registrar movimiento
+      await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
+        VALUES (?, ?, ?, 'retiro', ?, ?, ?, ?, ?)`, 
+        [uuidv4(), user.id, tipo_billetera, -m, saldoActual, newBalance, id, 'Solicitud de retiro enviada']);
+
+      return { id, ok: true };
     });
 
-    if (hasWithdrawalToday) {
-      return res.status(400).json({ error: 'Solo puedes realizar un retiro por día. Si tu retiro previo fue rechazado, contacta a soporte.' });
-    }
-
-    const m = parseFloat(monto);
-    if (!MONTOS.includes(m)) return res.status(400).json({ error: 'Monto no permitido' });
-    
-    // Obtener comisión desde la configuración global (default 12%)
-    const config = await getPublicContent();
-    const pc = mergePublicContent(config);
-    const porcentajeComision = parseFloat(pc.comision_retiro) || 12;
-    const comision = m * (porcentajeComision / 100);
-    const montoARecibir = m - comision;
-    
-    const saldo = tipo_billetera === 'comisiones' ? (user.saldo_comisiones || 0) : (user.saldo_principal || 0);
-    if (saldo < m) return res.status(400).json({ error: 'Saldo insuficiente' });
-    
-    const tarjetas = await getTarjetasByUser(user.id);
-    if (tarjetas.length === 0) {
-      return res.status(400).json({ error: 'Debes agregar al menos una cuenta bancaria en Seguridad de la cuenta' });
-    }
-    let tarjetaElegida = tarjetas[0];
-    if (tarjeta_id) {
-      tarjetaElegida = tarjetas.find((t) => t.id === tarjeta_id) || tarjetaElegida;
-    }
-    const retiro = {
-      id: uuidv4(),
-      usuario_id: user.id,
-      tarjeta_id: tarjetaElegida?.id || null,
-      monto: m,
-      comision: comision,
-      monto_a_recibir: montoARecibir,
-      tipo_billetera: tipo_billetera || 'principal',
-      qr_retiro: qr_retiro,
-      estado: 'pendiente',
-      created_at: boliviaTime.now().toISOString(),
-    };
-    await createRetiro(retiro);
-    
-    const updates = {};
-    if (tipo_billetera === 'comisiones') updates.saldo_comisiones = user.saldo_comisiones - m;
-    else updates.saldo_principal = user.saldo_principal - m;
-    await updateUser(user.id, updates);
-
-    // Responder inmediatamente al cliente
-    res.json(retiro);
-
-    // Notificar por Telegram (Bot de Retiros) en segundo plano
-    (async () => {
-      try {
-        const msg = `<b>💸 SOLICITUD DE RETIRO PENDIENTE</b>\n\n` +
-          `<b>👤 Usuario:</b> ${user.nombre_usuario}\n` +
-          `<b>📛 Nombre Real:</b> ${user.nombre_real || 'No especificado'}\n` +
-          `<b>📱 Teléfono:</b> ${user.telefono || 'No disponible'}\n\n` +
-          `<b>💰 MONTO SOLICITADO:</b> ${retiro.monto.toFixed(2)} BOB\n` +
-          `<b>🧾 Comisión (10%):</b> -${retiro.comision.toFixed(2)} BOB\n` +
-          `<b>💵 NETO A PAGAR:</b> <u>${retiro.monto_a_recibir.toFixed(2)} BOB</u>\n\n` +
-          `<b>🏦 Banco/Billetera:</b> ${tarjetaElegida?.tipo || 'N/A'}\n` +
-          `<b>👤 Titular:</b> ${tarjetaElegida?.nombre_banco || 'N/A'}\n` +
-          `<b>🔢 Nro. Cuenta:</b> <code>${tarjetaElegida?.numero_masked || 'N/A'}</code>\n\n` +
-          `<b>🕒 Fecha:</b> ${new Date(retiro.created_at).toLocaleString('es-BO', { timeZone: 'America/La_Paz' })}`;
-        
-        let results = [];
-        if (retiro.qr_retiro && retiro.qr_retiro.startsWith('data:image')) {
-          logger.info(`[Withdrawal] Sending Telegram with photo for ${retiro.id}`);
-          results = await telegram.sendRetiroConFoto(msg, retiro.qr_retiro, retiro.id);
-          logger.info(`[Withdrawal] Telegram with photo sent for ${retiro.id}`);
-        } else {
-          logger.info(`[Withdrawal] Sending Telegram text only for ${retiro.id}`);
-          results = await telegram.sendRetiro(msg, retiro.id);
-          logger.info(`[Withdrawal] Telegram text sent for ${retiro.id}`);
-        }
-
-        if (results && results.length > 0) {
-          await updateRetiro(retiro.id, { telegram_metadata: results });
-          logger.info(`[Withdrawal] Metadata stored for ${retiro.id}: ${results.length} messages`);
-        }
-      } catch (tgErr) {
-        logger.error(`[Withdrawal] Error en notificación de Telegram:`, tgErr);
-      }
-    })();
-    
-    } finally {
-      clearTimeout(lockTimeout);
-      withdrawalLocks.delete(lockKey);
-    }
-  } catch (error) {
-    logger.error('[Withdrawal Route Error]:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Error interno al procesar el retiro' });
-    }
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

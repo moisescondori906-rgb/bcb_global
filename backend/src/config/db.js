@@ -1,29 +1,72 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import logger from '../lib/logger.js';
+
 dotenv.config();
 
-// Pool de conexiones (Reemplaza a supabase-js)
-const pool = mysql.createPool({
+// Configuración del Pool de Conexiones optimizado para Contabo y alta concurrencia
+const poolConfig = {
   host: process.env.MYSQL_HOST || 'localhost',
-  user: process.env.MYSQL_USER || 'root',
-  password: process.env.MYSQL_PASSWORD || '',
-  database: process.env.MYSQL_DATABASE || 'sav_db',
+  port: parseInt(process.env.MYSQL_PORT || '3306'),
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 50, // Ajustar según capacidad del servidor Contabo
+  maxIdle: 10, // Conexiones inactivas máximas
+  idleTimeout: 60000, // 60 segundos
   queueLimit: 0,
-  namedPlaceholders: true
-});
-
-export const db = pool;
-
-export const checkDbConnection = async () => {
-    try {
-        const connection = await pool.getConnection();
-        console.log('[MySQL] Conexión establecida exitosamente.');
-        connection.release();
-        return true;
-    } catch (error) {
-        console.error('[MySQL Error] No se pudo conectar a la base de datos:', error.message);
-        return false;
-    }
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
+  // Tipos de datos: Asegurar que DECIMAL se trate como string para precisión total en JS si es necesario, 
+  // o usar un parser específico. mysql2 por defecto devuelve DECIMAL como string.
 };
+
+const pool = mysql.createPool(poolConfig);
+
+/**
+ * Helper centralizado para ejecutar consultas
+ * @param {string} sql - Consulta SQL con placeholders (?)
+ * @param {Array} params - Parámetros para la consulta
+ * @returns {Promise<any>} - Resultado de la consulta
+ */
+export async function query(sql, params) {
+  try {
+    const [results] = await pool.execute(sql, params);
+    return results;
+  } catch (err) {
+    logger.error(`[DB Query Error]: ${err.message} | SQL: ${sql}`);
+    throw err;
+  }
+}
+
+/**
+ * Helper para transacciones SQL (Atomicidad)
+ * @param {Function} callback - Función que recibe la conexión y ejecuta las queries
+ * @returns {Promise<any>} - Resultado del callback
+ */
+export async function transaction(callback) {
+  const connection = await pool.getConnection();
+  await connection.beginTransaction();
+  try {
+    const result = await callback(connection);
+    await connection.commit();
+    return result;
+  } catch (err) {
+    await connection.rollback();
+    logger.error(`[DB Transaction Error]: ${err.message}`);
+    throw err;
+  } finally {
+    connection.release();
+  }
+}
+
+/**
+ * Helper para obtener una sola fila
+ */
+export async function queryOne(sql, params) {
+  const results = await query(sql, params);
+  return results[0] || null;
+}
+
+export default pool;

@@ -38,6 +38,7 @@ import GlobalLoader from '../components/ui/GlobalLoader';
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({ ingresos_hoy: 0, total_acumulado: 0 });
+  const [niveles, setNiveles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pc, setPc] = useState(null);
   const [showSupportMenu, setShowSupportMenu] = useState(false);
@@ -46,9 +47,10 @@ export default function Dashboard() {
     let isMounted = true;
     const loadData = async () => {
       try {
-        const [statsData, pcData] = await Promise.all([
+        const [statsData, pcData, nivelesData] = await Promise.all([
           api.get('/users/stats'),
-          api.publicContent()
+          api.publicContent(),
+          api.levels.list()
         ]);
         
         if (isMounted) {
@@ -57,6 +59,7 @@ export default function Dashboard() {
             total_acumulado: statsData?.total_acumulado ?? 0
           });
           setPc(pcData);
+          setNiveles(nivelesData || []);
           setLoading(false);
         }
       } catch (err) {
@@ -176,7 +179,7 @@ export default function Dashboard() {
               <div className="p-1.5 rounded-lg bg-sav-primary/10">
                 <TrophyIcon size={16} className="text-sav-primary" />
               </div>
-              <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Rendimiento Mensual</h3>
+              <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Resumen Financiero</h3>
             </div>
             <div className="px-2 py-0.5 rounded-full bg-sav-success/10 border border-sav-success/20">
               <span className="text-[8px] font-black text-sav-success uppercase tracking-widest">+12.5%</span>
@@ -198,6 +201,54 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Investment Opportunities - Horizontal Scroll */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <TrendingUpIcon size={16} className="text-sav-primary" />
+              <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Planes de Inversión</h3>
+            </div>
+            <Link to="/vip" className="text-[9px] font-black text-sav-primary uppercase tracking-widest flex items-center gap-1">
+              Ver Todos <ChevronRightIcon size={12} />
+            </Link>
+          </div>
+
+          <div className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar snap-x">
+            {niveles.filter(n => (n.deposito || n.costo) > 0).map((n, i) => {
+              const esActual = n.id === user?.nivel_id;
+              return (
+                <Link 
+                  key={n.id} 
+                  to="/vip"
+                  className={cn(
+                    "min-w-[160px] p-5 rounded-[2rem] border transition-all snap-start relative overflow-hidden group",
+                    esActual ? "bg-sav-primary/10 border-sav-primary/30" : "bg-white/5 border-white/5"
+                  )}
+                >
+                  <div className="space-y-3 relative z-10">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[10px] font-black text-white/90 uppercase tracking-tighter">{n.nombre}</span>
+                      {esActual && <div className="w-1.5 h-1.5 rounded-full bg-sav-success animate-pulse" />}
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest leading-none">Renta Diaria</p>
+                      <p className="text-lg font-black text-white">+{Number(n.ingreso_diario || (Number(n.num_tareas_diarias || 0) * Number(n.ganancia_tarea || 0))).toFixed(2)}</p>
+                    </div>
+                    <div className="pt-3 border-t border-white/5 flex justify-between items-center">
+                      <span className="text-[8px] font-bold text-sav-muted uppercase">Inversión</span>
+                      <span className="text-[10px] font-black text-white">{Number(n.deposito).toLocaleString()} BOB</span>
+                    </div>
+                  </div>
+                  {/* Decor */}
+                  <div className="absolute right-[-10px] bottom-[-10px] opacity-[0.05] rotate-12 group-hover:rotate-[25deg] transition-transform duration-700">
+                    <TrendingUpIcon size={60} />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
 
         {/* Actions Grid */}
         <ActionGrid items={actionItems} />

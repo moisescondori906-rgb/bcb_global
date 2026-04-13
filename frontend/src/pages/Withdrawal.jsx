@@ -25,7 +25,8 @@ import {
   CreditCard as CreditCardIcon, 
   Banknote as BanknoteIcon, 
   QrCode as QrCodeIcon,
-  Lock as LockIcon
+  Lock as LockIcon,
+  Plus as PlusIcon
 } from 'lucide-react';
 import { isScheduleOpen } from '../lib/schedule';
 import imageCompression from 'browser-image-compression';
@@ -52,6 +53,7 @@ export default function Withdrawal() {
   const [loading, setLoading] = useState(false);
   const [pc, setPc] = useState(null);
   const [userLevel, setUserLevel] = useState(null);
+  const [niveles, setNiveles] = useState([]);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [hasWithdrawalToday, setHasWithdrawalToday] = useState(false);
   const [isPunished, setIsPunished] = useState(false);
@@ -89,6 +91,7 @@ export default function Withdrawal() {
 
     api.levels.list().then((list) => {
       if (!isMounted) return;
+      setNiveles(list || []);
       if (user?.nivel_id && list) {
         const found = list.find(l => l.id === user.nivel_id);
         if (found) setUserLevel(found);
@@ -270,6 +273,53 @@ export default function Withdrawal() {
                       {tipoBilletera === b.id && <CheckIcon size={14} strokeWidth={4} />}
                     </div>
                   </Card>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Visibility Everywhere - Reinvest Suggestion */}
+          <section className="space-y-6">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-lg">
+                  <TrendingUpIcon size={16} />
+                </div>
+                <h2 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">¿Prefieres Reinvertir?</h2>
+              </div>
+              <Link to="/vip" className="text-[9px] font-black text-sav-primary uppercase tracking-widest flex items-center gap-1">
+                Ver Opciones <ChevronRightIcon size={12} />
+              </Link>
+            </div>
+
+            <div className="flex gap-4 overflow-x-auto pb-2 px-1 no-scrollbar snap-x">
+              {niveles.filter(n => (n.deposito || n.costo) > 0).map((n, i) => {
+                const esActual = n.id === user?.nivel_id;
+                const esSuperior = n.orden > (userLevel?.orden || 0);
+                
+                if (!esSuperior && !esActual) return null;
+
+                return (
+                  <motion.div
+                    key={n.id}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate('/vip')}
+                    className={cn(
+                      "min-w-[140px] p-4 rounded-3xl border transition-all snap-start relative overflow-hidden group cursor-pointer",
+                      esActual ? "bg-sav-primary/10 border-sav-primary/20" : "bg-white/5 border-white/5"
+                    )}
+                  >
+                    <div className="space-y-2 relative z-10">
+                      <p className="text-[9px] font-black text-white/80 uppercase tracking-tighter truncate">{n.nombre}</p>
+                      <div className="space-y-0.5">
+                        <p className="text-[7px] font-black text-sav-muted uppercase tracking-widest leading-none">Renta Diaria</p>
+                        <p className="text-sm font-black text-sav-success">+{Number(n.ingreso_diario || (Number(n.num_tareas_diarias || 0) * Number(n.ganancia_tarea || 0))).toFixed(2)}</p>
+                      </div>
+                    </div>
+                    <div className="absolute right-[-5px] bottom-[-5px] opacity-[0.05] rotate-12 group-hover:rotate-[25deg] transition-transform duration-700">
+                      <PlusIcon size={40} />
+                    </div>
+                  </motion.div>
                 );
               })}
             </div>
