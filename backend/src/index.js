@@ -120,11 +120,11 @@ app.use('/api/auth', rateLimiter(60000, 15), authRoutes);
 app.use('/api/users/stats', rateLimiter(60000, 20)); // Limitar stats específicamente
 app.use('/api/users', userRoutes);
 app.use('/api/tasks', rateLimiter(60000, 40), taskRoutes);
-app.use('/api/levels', levelRoutes);
+app.use('/api/levels', rateLimiter(60000, 60), levelRoutes);
 app.use('/api/recharges', rechargeRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/sorteo', sorteoRoutes);
+app.use('/api/admin', rateLimiter(60000, 30), adminRoutes);
+app.use('/api/sorteo', rateLimiter(60000, 30), sorteoRoutes);
 app.use('/api/telegram-webhook', telegramWebhookRoutes);
 console.log('[SERVER] Rutas de API configuradas.');
 
@@ -142,7 +142,7 @@ app.get('/api/banners', async (req, res) => {
   }
 });
 
-app.get('/api/public-content', async (req, res) => {
+app.get('/api/public-content', rateLimiter(60000, 60), async (req, res) => {
   try {
     const { getPublicContent } = await import('./lib/queries.js');
     const config = await getPublicContent();
