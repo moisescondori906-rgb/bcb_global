@@ -10,7 +10,7 @@ import {
 } from '../lib/queries.js';
 import { query, queryOne } from '../config/db.js';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
-import { uploadToCloudinary, uploadVideoBuffer } from '../lib/cloudinary.js';
+import { uploadToCloudinary, uploadVideoBuffer } from '../config/cloudinary.js';
 import logger from '../lib/logger.js';
 
 const router = Router();
@@ -277,8 +277,8 @@ router.post('/tareas/video', uploadToCloudinary.single('video'), async (req, res
     }
     res.json({
       ok: true,
-      video_url: req.file.path,
-      public_id: req.file.filename,
+      video_url: req.file.secure_url || req.file.path,
+      public_id: req.file.public_id,
       original_name: req.file.originalname,
       size_bytes: req.file.size
     });

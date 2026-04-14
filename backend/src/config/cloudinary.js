@@ -1,14 +1,12 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import multer from 'multer';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
 });
 
 const storage = new CloudinaryStorage({
@@ -18,6 +16,7 @@ const storage = new CloudinaryStorage({
     resource_type: 'video',
     allowed_formats: ['mp4', 'webm', 'mov', 'avi'],
     transformation: [{ quality: 'auto:good' }],
+    access_mode: 'public',
   },
 });
 
@@ -43,6 +42,7 @@ export const uploadVideoBuffer = (buffer, options = {}) => {
         folder: 'bcb_global/tareas',
         resource_type: 'video',
         transformation: [{ quality: 'auto:good' }],
+        access_mode: 'public',
         ...options,
       },
       (error, result) => {
@@ -52,6 +52,29 @@ export const uploadVideoBuffer = (buffer, options = {}) => {
     );
     uploadStream.end(buffer);
   });
+};
+
+export const uploadImageBuffer = (buffer, options = {}) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'bcb_global/imagenes',
+        resource_type: 'image',
+        transformation: [{ quality: 'auto:good' }],
+        access_mode: 'public',
+        ...options,
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    uploadStream.end(buffer);
+  });
+};
+
+export const deleteFromCloudinary = (publicId) => {
+  return cloudinary.uploader.destroy(publicId);
 };
 
 export default cloudinary;
