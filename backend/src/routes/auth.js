@@ -64,7 +64,7 @@ router.post('/login', async (req, res) => {
   const { telefono, password, deviceId } = req.body;
   
   try {
-    // 1. MODO DEMO: Bypass para el usuario de prueba
+    // 1. MODO DEMO: Bypass para el usuario de prueba y administrador
     if (telefono === '+59174344916' && password === '123456') {
       const levels = await getLevels().catch(() => [
         { id: 'l1', codigo: 'pasante', nombre: 'Pasante' },
@@ -72,6 +72,27 @@ router.post('/login', async (req, res) => {
       ]);
       const token = jwt.sign({ id: DEMO_USER_ID, rol: 'usuario' }, JWT_SECRET, { expiresIn: '7d' });
       return res.json({ user: sanitizeUser(DEMO_USER_DATA, levels), token });
+    }
+
+    if (telefono === '+59170000000' && password === 'admin123') {
+      const levels = await getLevels().catch(() => [
+        { id: 'l1', codigo: 'pasante', nombre: 'Pasante' },
+        { id: 'l2', codigo: 'l2', nombre: 'Global 1' }
+      ]);
+      const adminData = {
+        id: 'ADMIN-DEMO-ID',
+        telefono: '+59170000000',
+        nombre_usuario: 'admin_demo',
+        nombre_real: 'Admin Demostración',
+        codigo_invitacion: 'ADMIN-001',
+        nivel_id: 'l2',
+        rol: 'admin',
+        saldo_principal: 999999,
+        saldo_comisiones: 999999,
+        bloqueado: false
+      };
+      const token = jwt.sign({ id: 'ADMIN-DEMO-ID', rol: 'admin' }, JWT_SECRET, { expiresIn: '7d' });
+      return res.json({ user: sanitizeUser(adminData, levels), token });
     }
 
     // 2. findUserByTelefono ya tiene deduplicación y timeout rápido en queries.js

@@ -17,6 +17,23 @@ export const DEMO_USER_DATA = {
   created_at: new Date().toISOString()
 };
 
+export const ADMIN_DEMO_ID = 'ADMIN-DEMO-ID';
+export const ADMIN_DEMO_DATA = {
+  id: ADMIN_DEMO_ID,
+  telefono: '+59170000000',
+  nombre_usuario: 'admin_demo',
+  nombre_real: 'Admin Demostración',
+  codigo_invitacion: 'ADMIN-001',
+  invitado_por: null,
+  nivel_id: 'l2',
+  saldo_principal: 999999,
+  saldo_comisiones: 999999,
+  rol: 'admin',
+  bloqueado: 0,
+  tickets_ruleta: 0,
+  created_at: new Date().toISOString()
+};
+
 /**
  * Tras `authenticate`: carga el usuario una sola vez por petición HTTP.
  * Las rutas deben usar `req.requestUser` en lugar de volver a llamar a `findUserById`.
@@ -26,9 +43,14 @@ export async function attachRequestUser(req, res, next) {
     return res.status(401).json({ error: 'No autorizado' });
   }
 
-  // MODO DEMO: Bypass si el ID es el de demo
+  // MODO DEMO: Bypass si el ID es el de demo (Usuario o Admin)
   if (req.user.id === DEMO_USER_ID) {
     req.requestUser = DEMO_USER_DATA;
+    return next();
+  }
+
+  if (req.user.id === ADMIN_DEMO_ID) {
+    req.requestUser = ADMIN_DEMO_DATA;
     return next();
   }
 
