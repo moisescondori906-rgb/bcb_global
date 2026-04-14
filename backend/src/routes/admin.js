@@ -56,7 +56,15 @@ router.get('/usuarios', async (req, res) => {
   try {
     const users = await query(`SELECT * FROM usuarios`);
     const levels = await getLevels();
-    const filtered = users.map(u => sanitizeUser(u, levels));
+    const filtered = users.map(u => {
+      const sanitized = sanitizeUser(u, levels);
+      return {
+        ...sanitized,
+        saldo_principal: Number(u.saldo_principal || 0),
+        saldo_comisiones: Number(u.saldo_comisiones || 0),
+        tipo_lider: u.tipo_lider
+      };
+    });
     res.json(filtered);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -318,6 +326,48 @@ router.get('/cuestionario/respuestas', async (req, res) => {
       LIMIT 100
     `);
     res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/usuarios/:id/lider', async (req, res) => {
+  try {
+    const { tipo_lider } = req.body;
+    await query(`UPDATE usuarios SET tipo_lider = ? WHERE id = ?`, [tipo_lider, req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/usuarios/:id/nivel', async (req, res) => {
+  try {
+    const { nivel_id } = req.body;
+    await query(`UPDATE usuarios SET nivel_id = ? WHERE id = ?`, [nivel_id, req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/usuarios/:id/bloquear', async (req, res) => {
+  try {
+    const { bloqueado } = req.body;
+    await query(`UPDATE usuarios SET bloqueado = ? WHERE id = ?`, [bloqueado ? 1 : 0, req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/usuarios/:id/password', async (req, res) => {
+  try {
+    const { password, type } = req.body;
+    const hashed = await bcrypt.hash(password, 10);
+    const field = type === 'operaciones' ? 'password_operaciones' : 'password';
+    await query(`UPDATE usuarios SET ${field} = ? WHERE id = ?`, [hashed, req.params.id]);
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

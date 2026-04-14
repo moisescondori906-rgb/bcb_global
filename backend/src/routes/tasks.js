@@ -53,21 +53,25 @@ router.get('/', async (req, res) => {
     let availableTasks = [];
     if (remaining > 0) {
       const allTasks = await getTasks();
-      availableTasks = allTasks.slice(0, remaining + 3);
+      // Mezclamos tareas de forma aleatoria para que no sean siempre las mismas
+      availableTasks = allTasks.sort(() => 0.5 - Math.random()).slice(0, Math.min(allTasks.length, remaining + 2));
     }
 
     res.json({
       nivel: level.nombre,
       tareas_restantes: remaining,
       tareas_completadas: todayCompletedCount,
+      num_tareas_diarias: numTareasDiarias,
+      ingreso_diario: level.ingreso_diario,
+      ganancia_tarea: level.ganancia_tarea,
       tareas: availableTasks.map(t => ({
         id: t.id,
         nombre: t.nombre,
-        ganancia_tarea: Number(level.ganancia_tarea), // Campo unificado
+        ganancia_tarea: Number(level.ganancia_tarea),
         video_url: t.video_url,
         descripcion: t.descripcion,
         pregunta: t.pregunta,
-        opciones: t.opciones
+        opciones: typeof t.opciones === 'string' ? JSON.parse(t.opciones) : t.opciones
       }))
     });
   } catch (err) {

@@ -128,7 +128,7 @@ export async function getDayStatus(dateStr = boliviaTime.todayStr()) {
  */
 export async function canPerformTasks(userId, dateStr = boliviaTime.todayStr()) {
   const status = await getDayStatus(dateStr);
-  if (!status) return { ok: true }; // Fallback permisivo si falla la DB
+  if (!status) return { ok: true }; 
 
   if (!status.tareas_habilitadas) {
     return { ok: false, message: status.motivo || 'Las tareas están suspendidas por hoy.' };
@@ -136,17 +136,17 @@ export async function canPerformTasks(userId, dateStr = boliviaTime.todayStr()) 
 
   // Verificar reglas por nivel si existen
   const user = await findUserById(userId);
+  if (!user) return { ok: false, message: 'Usuario no encontrado.' };
+  
   const levels = await getLevels();
   const userLevel = levels.find(l => String(l.id) === String(user.nivel_id));
 
-  if (status.reglas_niveles) {
-    const levelRules = typeof status.reglas_niveles === 'string' 
-      ? JSON.parse(status.reglas_niveles) 
-      : status.reglas_niveles;
+  const levelRules = typeof status.reglas_niveles === 'string' 
+    ? JSON.parse(status.reglas_niveles) 
+    : (status.reglas_niveles || {});
 
-    if (levelRules[userLevel?.codigo]?.tareas === false) {
-      return { ok: false, message: `Las tareas no están habilitadas para el nivel ${userLevel?.nombre} hoy.` };
-    }
+  if (userLevel && levelRules[userLevel.codigo]?.tareas === false) {
+    return { ok: false, message: `Las tareas no están habilitadas para el nivel ${userLevel.nombre} hoy.` };
   }
 
   return { ok: true };
@@ -164,6 +164,8 @@ export async function canWithdraw(userId, dateStr = boliviaTime.todayStr()) {
   }
 
   const user = await findUserById(userId);
+  if (!user) return { ok: false, message: 'Usuario no encontrado.' };
+
   const levels = await getLevels();
   const userLevel = levels.find(l => String(l.id) === String(user.nivel_id));
   
@@ -174,7 +176,6 @@ export async function canWithdraw(userId, dateStr = boliviaTime.todayStr()) {
   // 1. Regla de Día de la Semana (Prioridad: Calendario > Nivel > Default)
   const dayOfWeek = boliviaTime.getDay();
   
-  // Obtenemos reglas específicas del calendario para este día
   const levelRules = typeof status.reglas_niveles === 'string' 
     ? JSON.parse(status.reglas_niveles) 
     : (status.reglas_niveles || {});
@@ -186,12 +187,21 @@ export async function canWithdraw(userId, dateStr = boliviaTime.todayStr()) {
       return { ok: false, message: `Los retiros para el nivel ${userLevel.nombre} están bloqueados hoy por calendario operativo.` };
     }
   } else {
-    // Si no hay regla en el calendario, usamos la del nivel o el cronograma institucional
     if (userLevel.retiro_horario_habilitado) {
       // Validación por rango de días del nivel
-      if (dayOfWeek < userLevel.retiro_dia_inicio || dayOfWeek > userLevel.retiro_dia_fin) {
+      let allowed = false;
+      const start = Number(userLevel.retiro_dia_inicio);
+      const end = Number(userLevel.retiro_dia_fin);
+      
+      if (start <= end) {
+        allowed = dayOfWeek >= start && dayOfWeek <= end;
+      } else {
+        allowed = dayOfWeek >= start || dayOfWeek <= end;
+      }
+
+      if (!allowed) {
         const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-        return { ok: false, message: `Tu nivel permite retiros de ${DAYS[userLevel.retiro_dia_inicio]} a ${DAYS[userLevel.retiro_dia_fin]}.` };
+        return { ok: false, message: `Tu nivel permite retiros de ${DAYS[start]} a ${DAYS[end]}.` };
       }
     } else {
       // Cronograma Institucional Default: G1=Mar, G2=Mie, G3=Jue, G4=Vie, G5+=Sab
@@ -293,52 +303,42 @@ export async function getUsers() {
 export async function getLevels() {
   const now = Date.now();
   if (levelsCache.data && now - levelsCache.lastFetch < 60000) {
-    return levelsCache.data.map(l => {
-      const ingreso_diario = Number((Number(l.num_tareas_diarias) * Number(l.ganancia_tarea)).toFixed(2));
-      const isInternar = String(l.codigo).toLowerCase() === 'internar';
-      return {
-        ...l,
-        ingreso_diario,
-        ingreso_mensual: isInternar ? 0 : Number((ingreso_diario * 30).toFixed(2)),
-        ingreso_anual: isInternar ? 0 : Number((ingreso_diario * 365).toFixed(2))
-      };
-    });
+    return levelsCache.data;
   }
 
   try {
     const levels = await query(`SELECT * FROM niveles ORDER BY orden ASC`);
     if (levels.length === 0) {
-      // Si no hay niveles en la DB, sincronizar con los defaults
       await syncLevels();
       return getLevels();
     }
     
-    // Aseguramos que los campos booleanos y numéricos sean correctos desde la DB
-    const processed = levels.map(l => ({
-      ...l,
-      deposito: Number(l.deposito),
-      ganancia_tarea: Number(l.ganancia_tarea),
-      num_tareas_diarias: Number(l.num_tareas_diarias),
-      orden: Number(l.orden),
-      activo: !!l.activo,
-      retiro_horario_habilitado: !!l.retiro_horario_habilitado,
-      retiro_dia_inicio: l.retiro_dia_inicio !== null ? Number(l.retiro_dia_inicio) : 1,
-      retiro_dia_fin: l.retiro_dia_fin !== null ? Number(l.retiro_dia_fin) : 5
-    }));
+    const processed = levels.map(l => {
+      const deposito = Number(l.deposito);
+      const ganancia_tarea = Number(l.ganancia_tarea);
+      const num_tareas_diarias = Number(l.num_tareas_diarias);
+      const ingreso_diario = Number((num_tareas_diarias * ganancia_tarea).toFixed(2));
+      const isInternar = String(l.codigo).toLowerCase() === 'internar';
+
+      return {
+        ...l,
+        deposito,
+        ganancia_tarea,
+        num_tareas_diarias,
+        ingreso_diario,
+        ingreso_mensual: isInternar ? 0 : Number((ingreso_diario * 30).toFixed(2)),
+        ingreso_anual: isInternar ? 0 : Number((ingreso_diario * 365).toFixed(2)),
+        orden: Number(l.orden),
+        activo: !!l.activo,
+        retiro_horario_habilitado: !!l.retiro_horario_habilitado,
+        retiro_dia_inicio: l.retiro_dia_inicio !== null ? Number(l.retiro_dia_inicio) : 1,
+        retiro_dia_fin: l.retiro_dia_fin !== null ? Number(l.retiro_dia_fin) : 5
+      };
+    });
 
     levelsCache.data = processed;
     levelsCache.lastFetch = now;
-
-    return processed.map(l => {
-      const ingreso_diario = Number((Number(l.num_tareas_diarias) * Number(l.ganancia_tarea)).toFixed(2));
-      const isInternar = String(l.codigo).toLowerCase() === 'internar';
-      return {
-        ...l,
-        ingreso_diario,
-        ingreso_mensual: isInternar ? 0 : Number((ingreso_diario * 30).toFixed(2)),
-        ingreso_anual: isInternar ? 0 : Number((ingreso_diario * 365).toFixed(2))
-      };
-    });
+    return processed;
   } catch (e) {
     logger.warn('[DB] Usando niveles por defecto (DB Offline)');
     return DEFAULT_LEVELS.map(l => {
@@ -406,45 +406,54 @@ export async function getTaskById(id) {
  * Acredita una tarea con Idempotencia real y Transacción
  */
 export async function completeTask(userId, taskId) {
+  const todayStr = boliviaTime.todayStr();
+  
   return await transaction(async (conn) => {
-    const today = boliviaTime.todayStr();
-    
-    // 1. Verificar idempotencia (Si ya hizo esta tarea específica hoy)
-    const [alreadyDone] = await conn.query(`SELECT id FROM actividad_tareas WHERE usuario_id = ? AND tarea_id = ? AND fecha_dia = ?`, [userId, taskId, today]);
-    if (alreadyDone.length > 0) throw new Error('Tarea ya completada hoy');
-
-    // 2. Bloquear usuario para evitar race conditions de saldo y contador de tareas
-    const [userRows] = await conn.query(`
-      SELECT u.id, u.saldo_principal, n.ganancia_tarea, n.num_tareas_diarias 
-      FROM usuarios u 
-      JOIN niveles n ON u.nivel_id = n.id 
-      WHERE u.id = ? FOR UPDATE`, [userId]);
-    
+    // 1. Bloqueo de usuario para evitar concurrencia
+    const [userRows] = await conn.query('SELECT * FROM usuarios WHERE id = ? FOR UPDATE', [userId]);
     const user = userRows[0];
     if (!user) throw new Error('Usuario no encontrado');
 
-    // 3. Verificar límite de tareas diarias (Contar cuántas lleva hoy)
-    const [countRows] = await conn.query(`SELECT COUNT(*) as total FROM actividad_tareas WHERE usuario_id = ? AND fecha_dia = ?`, [userId, today]);
-    if (countRows[0].total >= user.num_tareas_diarias) throw new Error('Has alcanzado tu límite de tareas diarias para tu nivel.');
+    // 2. Verificar si la tarea específica ya se hizo hoy (Idempotencia)
+    const [existing] = await conn.query(
+      'SELECT id FROM actividad_tareas WHERE usuario_id = ? AND tarea_id = ? AND fecha_dia = ?',
+      [userId, taskId, todayStr]
+    );
+    if (existing.length > 0) throw new Error('Tarea ya completada hoy');
 
-    const amount = Number(user.ganancia_tarea);
+    // 3. Verificar límite de tareas del nivel
+    const [countResult] = await conn.query(
+      'SELECT COUNT(*) as total FROM actividad_tareas WHERE usuario_id = ? AND fecha_dia = ?',
+      [userId, todayStr]
+    );
+    const todayCount = countResult[0]?.total || 0;
+
+    const levels = await getLevels();
+    const level = levels.find(l => String(l.id) === String(user.nivel_id));
+    if (!level) throw new Error('Nivel no configurado');
+
+    if (todayCount >= Number(level.num_tareas_diarias)) {
+      throw new Error('Has alcanzado tu límite de tareas diarias para tu nivel.');
+    }
+
+    // 4. Registrar actividad y pagar
+    const amount = Number(level.ganancia_tarea);
     const oldBalance = Number(user.saldo_principal);
     const newBalance = oldBalance + amount;
 
-    // 4. Insertar Actividad
-    const activityId = uuidv4();
-    await conn.query(`INSERT INTO actividad_tareas (id, usuario_id, tarea_id, monto_ganado, fecha_dia) VALUES (?, ?, ?, ?, ?)`, 
-      [activityId, userId, taskId, amount, today]);
+    await conn.query('UPDATE usuarios SET saldo_principal = ? WHERE id = ?', [newBalance, userId]);
+    
+    await conn.query(
+      'INSERT INTO actividad_tareas (id, usuario_id, tarea_id, monto_ganado, fecha_dia) VALUES (?, ?, ?, ?, ?)',
+      [uuidv4(), userId, taskId, amount, todayStr]
+    );
 
-    // 5. Actualizar Saldo
-    await conn.query(`UPDATE usuarios SET saldo_principal = ? WHERE id = ?`, [newBalance, userId]);
+    await conn.query(
+      'INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [uuidv4(), userId, 'principal', 'tarea_completada', amount, oldBalance, newBalance, taskId, `Pago por tarea publicitaria`]
+    );
 
-    // 6. Registrar Movimiento de Saldo
-    await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
-      VALUES (?, ?, 'principal', 'tarea', ?, ?, ?, ?, ?)`, 
-      [uuidv4(), userId, amount, oldBalance, newBalance, activityId, 'Ganancia por tarea publicitaria completada']);
-
-    return { success: true, amount };
+    return { amount };
   });
 }
 
@@ -591,6 +600,9 @@ export async function distributeInvestmentCommissions(userId, amount) {
     for (const config of configs) {
       if (!currentUplineId) break;
       
+      const upline = await findUserById(currentUplineId);
+      if (!upline) break;
+
       await transaction(async (conn) => {
         const [uplineRows] = await conn.query(`
           SELECT u.*, n.orden as nivel_orden, n.codigo as nivel_codigo 
@@ -598,30 +610,30 @@ export async function distributeInvestmentCommissions(userId, amount) {
           LEFT JOIN niveles n ON u.nivel_id = n.id 
           WHERE u.id = ? FOR UPDATE`, [currentUplineId]);
         
-        const upline = uplineRows[0];
-        if (!upline) return;
+        const uplineData = uplineRows[0];
+        if (!uplineData) return;
 
         // REGLA DE JERARQUÍA: 
         // 1. Internares no cobran comisiones.
         // 2. El nivel del upline debe ser mayor o igual al nivel del usuario que genera la comisión.
-        if (upline.nivel_codigo === 'internar' || Number(upline.nivel_orden) < Number(userLevel.orden)) {
-          currentUplineId = upline.invitado_por;
+        if (uplineData.nivel_codigo === 'internar' || Number(uplineData.nivel_orden) < Number(userLevel.orden)) {
           return;
         }
 
         const commission = Number((amount * config.percent).toFixed(2));
         if (commission > 0) {
-          const oldBalance = Number(upline.saldo_comisiones);
+          const oldBalance = Number(uplineData.saldo_comisiones);
           const newBalance = oldBalance + commission;
 
-          await conn.query(`UPDATE usuarios SET saldo_comisiones = ? WHERE id = ?`, [newBalance, upline.id]);
+          await conn.query(`UPDATE usuarios SET saldo_comisiones = ? WHERE id = ?`, [newBalance, uplineData.id]);
           
           await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
             VALUES (?, ?, 'comisiones', 'comision_inversion', ?, ?, ?, ?, ?)`, 
-            [uuidv4(), upline.id, commission, oldBalance, newBalance, user.id, `Comisión Inversión Nivel ${config.key} de ${user.nombre_usuario}`]);
+            [uuidv4(), uplineData.id, commission, oldBalance, newBalance, user.id, `Comisión Inversión Nivel ${config.key} de ${user.nombre_usuario}`]);
         }
-        currentUplineId = upline.invitado_por;
       });
+
+      currentUplineId = upline.invitado_por;
     }
   } catch (err) {
     logger.error(`[Commissions Error]: ${err.message}`);
@@ -784,9 +796,6 @@ export async function distributeTaskCommissions(userId, taskAmount) {
     const userLevel = levels.find(l => String(l.id) === String(user.nivel_id));
     if (!userLevel) return;
 
-    // REGLA OFICIAL: 
-    // Nivel A (Directo) = 0% por tareas.
-    // Nivel B = 2%, Nivel C = 1%
     const configs = [
       { key: 'A', percent: 0.00 },
       { key: 'B', percent: 0.02 },
@@ -797,44 +806,37 @@ export async function distributeTaskCommissions(userId, taskAmount) {
     for (const config of configs) {
       if (!currentUplineId) break;
       
-      // Si el porcentaje es 0, pasamos al siguiente nivel sin procesar transacción
-      if (config.percent === 0) {
-        const upline = await findUserById(currentUplineId);
-        currentUplineId = upline?.invitado_por;
-        continue;
+      const upline = await findUserById(currentUplineId);
+      if (!upline) break;
+
+      if (config.percent > 0) {
+        await transaction(async (conn) => {
+          const [uplineRows] = await conn.query(`
+            SELECT u.*, n.orden as nivel_orden, n.codigo as nivel_codigo 
+            FROM usuarios u 
+            LEFT JOIN niveles n ON u.nivel_id = n.id 
+            WHERE u.id = ? FOR UPDATE`, [currentUplineId]);
+          
+          const uplineData = uplineRows[0];
+          if (!uplineData) return;
+
+          if (uplineData.nivel_codigo !== 'internar' && Number(uplineData.nivel_orden) >= Number(userLevel.orden)) {
+            const commission = Number((taskAmount * config.percent).toFixed(2));
+            if (commission > 0) {
+              const oldBalance = Number(uplineData.saldo_comisiones);
+              const newBalance = oldBalance + commission;
+
+              await conn.query(`UPDATE usuarios SET saldo_comisiones = ? WHERE id = ?`, [newBalance, uplineData.id]);
+              
+              await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
+                VALUES (?, ?, 'comisiones', 'comision_tarea', ?, ?, ?, ?, ?)`, 
+                [uuidv4(), uplineData.id, commission, oldBalance, newBalance, user.id, `Comisión Tarea Nivel ${config.key} de ${user.nombre_usuario}`]);
+            }
+          }
+        });
       }
 
-      await transaction(async (conn) => {
-        const [uplineRows] = await conn.query(`
-          SELECT u.*, n.orden as nivel_orden, n.codigo as nivel_codigo 
-          FROM usuarios u 
-          LEFT JOIN niveles n ON u.nivel_id = n.id 
-          WHERE u.id = ? FOR UPDATE`, [currentUplineId]);
-        
-        const upline = uplineRows[0];
-        if (!upline) return;
-
-        // REGLA DE JERARQUÍA: 
-        // 1. Internares no cobran comisiones.
-        // 2. El nivel del upline debe ser mayor o igual al nivel del usuario que genera la comisión.
-        if (upline.nivel_codigo === 'internar' || Number(upline.nivel_orden) < Number(userLevel.orden)) {
-          currentUplineId = upline.invitado_por;
-          return;
-        }
-
-        const commission = Number((taskAmount * config.percent).toFixed(2));
-        if (commission > 0) {
-          const oldBalance = Number(upline.saldo_comisiones);
-          const newBalance = oldBalance + commission;
-
-          await conn.query(`UPDATE usuarios SET saldo_comisiones = ? WHERE id = ?`, [newBalance, upline.id]);
-          
-          await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
-            VALUES (?, ?, 'comisiones', 'comision_tarea', ?, ?, ?, ?, ?)`, 
-            [uuidv4(), upline.id, commission, oldBalance, newBalance, user.id, `Comisión Tarea Publicitaria Nivel ${config.key} de ${user.nombre_usuario}`]);
-        }
-        currentUplineId = upline.invitado_por;
-      });
+      currentUplineId = upline.invitado_por;
     }
   } catch (err) {
     logger.error(`[Task Commissions Error]: ${err.message}`);

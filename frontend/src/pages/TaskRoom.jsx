@@ -267,11 +267,11 @@ export default function TaskRoom() {
     );
   }
 
-  const currentLevel = niveles.find(n => n.id === user?.nivel_id);
-  const taskReward = Number(currentLevel?.ganancia_tarea || 0);
+  const currentLevel = niveles.find(n => String(n.id) === String(user?.nivel_id));
+  const taskReward = Number(data?.ganancia_tarea || currentLevel?.ganancia_tarea || 0);
   const tareasCompletadas = Number(data?.tareas_completadas || 0);
   const tareasRestantes = Number(data?.tareas_restantes || 0);
-  const totalDiarias = tareasCompletadas + tareasRestantes;
+  const totalDiarias = Number(data?.num_tareas_diarias || currentLevel?.num_tareas_diarias || (tareasCompletadas + tareasRestantes));
   const progress = totalDiarias > 0 ? (tareasCompletadas / totalDiarias) * 100 : 0;
 
   return (
