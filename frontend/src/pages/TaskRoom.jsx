@@ -127,15 +127,12 @@ export default function TaskRoom() {
   }
 
   if ((error || data?.bloqueado) && !activeTask) {
-    const isRestricted = !!(error || data?.bloqueado);
-
     return (
       <Layout>
         <div className="p-6 flex flex-col items-center justify-center min-h-[70vh] text-center space-y-8">
           <Card variant="premium" className="w-full flex flex-col items-center p-10 space-y-6">
             <div className={cn(
-              "w-20 h-20 rounded-3xl flex items-center justify-center shadow-2xl",
-              "bg-amber-500/10 text-amber-500"
+              "w-20 h-20 rounded-3xl flex items-center justify-center shadow-2xl bg-amber-500/10 text-amber-500"
             )}>
               <ShieldCheck size={48} />
             </div>
@@ -153,7 +150,7 @@ export default function TaskRoom() {
           {data?.bloqueado && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full">
               <Link to="/vip" className="w-full">
-                <Button variant="primary" className="shadow-sav-glow text-[10px] h-14 uppercase tracking-widest">Mejorar a GLOBAL ahora</Button>
+                <Button variant="primary" className="shadow-sav-glow text-[10px] h-14 uppercase tracking-widest">Mejorar a VIP ahora</Button>
               </Link>
             </motion.div>
           )}

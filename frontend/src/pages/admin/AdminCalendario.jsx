@@ -12,7 +12,9 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
-  Settings2
+  Settings2,
+  Play,
+  Wallet
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
