@@ -8,8 +8,8 @@ export function useAndroidBackHandler(isModalOpen, onModalClose) {
   const location = useLocation();
 
   useEffect(() => {
-    const rootPages = ['/', '/dashboard', '/login', '/register'];
-    const isRoot = rootPages.includes(location.pathname);
+    const rootPages = ['/', '/dashboard', '/login', '/register', '/admin'];
+    const isRoot = rootPages.includes(location.pathname) || location.pathname === '/admin/';
 
     const handleBack = () => {
       // Si hay un modal o vista activa (como una tarea abierta), la cerramos primero

@@ -280,7 +280,17 @@ router.get('/calendario', async (req, res) => {
 
 router.post('/calendario', async (req, res) => {
   try {
-    const { fecha, tipo_dia, es_feriado, tareas_habilitadas, retiros_habilitados, recargas_habilitadas, motivo, reglas_niveles } = req.body;
+    const { 
+      fecha, 
+      tipo_dia, 
+      es_feriado, 
+      tareas_habilitadas, 
+      retiros_habilitados, 
+      recargas_habilitadas, 
+      motivo, 
+      reglas_niveles 
+    } = req.body;
+
     if (!fecha) return res.status(400).json({ error: 'Fecha requerida' });
 
     await query(`
@@ -295,7 +305,16 @@ router.post('/calendario', async (req, res) => {
         recargas_habilitadas = VALUES(recargas_habilitadas),
         motivo = VALUES(motivo),
         reglas_niveles = VALUES(reglas_niveles)
-    `, [fecha, tipo_dia, es_feriado, tareas_habilitadas, retiros_habilitados, recargas_habilitadas, motivo, JSON.stringify(reglas_niveles || {})]);
+    `, [
+      fecha, 
+      tipo_dia || 'laboral', 
+      es_feriado ? 1 : 0, 
+      tareas_habilitadas ? 1 : 0, 
+      retiros_habilitados ? 1 : 0, 
+      recargas_habilitadas ? 1 : 0, 
+      motivo || '', 
+      JSON.stringify(reglas_niveles || {})
+    ]);
 
     res.json({ ok: true });
   } catch (err) {

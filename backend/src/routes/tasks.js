@@ -22,18 +22,23 @@ router.get('/', async (req, res) => {
     // MODO DEMO: Bypass si el ID es el de demo
     if (user.id === DEMO_USER_ID) {
       const levels = await getLevels();
-      const level = levels.find(l => String(l.id) === String(user.nivel_id)) || { nombre: 'Global 1', ganancia_tarea: 1.80 };
+      // El modo demo representa GLOBAL 1 (l2 en seed.js por defecto)
+      const level = levels.find(l => String(l.codigo) === 'global1') || levels[1] || { nombre: 'GLOBAL 1', ganancia_tarea: 1.80, num_tareas_diarias: 4 };
+      
+      const numTareasDiarias = Number(level.num_tareas_diarias);
       const reward = Number(level.ganancia_tarea);
+      const totalDaily = Number((numTareasDiarias * reward).toFixed(2));
       
       return res.json({
         nivel: level.nombre,
-        tareas_restantes: 4,
+        tareas_restantes: numTareasDiarias,
         tareas_completadas: 0,
-        ingreso_diario: Number((4 * reward).toFixed(2)),
+        num_tareas_diarias: numTareasDiarias,
+        ingreso_diario: totalDaily,
         ganancia_tarea: reward,
         tareas: [
-          { id: 't1', nombre: 'Tarea Demo 1', ganancia_tarea: reward, video_url: '/video/adidas1.mp4', descripcion: 'Visualización demo', pregunta: '¿Marca?', opciones: ['A', 'B'] },
-          { id: 't2', nombre: 'Tarea Demo 2', ganancia_tarea: reward, video_url: '/video/nike1.mp4', descripcion: 'Visualización demo', pregunta: '¿Marca?', opciones: ['A', 'B'] }
+          { id: 't1', nombre: 'Tarea Demo 1', ganancia_tarea: reward, video_url: '/video/adidas1.mp4', descripcion: 'Visualización demo', pregunta: '¿Marca?', opciones: ['ADIDAS', 'NIKE'], respuesta_correcta: 'ADIDAS' },
+          { id: 't2', nombre: 'Tarea Demo 2', ganancia_tarea: reward, video_url: '/video/nike1.mp4', descripcion: 'Visualización demo', pregunta: '¿Marca?', opciones: ['ADIDAS', 'NIKE'], respuesta_correcta: 'NIKE' }
         ]
       });
     }
@@ -108,6 +113,9 @@ router.post('/:id/responder', async (req, res) => {
     }
 
     // Acreditación Transaccional e Idempotente
+    if (user.id === DEMO_USER_ID) {
+      return res.json({ success: true, monto: 1.80 }); // Monto fijo para demo
+    }
     const result = await completeTask(user.id, task.id);
     
     res.json({ success: true, monto: result.amount });
