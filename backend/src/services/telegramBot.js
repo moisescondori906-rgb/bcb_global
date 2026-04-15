@@ -37,7 +37,6 @@ initTelegramBot();
  */
 export const sendMessage = async (chatId, message) => {
   if (!bot) {
-    // Intentar re-inicializar si bot es null
     initTelegramBot();
     if (!bot) return false;
   }

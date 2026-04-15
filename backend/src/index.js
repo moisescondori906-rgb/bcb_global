@@ -1,5 +1,8 @@
 import 'dotenv/config';
 import logger from './lib/logger.js';
+// Importar bot de telegram para inicialización automática
+import './services/telegramBot.js';
+
 // Forzar Zona Horaria de Bolivia a nivel de proceso Node.js
 process.env.TZ = 'America/La_Paz';
 logger.info('[TIMEZONE] Configurado a: ' + process.env.TZ + ' (Bolivia)');
@@ -19,8 +22,6 @@ import adminRoutes from './routes/admin.js';
 import telegramAdminRoutes from './routes/telegram_admin.js';
 import sorteoRoutes from './routes/sorteo.js';
 import telegramWebhookRoutes from './routes/telegram_webhook.js';
-// Importar bot de telegram para inicialización automática
-import './services/telegramBot.js';
 import { preloadConfig, preloadLevels } from './lib/queries.js';
 import { query } from './config/db.js';
 import { rateLimiter } from './middleware/rateLimiter.js';

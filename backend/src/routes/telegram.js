@@ -10,24 +10,24 @@ const router = Router();
 router.get('/test', async (req, res) => {
   try {
     console.log("Iniciando test de Telegram...");
-    
-    // Test a través de las funciones del servicio
-    await sendToRetiros("🚀 Test RETIROS OK");
-    await sendToAdmin("🚀 Test ADMIN OK");
-    await sendToSecretaria("🚀 Test SECRETARIA OK");
-    
-    // FORZAR ENVÍO DIRECTO (Punto 6 solicitado)
+
+    // Envío directo solicitado al ID específico con await
     if (bot) {
       await bot.sendMessage(-1003904814691, "🚀 TEST DIRECTO");
       console.log("Test directo enviado");
     } else {
-      console.error("Bot no inicializado para test directo");
+      console.error("Bot no inicializado");
     }
-    
-    res.json({ success: true, message: "Mensajes enviados" });
-  } catch (error) {
-    console.error("Error en endpoint test:", error.message);
-    res.status(500).json({ success: false, error: error.message });
+
+    // Test a través de las funciones del servicio con await
+    await sendToRetiros("🚀 Test RETIROS OK");
+    await sendToAdmin("🚀 Test ADMIN OK");
+    await sendToSecretaria("🚀 Test SECRETARIA OK");
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Error en test Telegram:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
