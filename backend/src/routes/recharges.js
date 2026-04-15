@@ -6,6 +6,7 @@ import {
 import { query, queryOne } from '../config/db.js';
 import { authenticate } from '../middleware/auth.js';
 import { attachRequestUser } from '../middleware/requestContext.js';
+import { sendTelegramAlert } from '../lib/telegram.js';
 import logger from '../lib/logger.js';
 
 const router = Router();
@@ -53,6 +54,17 @@ router.post('/', async (req, res) => {
     const id = uuidv4();
     await query(`INSERT INTO recargas (id, usuario_id, monto, comprobante_url, estado) VALUES (?, ?, ?, ?, 'pendiente')`,
       [id, req.user.id, parseFloat(monto), comprobante_url]);
+
+    // 2. Alerta de Telegram
+    const levels = await getLevels();
+    const userLevel = levels.find(l => String(l.id) === String(req.requestUser.nivel_id));
+    sendTelegramAlert('recarga', {
+      refId: id,
+      usuario: req.requestUser.nombre_usuario,
+      monto: monto,
+      nivel: userLevel?.nombre || 'Internar',
+      extraInfo: `🖼️ Comprobante: ${comprobante_url ? 'ADJUNTO' : 'NO DISPONIBLE'}`
+    }).catch(e => logger.error(`[Telegram Alert Error]: ${e.message}`));
 
     res.json({ id, ok: true });
   } catch (err) {

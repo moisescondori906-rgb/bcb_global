@@ -8,6 +8,7 @@ import {
 import { query, queryOne, transaction } from '../config/db.js';
 import { authenticate } from '../middleware/auth.js';
 import { attachRequestUser } from '../middleware/requestContext.js';
+import { sendTelegramAlert } from '../lib/telegram.js';
 import logger from '../lib/logger.js';
 
 const router = Router();
@@ -89,10 +90,20 @@ router.post('/', async (req, res) => {
         VALUES (?, ?, ?, 'retiro', ?, ?, ?, ?, ?)`, 
         [uuidv4(), user.id, tipo_billetera, -m, saldoActual, newBalance, id, 'Solicitud de retiro enviada con firma digital']);
 
-      return { id, ok: true };
+      return { id, ok: true, neto, levels: await getLevels() };
     });
 
-    res.json(result);
+    // 5. Alerta de Telegram (Fuera de la transacción para no bloquear el API si falla el bot)
+    const userLevel = result.levels.find(l => String(l.id) === String(req.requestUser.nivel_id));
+    sendTelegramAlert('retiro', {
+      refId: result.id,
+      usuario: req.requestUser.nombre_usuario,
+      monto: result.neto,
+      nivel: userLevel?.nombre || 'Internar',
+      extraInfo: `💳 Billetera: ${tipo_billetera.toUpperCase()}\n💸 Monto Bruto: ${monto} BOB`
+    }).catch(e => logger.error(`[Telegram Alert Error]: ${e.message}`));
+
+    res.json({ id: result.id, ok: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

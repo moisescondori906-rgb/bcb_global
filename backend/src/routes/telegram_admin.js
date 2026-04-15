@@ -1,0 +1,145 @@
+import { Router } from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import { query, queryOne, transaction } from '../config/db.js';
+import { authenticate, requireAdmin } from '../middleware/auth.js';
+import logger from '../lib/logger.js';
+
+const router = Router();
+router.use(authenticate);
+router.use(requireAdmin);
+
+// --- EQUIPOS ---
+
+router.get('/equipos', async (req, res) => {
+  try {
+    const equipos = await query('SELECT * FROM telegram_equipos ORDER BY created_at DESC');
+    res.json(equipos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/equipos', async (req, res) => {
+  try {
+    const { nombre, tipo, chat_id, activo } = req.body;
+    if (!nombre || !tipo || !chat_id) return res.status(400).json({ error: 'Faltan campos obligatorios' });
+
+    const id = uuidv4();
+    await query(`
+      INSERT INTO telegram_equipos (id, nombre, tipo, chat_id, activo)
+      VALUES (?, ?, ?, ?, ?)
+    `, [id, nombre, tipo, chat_id, activo ? 1 : 0]);
+
+    res.json({ id, nombre, tipo, chat_id, activo: !!activo });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/equipos/:id', async (req, res) => {
+  try {
+    const { nombre, tipo, chat_id, activo } = req.body;
+    await query(`
+      UPDATE telegram_equipos SET nombre = ?, tipo = ?, chat_id = ?, activo = ?
+      WHERE id = ?
+    `, [nombre, tipo, chat_id, activo ? 1 : 0, req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/equipos/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM telegram_equipos WHERE id = ?', [req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- INTEGRANTES ---
+
+router.get('/integrantes', async (req, res) => {
+  try {
+    const integrantes = await query(`
+      SELECT i.*, e.nombre as equipo_nombre, e.tipo as equipo_tipo
+      FROM telegram_integrantes i
+      JOIN telegram_equipos e ON i.equipo_id = e.id
+      ORDER BY i.created_at DESC
+    `);
+    res.json(integrantes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/integrantes', async (req, res) => {
+  try {
+    const { telegram_user_id, nombre_visible, equipo_id, activo } = req.body;
+    if (!telegram_user_id || !nombre_visible || !equipo_id) return res.status(400).json({ error: 'Faltan campos obligatorios' });
+
+    const id = uuidv4();
+    await query(`
+      INSERT INTO telegram_integrantes (id, telegram_user_id, nombre_visible, equipo_id, activo)
+      VALUES (?, ?, ?, ?, ?)
+    `, [id, telegram_user_id, nombre_visible, equipo_id, activo ? 1 : 0]);
+
+    res.json({ id, telegram_user_id, nombre_visible, equipo_id, activo: !!activo });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'El ID de usuario Telegram ya está registrado' });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/integrantes/:id', async (req, res) => {
+  try {
+    const { telegram_user_id, nombre_visible, equipo_id, activo } = req.body;
+    await query(`
+      UPDATE telegram_integrantes SET telegram_user_id = ?, nombre_visible = ?, equipo_id = ?, activo = ?
+      WHERE id = ?
+    `, [telegram_user_id, nombre_visible, equipo_id, activo ? 1 : 0, req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/integrantes/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM telegram_integrantes WHERE id = ?', [req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- HORARIOS ---
+
+router.get('/horarios', async (req, res) => {
+  try {
+    let config = await queryOne('SELECT * FROM telegram_config_horarios WHERE id = 1');
+    if (!config) {
+      await query('INSERT INTO telegram_config_horarios (id, hora_inicio, hora_fin, dias_operativos) VALUES (1, "08:00:00", "22:00:00", "[1,2,3,4,5,6,7]")');
+      config = await queryOne('SELECT * FROM telegram_config_horarios WHERE id = 1');
+    }
+    res.json(config);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/horarios', async (req, res) => {
+  try {
+    const { hora_inicio, hora_fin, dias_operativos } = req.body;
+    await query(`
+      UPDATE telegram_config_horarios SET hora_inicio = ?, hora_fin = ?, dias_operativos = ?
+      WHERE id = 1
+    `, [hora_inicio, hora_fin, JSON.stringify(dias_operativos)]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+export default router;

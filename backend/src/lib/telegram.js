@@ -1,235 +1,281 @@
-import { getPublicContent, getAdminsInShift } from './queries.js';
+import TelegramBot from 'node-telegram-bot-api';
+import { query, queryOne, transaction } from '../config/db.js';
+import { boliviaTime } from '../lib/queries.js';
+import logger from '../lib/logger.js';
+import { CronJob } from 'cron';
 
-const getRecargasConfig = async () => {
-  const config = await getPublicContent();
-  const adminsInShift = await getAdminsInShift();
-  
-  const groupChatId = config.telegram_recargas_chat_id || process.env.TELEGRAM_RECARGAS_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
-  const botToken = config.telegram_recargas_token || process.env.TELEGRAM_RECARGAS_TOKEN;
-  
-  let targetChatIds = [];
-
-  // 1. Siempre añadir el ID del grupo (para que todos lo vean)
-  if (groupChatId) {
-    targetChatIds.push(groupChatId);
-  }
-
-  // 2. Si hay admins en turno, añadir sus IDs personales (para alerta privada)
-  if (adminsInShift.length > 0) {
-    const adminChatIds = adminsInShift
-      .filter(a => a.recibe_notificaciones !== false) // Solo si tiene notificaciones activas
-      .map(a => a.telegram_user_id)
-      .filter(id => id);
-      
-    adminChatIds.forEach(id => {
-      if (!targetChatIds.includes(String(id))) {
-        targetChatIds.push(String(id));
-      }
-    });
-  }
-
-  return {
-    token: botToken,
-    chatId: targetChatIds.join(','),
-    enabled: config.telegram_recargas_enabled !== 'false' && !!botToken
-  };
-};
-
-const getRetirosConfig = async () => {
-  const config = await getPublicContent();
-  const adminsInShift = await getAdminsInShift();
-  
-  const groupChatId = config.telegram_retiros_chat_id || process.env.TELEGRAM_RETIROS_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
-  const botToken = config.telegram_retiros_token || process.env.TELEGRAM_RETIROS_TOKEN;
-  
-  let targetChatIds = [];
-
-  // 1. Siempre añadir el ID del grupo
-  if (groupChatId) {
-    targetChatIds.push(groupChatId);
-  }
-
-  // 2. Si hay admins en turno, añadir sus IDs personales
-  if (adminsInShift.length > 0) {
-    const adminChatIds = adminsInShift
-      .filter(a => a.recibe_notificaciones !== false)
-      .map(a => a.telegram_user_id)
-      .filter(id => id);
-      
-    adminChatIds.forEach(id => {
-      if (!targetChatIds.includes(String(id))) {
-        targetChatIds.push(String(id));
-      }
-    });
-  }
-
-  return {
-    token: botToken,
-    chatId: targetChatIds.join(','),
-    enabled: config.telegram_retiros_enabled !== 'false' && !!botToken
-  };
-};
-
-async function send(token, chatId, text, replyMarkup = null) {
-  if (!token || !chatId) {
-    console.warn('[Telegram Lib] Missing token or chatId for text message');
-    return [];
-  }
-
-  const chatIds = String(chatId).split(',').map(id => id.trim()).filter(id => id);
-  console.log(`[Telegram Lib] Sending text message to ${chatIds.length} recipients: ${chatIds.join(', ')}`);
-  
-  const results = [];
-  for (const id of chatIds) {
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    try {
-      const body = {
-        chat_id: id,
-        text,
-        parse_mode: 'HTML'
-      };
-      if (replyMarkup) body.reply_markup = replyMarkup;
-
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        console.error(`[Telegram Lib] Error sending message to ${id}:`, data);
-      } else {
-        console.log(`[Telegram Lib] Text message successfully sent to ${id}`);
-        results.push({ chat_id: String(id), message_id: String(data.result.message_id) });
-      }
-    } catch (err) {
-      console.error(`[Telegram Lib] Exception sending to ${id}:`, err.message);
-    }
-  }
-  return results;
+const token = process.env.TELEGRAM_BOT_TOKEN;
+if (!token) {
+  logger.warn('⚠️ TELEGRAM_BOT_TOKEN no configurado. El sistema de Telegram no funcionará.');
 }
 
-async function sendPhoto(token, chatId, base64Photo, caption = null, replyMarkup = null) {
-  if (!token || !chatId || !base64Photo) {
-    console.warn('[Telegram Lib] Missing data for photo message:', { token: !!token, chatId: !!chatId, photo: !!base64Photo });
-    return [];
+const bot = token ? new TelegramBot(token, { polling: true }) : null;
+
+/**
+ * Lógica Central de Telegram: UN CASO = UN RESPONSABLE. BLOQUEO TOTAL.
+ */
+
+if (bot) {
+  // --- MIDDLEWARE DE VALIDACIÓN DE INTEGRANTE ---
+  const validateMember = async (msg) => {
+    const userId = String(msg.from.id);
+    const member = await queryOne(`
+      SELECT i.*, e.tipo as equipo_tipo, e.chat_id as equipo_chat_id 
+      FROM telegram_integrantes i 
+      JOIN telegram_equipos e ON i.equipo_id = e.id 
+      WHERE i.telegram_user_id = ? AND i.activo = 1 AND e.activo = 1
+    `, [userId]);
+    return member;
+  };
+
+  // --- ESCUCHADOR DE CALLBACK QUERIES (Botones) ---
+  bot.on('callback_query', async (callbackQuery) => {
+    const { data, message, from } = callbackQuery;
+    const [action, refId] = data.split(':');
+    const telegramUserId = String(from.id);
+
+    try {
+      // 1. Validar que el usuario sea un integrante activo
+      const member = await queryOne(`
+        SELECT i.*, e.tipo as equipo_tipo 
+        FROM telegram_integrantes i 
+        JOIN telegram_equipos e ON i.equipo_id = e.id 
+        WHERE i.telegram_user_id = ? AND i.activo = 1 AND e.activo = 1
+      `, [telegramUserId]);
+
+      if (!member) {
+        return bot.answerCallbackQuery(callbackQuery.id, { 
+          text: '❌ No tienes permisos o tu equipo está desactivado.', 
+          show_alert: true 
+        });
+      }
+
+      // 2. Ejecutar Acción con Bloqueo de Fila (SELECT FOR UPDATE)
+      await transaction(async (conn) => {
+        // Bloqueo estricto del caso
+        const [casoRows] = await conn.query(
+          'SELECT * FROM telegram_casos_bloqueo WHERE referencia_id = ? FOR UPDATE', 
+          [refId]
+        );
+        let caso = casoRows[0];
+
+        // Si no existe, lo creamos como pendiente (debería existir al enviar el mensaje, pero por seguridad)
+        if (!caso) {
+          const type = data.includes('retiro') ? 'retiro' : 'recarga';
+          await conn.query(
+            'INSERT INTO telegram_casos_bloqueo (referencia_id, tipo_operacion, estado_operativo) VALUES (?, ?, "pendiente")',
+            [refId, type]
+          );
+          [caso] = await conn.query('SELECT * FROM telegram_casos_bloqueo WHERE referencia_id = ? FOR UPDATE', [refId]);
+        }
+
+        // --- LÓGICA DE ACCIONES ---
+
+        if (action === 'tomar') {
+          if (caso.estado_operativo !== 'pendiente') {
+            throw new Error(`Este caso ya fue ${caso.estado_operativo} por ${caso.tomado_por === telegramUserId ? 'ti' : 'otro operador'}.`);
+          }
+
+          await conn.query(`
+            UPDATE telegram_casos_bloqueo 
+            SET estado_operativo = 'tomado', tomado_por = ?, tomado_at = ?, telegram_message_id = ?
+            WHERE referencia_id = ?
+          `, [telegramUserId, boliviaTime.now(), String(message.message_id), refId]);
+
+          await bot.answerCallbackQuery(callbackQuery.id, { text: '✅ Caso tomado. Eres el único responsable.' });
+          await updateTelegramMessage(bot, message, 'tomado', member.nombre_visible, refId);
+        }
+
+        else if (action === 'aceptar' || action === 'rechazar') {
+          // VALIDACIÓN CRÍTICA: Solo el que tomó puede resolver
+          if (caso.estado_operativo !== 'tomado') {
+            throw new Error('Debes tomar el caso antes de resolverlo.');
+          }
+          if (caso.tomado_por !== telegramUserId) {
+            throw new Error('Solo el operador que tomó el caso puede resolverlo. NO EXISTE OVERRIDE.');
+          }
+
+          const nuevoEstado = action === 'aceptar' ? 'aprobada' : 'rechazada'; // Mapeo a DB real
+          const table = caso.tipo_operacion === 'retiro' ? 'retiros' : 'recargas';
+          
+          // Actualizar tabla real del sistema
+          await conn.query(
+            `UPDATE ${table} SET estado = ?, procesado_por_telegram = ?, procesado_at = ? WHERE id = ?`,
+            [action === 'aceptar' ? (table === 'retiros' ? 'pagado' : 'aprobada') : 'rechazada', telegramUserId, boliviaTime.now(), refId]
+          );
+
+          // Marcar como resuelto en bloqueo
+          await conn.query(
+            `UPDATE telegram_casos_bloqueo SET estado_operativo = 'resuelto', resuelto_at = ? WHERE referencia_id = ?`,
+            [boliviaTime.now(), refId]
+          );
+
+          // Log de operación
+          await conn.query(
+            `INSERT INTO telegram_operaciones_log (referencia_id, telegram_user_id, accion) VALUES (?, ?, ?)`,
+            [refId, telegramUserId, action]
+          );
+
+          await bot.answerCallbackQuery(callbackQuery.id, { text: `✅ Caso ${action}do correctamente.` });
+          await updateTelegramMessage(bot, message, 'resuelto', member.nombre_visible, refId, action);
+        }
+      });
+
+    } catch (err) {
+      logger.error(`[Telegram Callback Error]: ${err.message}`);
+      bot.answerCallbackQuery(callbackQuery.id, { 
+        text: `❌ ERROR: ${err.message}`, 
+        show_alert: true 
+      });
+    }
+  });
+}
+
+/**
+ * Helper para editar mensajes en Telegram según el estado
+ */
+async function updateTelegramMessage(bot, message, estado, operador, refId, resolucion = '') {
+  const chatId = message.chat.id;
+  const messageId = message.message_id;
+  let text = message.text || '';
+
+  // Limpiar texto anterior de estado si existe
+  text = text.split('\n\n---')[0];
+
+  let newText = text;
+  let buttons = [];
+
+  if (estado === 'tomado') {
+    newText += `\n\n--- ⏳ EN PROCESO ---\n👤 Responsable: ${operador}\n⏰ Tomado a las: ${boliviaTime.getTimeString()}`;
+    buttons = [
+      [
+        { text: '✅ ACEPTAR', callback_data: `aceptar:${refId}` },
+        { text: '❌ RECHAZAR', callback_data: `rechazar:${refId}` }
+      ]
+    ];
+  } else if (estado === 'resuelto') {
+    const color = resolucion === 'aceptar' ? '✅' : '❌';
+    newText += `\n\n--- ${color} RESUELTO ---\n👤 Operador: ${operador}\n🏁 Resultado: ${resolucion.toUpperCase()}\n⏰ Finalizado: ${boliviaTime.getTimeString()}`;
+    buttons = []; // Sin botones al finalizar
   }
 
-  const chatIds = String(chatId).split(',').map(id => id.trim()).filter(id => id);
-  console.log(`[Telegram Lib] Sending photo to ${chatIds.length} recipients: ${chatIds.join(', ')}`);
-  
-  // Detectar MIME type y datos base64 reales
-  let mimeType = 'image/jpeg';
-  let extension = 'jpg';
-  let base64Data = base64Photo;
+  try {
+    await bot.editMessageText(newText, {
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: { inline_keyboard: buttons }
+    });
 
-  if (base64Photo.includes(';base64,')) {
-    const parts = base64Photo.split(';base64,');
-    mimeType = parts[0].split(':')[1];
-    base64Data = parts[1];
+    // Actualizar también en Secretaría si tenemos el ID del mensaje
+    const caso = await queryOne('SELECT telegram_secretaria_message_id FROM telegram_casos_bloqueo WHERE referencia_id = ?', [refId]);
+    if (caso && caso.telegram_secretaria_message_id) {
+      const secGroup = await queryOne("SELECT chat_id FROM telegram_equipos WHERE tipo = 'secretaria' AND activo = 1");
+      if (secGroup) {
+        await bot.editMessageText(newText, {
+          chat_id: secGroup.chat_id,
+          message_id: caso.telegram_secretaria_message_id
+        }).catch(() => {}); // Ignorar si falla secretaría
+      }
+    }
+  } catch (e) {
+    logger.error(`[Telegram Edit Error]: ${e.message}`);
+  }
+}
+
+/**
+ * Función principal para enviar alertas a los grupos
+ */
+export async function sendTelegramAlert(tipo, data) {
+  if (!bot) return;
+
+  try {
+    const { refId, usuario, monto, nivel, extraInfo = '' } = data;
+    const time = boliviaTime.getTimeString();
     
-    // Mapear extensiones comunes
-    if (mimeType === 'image/png') extension = 'png';
-    else if (mimeType === 'image/webp') extension = 'webp';
-    else if (mimeType === 'image/gif') extension = 'gif';
-  }
+    // 1. Construir Mensaje Base
+    const message = `🔔 NUEVA OPERACIÓN: ${tipo.toUpperCase()}\n\n` +
+                    `👤 Usuario: ${usuario}\n` +
+                    `⭐ Nivel: ${nivel}\n` +
+                    `💰 Monto: ${monto} BOB\n` +
+                    `⏰ Hora: ${time}\n` +
+                    `${extraInfo}\n` +
+                    `🆔 Ref: ${refId}`;
 
-  const buffer = Buffer.from(base64Data, 'base64');
-  console.log(`[Telegram Lib] Photo buffer created. Size: ${buffer.length} bytes. Type: ${mimeType}`);
+    // 2. Obtener Grupos
+    const equipos = await query("SELECT * FROM telegram_equipos WHERE activo = 1");
+    const secGroup = equipos.find(e => e.tipo === 'secretaria');
+    const retGroup = equipos.find(e => e.tipo === 'retiros');
+    const admGroup = equipos.find(e => e.tipo === 'administradores');
 
-  const results = [];
-  for (const id of chatIds) {
-    const url = `https://api.telegram.org/bot${token}/sendPhoto`;
-    try {
-      const boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2)}`;
-      
-      // Añadir otros campos opcionales
-      let middleParts = [];
-      if (caption) {
-        middleParts.push(`--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n${caption}\r\n`);
-        middleParts.push(`--${boundary}\r\nContent-Disposition: form-data; name="parse_mode"\r\n\r\nHTML\r\n`);
-      }
-      if (replyMarkup) {
-        middleParts.push(`--${boundary}\r\nContent-Disposition: form-data; name="reply_markup"\r\n\r\n${JSON.stringify(replyMarkup)}\r\n`);
-      }
-      const middleBuffer = Buffer.from(middleParts.join(''));
-      const footerBuffer = Buffer.from(`\r\n--${boundary}--\r\n`);
-
-      // Combinar todo en un solo Buffer para el cuerpo
-      const bodyBuffer = Buffer.concat([
-        Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${id}\r\n`),
-        Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="photo"; filename="image.${extension}"\r\nContent-Type: ${mimeType}\r\n\r\n`),
-        buffer,
-        Buffer.from(`\r\n`),
-        middleBuffer,
-        footerBuffer
-      ]);
-
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': `multipart/form-data; boundary=${boundary}`
-        },
-        body: bodyBuffer
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        console.error(`[Telegram Lib] Error sending photo to ${id}:`, data);
-      } else {
-        console.log(`[Telegram Lib] Photo successfully sent to ${id}`);
-        results.push({ chat_id: String(id), message_id: String(data.result.message_id) });
-      }
-    } catch (err) {
-      console.error(`[Telegram Lib] Exception sending photo to ${id}:`, err.message);
+    // 3. Enviar a Secretaría (Lectura)
+    let secMsgId = null;
+    if (secGroup) {
+      const sent = await bot.sendMessage(secGroup.chat_id, message);
+      secMsgId = sent.message_id;
     }
+
+    // 4. Enviar a Grupos Operativos (Con Botones)
+    const buttons = [[{ text: '✋ TOMAR CASO', callback_data: `tomar:${refId}` }]];
+    
+    const targetGroups = [];
+    if (tipo === 'retiro' && retGroup) targetGroups.push(retGroup.chat_id);
+    if (admGroup) targetGroups.push(admGroup.chat_id);
+
+    for (const chatId of targetGroups) {
+      await bot.sendMessage(chatId, message, {
+        reply_markup: { inline_keyboard: buttons }
+      });
+    }
+
+    // 5. Registrar en tabla de bloqueo
+    await query(`
+      INSERT INTO telegram_casos_bloqueo (referencia_id, tipo_operacion, telegram_secretaria_message_id)
+      VALUES (?, ?, ?)
+    `, [refId, tipo, String(secMsgId)]);
+
+  } catch (err) {
+    logger.error(`[Telegram Alert Error]: ${err.message}`);
   }
-  return results;
 }
 
-export const telegram = {
-  sendRecarga: async (text, id) => {
-    const config = await getRecargasConfig();
-    if (!config.enabled) return;
-    const markup = {
-      inline_keyboard: [[
-        { text: '✅ Aceptar', callback_data: `recarga_aprobar_${id}` },
-        { text: '❌ Rechazar', callback_data: `recarga_rechazar_${id}` }
-      ]]
-    };
-    return send(config.token, config.chatId, text, markup);
-  },
-  sendRecargaConFoto: async (text, base64Photo, id) => {
-    const config = await getRecargasConfig();
-    if (!config.enabled) return;
-    const markup = {
-      inline_keyboard: [[
-        { text: '✅ Aceptar', callback_data: `recarga_aprobar_${id}` },
-        { text: '❌ Rechazar', callback_data: `recarga_rechazar_${id}` }
-      ]]
-    };
-    return sendPhoto(config.token, config.chatId, base64Photo, text, markup);
-  },
-  sendRetiro: async (text, id) => {
-    const config = await getRetirosConfig();
-    if (!config.enabled) return;
-    const markup = {
-      inline_keyboard: [[
-        { text: '🔒 Tomar Retiro', callback_data: `retiro_tomar_${id}` },
-        { text: '❌ Rechazar', callback_data: `retiro_rechazar_${id}` }
-      ]]
-    };
-    return send(config.token, config.chatId, text, markup);
-  },
-  sendRetiroConFoto: async (text, base64Photo, id) => {
-    const config = await getRetirosConfig();
-    if (!config.enabled) return;
-    const markup = {
-      inline_keyboard: [[
-        { text: '🔒 Tomar Retiro', callback_data: `retiro_tomar_${id}` },
-        { text: '❌ Rechazar', callback_data: `retiro_rechazar_${id}` }
-      ]]
-    };
-    return sendPhoto(config.token, config.chatId, base64Photo, text, markup);
-  },
-};
+/**
+ * Reporte Diario Automático (23:30)
+ */
+if (bot) {
+  new CronJob('30 23 * * *', async () => {
+    logger.info('[Telegram] Generando reporte diario...');
+    try {
+      const today = boliviaTime.todayStr();
+      const stats = await query(`
+        SELECT i.nombre_visible, 
+               COUNT(CASE WHEN l.accion = 'tomar' THEN 1 END) as tomados,
+               COUNT(CASE WHEN l.accion = 'aceptar' THEN 1 END) as aceptados,
+               COUNT(CASE WHEN l.accion = 'rechazar' THEN 1 END) as rechazados
+        FROM telegram_integrantes i
+        LEFT JOIN telegram_operaciones_log l ON i.telegram_user_id = l.telegram_user_id
+        WHERE DATE(l.fecha) = ?
+        GROUP BY i.id
+      `, [today]);
+
+      let report = `📊 REPORTE DIARIO OPERATIVO (${today})\n\n`;
+      if (stats.length === 0) {
+        report += "Sin actividad registrada hoy.";
+      } else {
+        stats.forEach(s => {
+          report += `👤 ${s.nombre_visible}:\n` +
+                    `  📥 Tomados: ${s.tomados}\n` +
+                    `  ✅ Aceptados: ${s.aceptados}\n` +
+                    `  ❌ Rechazados: ${s.rechazados}\n\n`;
+        });
+      }
+
+      const admGroup = await queryOne("SELECT chat_id FROM telegram_equipos WHERE tipo = 'administradores' AND activo = 1");
+      if (admGroup) await bot.sendMessage(admGroup.chat_id, report);
+
+    } catch (e) {
+      logger.error(`[Telegram Report Error]: ${e.message}`);
+    }
+  }, null, true, 'America/La_Paz');
+}
+
+export default bot;

@@ -15,6 +15,7 @@ import levelRoutes from './routes/levels.js';
 import rechargeRoutes from './routes/recharges.js';
 import withdrawalRoutes from './routes/withdrawals.js';
 import adminRoutes from './routes/admin.js';
+import telegramAdminRoutes from './routes/telegram_admin.js';
 import sorteoRoutes from './routes/sorteo.js';
 import telegramWebhookRoutes from './routes/telegram_webhook.js';
 import { preloadConfig, preloadLevels } from './lib/queries.js';
@@ -123,6 +124,7 @@ app.use('/api/tasks', rateLimiter(60000, 40), taskRoutes);
 app.use('/api/levels', rateLimiter(60000, 60), levelRoutes);
 app.use('/api/recharges', rechargeRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
+app.use('/api/admin/telegram', telegramAdminRoutes);
 app.use('/api/admin', rateLimiter(60000, 30), adminRoutes);
 app.use('/api/sorteo', rateLimiter(60000, 30), sorteoRoutes);
 app.use('/api/telegram-webhook', telegramWebhookRoutes);
@@ -171,15 +173,13 @@ const startServer = async () => {
       preloadLevels().catch(() => {});
     }, 5 * 60 * 1000);
     
-    // 3. Iniciar polling de Telegram (Solo si hay token configurado)
+    // 3. Inicializar Bot de Telegram (Polling Interno)
     try {
-      const { getPublicContent } = await import('./lib/queries.js');
-      const config = await getPublicContent();
-      if (config.telegram_recargas_token) {
-        const { startTelegramPolling } = await import('./lib/telegram_polling.js');
-        startTelegramPolling();
-      }
-    } catch (e) {}
+      await import('./lib/telegram.js');
+      logger.info('[TELEGRAM] Sistema de Operaciones iniciado.');
+    } catch (e) {
+      logger.error(`[TELEGRAM] Error al iniciar bot: ${e.message}`);
+    }
     
     app.listen(PORT, async () => {
       console.log(`\n[SUCCESS] ¡Servidor Global API escuchando en http://localhost:${PORT}!\n`);
