@@ -666,7 +666,7 @@ export async function distributeInvestmentCommissions(userId, amount) {
 
 export async function getPublicContent() {
   const now = Date.now();
-  if (configCache.data && now - configCache.lastFetch < 60000) return configCache.data;
+  if (configCache.data && now - configCache.lastFetch < 300000) return configCache.data;
 
   try {
     const rows = await query(`SELECT * FROM configuraciones`);
