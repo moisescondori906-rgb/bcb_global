@@ -69,7 +69,7 @@ if (bot) {
         }
 
         if (config && caso?.tipo_operacion === 'recarga') {
-          const now = new Date(boliviaTime.now());
+          const now = boliviaTime.nowDate();
           const currentDay = now.getDay() === 0 ? 7 : now.getDay();
           const dias = JSON.parse(config.dias_operativos || '[1,2,3,4,5,6,7]');
           
