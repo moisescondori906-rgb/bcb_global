@@ -9,7 +9,7 @@ router.get('/', (req, res) => {
   res.send('✅ El endpoint del Webhook de Telegram está activo y listo para recibir señales.');
 });
 
-// Endpoint de prueba real de envío de mensaje a los 3 grupos
+// Endpoint de prueba real de envío de mensaje a los 3 grupos (v8.6.0)
 router.get('/test', async (req, res) => {
   try {
     const results = await Promise.all([

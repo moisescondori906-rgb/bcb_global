@@ -8,7 +8,13 @@ import {
 import { query, queryOne, transaction } from '../config/db.js';
 import { authenticate } from '../middleware/auth.js';
 import { attachRequestUser } from '../middleware/requestContext.js';
-import { sendTelegramAlert } from '../lib/telegram.js';
+import { 
+  initTelegramBot, 
+  sendToRetiros, 
+  sendToAdmin, 
+  sendToSecretaria, 
+  formatRetiroMessage 
+} from '../services/telegramBot.js';
 import logger from '../lib/logger.js';
 
 const router = Router();
@@ -95,13 +101,22 @@ router.post('/', async (req, res) => {
 
     // 5. Alerta de Telegram (Fuera de la transacción para no bloquear el API si falla el bot)
     const userLevel = result.levels.find(l => String(l.id) === String(req.requestUser.nivel_id));
-    sendTelegramAlert('retiro', {
-      refId: result.id,
-      usuario: req.requestUser.nombre_usuario,
+    
+    const telegramData = {
+      telefono: req.requestUser.nombre_usuario,
+      nivel: userLevel?.nombre || 'Pasante',
       monto: result.neto,
-      nivel: userLevel?.nombre || 'Internar',
-      extraInfo: `💳 Billetera: ${tipo_billetera.toUpperCase()}\n💸 Monto Bruto: ${monto} BOB`
-    }).catch(e => logger.error(`[Telegram Alert Error]: ${e.message}`));
+      hora: boliviaTime.getTimeString()
+    };
+
+    const message = formatRetiroMessage(telegramData);
+    
+    // Enviar a los 3 grupos
+    Promise.all([
+      sendToRetiros(message),
+      sendToAdmin(message),
+      sendToSecretaria(message)
+    ]).catch(e => logger.error(`[Telegram Alert Error]: ${e.message}`));
 
     res.json({ id: result.id, ok: true });
   } catch (err) {

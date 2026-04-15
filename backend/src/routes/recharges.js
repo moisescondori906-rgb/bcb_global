@@ -6,7 +6,11 @@ import {
 import { query, queryOne } from '../config/db.js';
 import { authenticate } from '../middleware/auth.js';
 import { attachRequestUser } from '../middleware/requestContext.js';
-import { sendTelegramAlert } from '../lib/telegram.js';
+import { 
+  sendToAdmin, 
+  sendToSecretaria, 
+  formatRecargaMessage 
+} from '../services/telegramBot.js';
 import logger from '../lib/logger.js';
 
 const router = Router();
@@ -58,15 +62,22 @@ router.post('/', async (req, res) => {
     // 2. Alerta de Telegram
     const levels = await getLevels();
     const userLevel = levels.find(l => String(l.id) === String(req.requestUser.nivel_id));
-    sendTelegramAlert('recarga', {
-      refId: id,
-      usuario: req.requestUser.nombre_usuario,
-      monto: monto,
-      nivel: userLevel?.nombre || 'Internar',
-      extraInfo: `🖼️ Comprobante: ${comprobante_url ? 'ADJUNTO' : 'NO DISPONIBLE'}`
-    }).catch(e => logger.error(`[Telegram Alert Error]: ${e.message}`));
+    
+    const telegramData = {
+      telefono: req.requestUser.nombre_usuario,
+      nivel: userLevel?.nombre || 'Pasante',
+      monto: parseFloat(monto)
+    };
 
-    res.json({ id, ok: true });
+    const message = formatRecargaMessage(telegramData);
+
+    // Enviar a Admin y Secretaria
+    Promise.all([
+      sendToAdmin(message),
+      sendToSecretaria(message)
+    ]).catch(e => logger.error(`[Telegram Alert Error]: ${e.message}`));
+
+    res.json({ id: id, ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Error al procesar la recarga' });
   }

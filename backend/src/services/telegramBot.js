@@ -1,87 +1,86 @@
 import TelegramBot from 'node-telegram-bot-api';
 import logger from '../lib/logger.js';
 
-// Instancias de los bots
-let botAdmin = null;
-let botRetiros = null;
-let botSecretaria = null;
+const token = process.env.TELEGRAM_BOT_TOKEN;
+let bot = null;
 
 /**
- * Inicializa los bots de Telegram automáticamente al arrancar el backend
+ * Inicializa el bot de Telegram (Un solo bot para todos los grupos)
  */
-export const initTelegramBots = () => {
-  const tokenAdmin = process.env.TELEGRAM_BOT_TOKEN_ADMIN;
-  const tokenRetiros = process.env.TELEGRAM_BOT_TOKEN_RETIROS;
-  const tokenSecretaria = process.env.TELEGRAM_BOT_TOKEN_SECRETARIA;
-
-  // Inicializar Bot ADMIN
-  if (tokenAdmin) {
-    try {
-      botAdmin = new TelegramBot(tokenAdmin, { polling: true });
-      logger.info('✅ Telegram bot ADMIN iniciado correctamente');
-    } catch (error) {
-      logger.error(`❌ Error al inicializar bot ADMIN: ${error.message}`);
-    }
-  } else {
-    logger.warn('⚠️ TELEGRAM_BOT_TOKEN_ADMIN no configurado');
+export const initTelegramBot = () => {
+  if (!token) {
+    logger.warn('⚠️ TELEGRAM_BOT_TOKEN no configurado. El sistema de Telegram no funcionará.');
+    return null;
   }
 
-  // Inicializar Bot RETIROS
-  if (tokenRetiros) {
-    try {
-      botRetiros = new TelegramBot(tokenRetiros, { polling: true });
-      logger.info('✅ Telegram bot RETIROS iniciado correctamente');
-    } catch (error) {
-      logger.error(`❌ Error al inicializar bot RETIROS: ${error.message}`);
-    }
-  } else {
-    logger.warn('⚠️ TELEGRAM_BOT_TOKEN_RETIROS no configurado');
-  }
-
-  // Inicializar Bot SECRETARIA
-  if (tokenSecretaria) {
-    try {
-      botSecretaria = new TelegramBot(tokenSecretaria, { polling: true });
-      logger.info('✅ Telegram bot SECRETARIA iniciado correctamente');
-    } catch (error) {
-      logger.error(`❌ Error al inicializar bot SECRETARIA: ${error.message}`);
-    }
-  } else {
-    logger.warn('⚠️ TELEGRAM_BOT_TOKEN_SECRETARIA no configurado');
+  try {
+    bot = new TelegramBot(token, { polling: true });
+    logger.info('✅ Telegram bot iniciado correctamente (Unificado)');
+    return bot;
+  } catch (error) {
+    logger.error(`❌ Error al inicializar Telegram bot: ${error.message}`);
+    return null;
   }
 };
 
 /**
  * Función genérica para enviar mensajes HTML
  */
-const sendMessage = async (bot, chatId, message) => {
+export const sendMessage = async (chatId, message) => {
   if (!bot) {
-    logger.warn('⚠️ Intento de enviar mensaje sin bot inicializado');
+    logger.warn('⚠️ Intento de enviar mensaje de Telegram sin bot inicializado');
     return false;
   }
+
   if (!chatId) {
-    logger.warn('⚠️ Intento de enviar mensaje sin chatId configurado');
+    logger.warn('⚠️ Intento de enviar mensaje de Telegram sin chatId');
     return false;
   }
 
   try {
     await bot.sendMessage(chatId, message, { parse_mode: 'HTML' });
-    logger.info(`[Telegram] Mensaje enviado a chat ${chatId}`);
+    console.log("Telegram enviado:", chatId);
     return true;
   } catch (error) {
-    logger.error(`❌ [Telegram] Error al enviar a ${chatId}: ${error.message}`);
+    console.error("Error Telegram:", error.message);
     return false;
   }
 };
 
-// Funciones de envío por grupo
-export const sendToAdmin = (message) => sendMessage(botAdmin, process.env.TELEGRAM_CHAT_ADMIN, message);
-export const sendToRetiros = (message) => sendMessage(botRetiros, process.env.TELEGRAM_CHAT_RETIROS, message);
-export const sendToSecretaria = (message) => sendMessage(botSecretaria, process.env.TELEGRAM_CHAT_SECRETARIA, message);
+// Funciones de envío por grupo (Usando Chat IDs de .env)
+export const sendToAdmin = (message) => sendMessage(process.env.TELEGRAM_CHAT_ADMIN, message);
+export const sendToRetiros = (message) => sendMessage(process.env.TELEGRAM_CHAT_RETIROS, message);
+export const sendToSecretaria = (message) => sendMessage(process.env.TELEGRAM_CHAT_SECRETARIA, message);
+
+/**
+ * Formateador de mensajes para RETIROS
+ */
+export const formatRetiroMessage = (data) => {
+  const { telefono, nivel, monto, hora } = data;
+  return `📌 <b>NUEVO RETIRO</b>\n\n` +
+         `👤 Usuario: ${telefono}\n` +
+         `🏅 Nivel: ${nivel}\n` +
+         `💵 Monto: ${monto} Bs\n` +
+         `🕒 Hora: ${hora}`;
+};
+
+/**
+ * Formateador de mensajes para RECARGAS
+ */
+export const formatRecargaMessage = (data) => {
+  const { telefono, nivel, monto } = data;
+  return `📌 <b>NUEVA RECARGA</b>\n\n` +
+         `👤 Usuario: ${telefono}\n` +
+         `🏅 Nivel: ${nivel}\n` +
+         `💵 Monto: ${monto} Bs`;
+};
 
 export default {
-  initTelegramBots,
+  initTelegramBot,
+  sendMessage,
   sendToAdmin,
   sendToRetiros,
-  sendToSecretaria
+  sendToSecretaria,
+  formatRetiroMessage,
+  formatRecargaMessage
 };
