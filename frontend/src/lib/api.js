@@ -299,6 +299,11 @@ export const api = {
       eliminarIntegrante: (id) => request(`/admin/telegram/integrantes/${id}`, { method: 'DELETE' }),
       horarios: () => request('/admin/telegram/horarios'),
       updateHorarios: (data) => request('/admin/telegram/horarios', { method: 'PUT', body: JSON.stringify(data) }),
+      usuarios: () => request('/admin/telegram/usuarios'),
+      crearUsuario: (data) => request('/admin/telegram/usuarios', { method: 'POST', body: JSON.stringify(data) }),
+      updateUsuario: (id, data) => request(`/admin/telegram/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+      eliminarUsuario: (id) => request(`/admin/telegram/usuarios/${id}`, { method: 'DELETE' }),
+      historial: () => request('/admin/telegram/historial'),
     }
   },
 };

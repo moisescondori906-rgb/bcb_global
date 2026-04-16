@@ -6,9 +6,9 @@ import {
   Plus, 
   Trash2, 
   Edit2, 
+  Shield, 
   Save, 
   X, 
-  Shield, 
   Lock, 
   Eye, 
   CheckCircle2, 
@@ -23,6 +23,7 @@ import { cn } from '../../lib/utils/cn';
 export default function AdminTelegram() {
   const [equipos, setEquipos] = useState([]);
   const [integrantes, setIntegrantes] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
   const [horarios, setHorarios] = useState({ 
     hora_inicio: '08:00', 
     hora_fin: '22:00', 
@@ -36,11 +37,14 @@ export default function AdminTelegram() {
   // Modales y Edición
   const [showEquipoModal, setShowEquipoModal] = useState(false);
   const [showIntegranteModal, setShowIntegranteModal] = useState(false);
+  const [showUsuarioModal, setShowUsuarioModal] = useState(false);
   const [editingEquipo, setEditingEquipo] = useState(null);
   const [editingIntegrante, setEditingIntegrante] = useState(null);
+  const [editingUsuario, setEditingUsuario] = useState(null);
   
   const [equipoForm, setEquipoForm] = useState({ nombre: '', tipo: 'secretaria', chat_id: '', activo: true });
   const [integranteForm, setIntegranteForm] = useState({ telegram_user_id: '', nombre_visible: '', equipo_id: '', activo: true });
+  const [usuarioForm, setUsuarioForm] = useState({ telegram_id: '', nombre: '', rol: 'secretaria', activo: true });
 
   useEffect(() => {
     fetchData();
@@ -49,14 +53,16 @@ export default function AdminTelegram() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [e, i, h, log] = await Promise.all([
+      const [e, i, u, h, log] = await Promise.all([
         api.admin.telegram.equipos(),
         api.admin.telegram.integrantes(),
+        api.admin.telegram.usuarios(),
         api.admin.telegram.horarios(),
         api.admin.telegram.historial()
       ]);
       setEquipos(e);
       setIntegrantes(i);
+      setUsuarios(u || []);
       setHistorial(log || []);
       if (h) setHorarios({ 
         ...h, 
@@ -99,6 +105,33 @@ export default function AdminTelegram() {
       setShowIntegranteModal(false);
       setEditingIntegrante(null);
       setIntegranteForm({ telegram_user_id: '', nombre_visible: '', equipo_id: '', activo: true });
+      fetchData();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleSaveUsuario = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingUsuario) {
+        await api.admin.telegram.updateUsuario(editingUsuario.id, usuarioForm);
+      } else {
+        await api.admin.telegram.crearUsuario(usuarioForm);
+      }
+      setShowUsuarioModal(false);
+      setEditingUsuario(null);
+      setUsuarioForm({ telegram_id: '', nombre: '', rol: 'secretaria', activo: true });
+      fetchData();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleEliminarUsuario = async (id) => {
+    if (!confirm('¿Seguro que deseas eliminar este usuario de Telegram?')) return;
+    try {
+      await api.admin.telegram.eliminarUsuario(id);
       fetchData();
     } catch (err) {
       alert(err.message);
@@ -241,6 +274,62 @@ export default function AdminTelegram() {
                         <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => { setEditingIntegrante(i); setIntegranteForm(i); setShowIntegranteModal(true); }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit2 size={14} /></button>
                           <button onClick={async () => { if(confirm('¿Eliminar?')) { await api.admin.telegram.eliminarIntegrante(i.id); fetchData(); } }} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={14} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* ROLES DINÁMICOS (USUARIOS TELEGRAM) */}
+          <Card className="p-6 border-none shadow-xl bg-white overflow-hidden">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <Shield className="text-indigo-600" size={20} />
+                <h2 className="text-sm font-black uppercase tracking-widest text-gray-800">Roles Dinámicos Telegram</h2>
+              </div>
+              <Button 
+                onClick={() => { setEditingUsuario(null); setUsuarioForm({ telegram_id: '', nombre: '', rol: 'secretaria', activo: true }); setShowUsuarioModal(true); }}
+                className="h-9 px-4 text-[10px]"
+              >
+                <Plus size={14} className="mr-2" /> Nuevo Operador
+              </Button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-50">
+                    <th className="text-left py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nombre</th>
+                    <th className="text-left py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Telegram ID</th>
+                    <th className="text-left py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Rol</th>
+                    <th className="text-left py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Estado</th>
+                    <th className="text-right py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {usuarios.map(u => (
+                    <tr key={u.id} className="group hover:bg-gray-50/50 transition-colors">
+                      <td className="py-4">
+                        <p className="text-xs font-black text-gray-800 uppercase">{u.nombre}</p>
+                      </td>
+                      <td className="py-4">
+                        <code className="text-[10px] font-mono text-gray-400">{u.telegram_id}</code>
+                      </td>
+                      <td className="py-4">
+                        <Badge variant={u.rol === 'admin' ? 'error' : (u.rol === 'retiro' ? 'info' : 'secondary')} className="text-[9px]">
+                          {u.rol.toUpperCase()}
+                        </Badge>
+                      </td>
+                      <td className="py-4">
+                        <div className={cn("w-2 h-2 rounded-full", u.activo ? "bg-green-500" : "bg-gray-300")} />
+                      </td>
+                      <td className="py-4 text-right">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => { setEditingUsuario(u); setUsuarioForm(u); setShowUsuarioModal(true); }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit2 size={14} /></button>
+                          <button onClick={() => handleEliminarUsuario(u.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -480,6 +569,61 @@ export default function AdminTelegram() {
                 <span className="text-[10px] font-black text-gray-700 uppercase">Integrante Activo</span>
               </label>
               <Button type="submit" className="w-full py-5 text-xs font-black uppercase tracking-[0.2em]">{editingIntegrante ? 'Actualizar' : 'Crear Integrante'}</Button>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* MODAL USUARIO TELEGRAM (ROLES) */}
+      {showUsuarioModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-in fade-in">
+          <Card className="max-w-md w-full p-8 space-y-6 animate-in zoom-in-95">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">{editingUsuario ? 'Editar Operador' : 'Nuevo Operador'}</h2>
+              <button onClick={() => setShowUsuarioModal(false)}><X className="text-gray-400" /></button>
+            </div>
+            <form onSubmit={handleSaveUsuario} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Nombre del Operador</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Ej: Juan Pérez"
+                  value={usuarioForm.nombre}
+                  onChange={e => setUsuarioForm({...usuarioForm, nombre: e.target.value})}
+                  className="w-full px-5 py-4 rounded-2xl bg-gray-50 border-2 border-gray-50 font-bold text-sm outline-none focus:border-indigo-100 transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Telegram User ID (Numérico)</label>
+                <input 
+                  type="text" 
+                  required
+                  disabled={!!editingUsuario}
+                  placeholder="12345678"
+                  value={usuarioForm.telegram_id}
+                  onChange={e => setUsuarioForm({...usuarioForm, telegram_id: e.target.value})}
+                  className="w-full px-5 py-4 rounded-2xl bg-gray-50 border-2 border-gray-50 font-bold text-sm outline-none focus:border-indigo-100 transition-all disabled:opacity-50"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Asignar Rol</label>
+                <select 
+                  required
+                  value={usuarioForm.rol}
+                  onChange={e => setUsuarioForm({...usuarioForm, rol: e.target.value})}
+                  className="w-full px-5 py-4 rounded-2xl bg-gray-50 border-2 border-gray-50 font-bold text-sm outline-none focus:border-indigo-100 transition-all"
+                >
+                  <option value="admin">ADMIN (CONTROL TOTAL)</option>
+                  <option value="retiro">RETIROS (TOMAR/APROBAR/RECHAZAR)</option>
+                  <option value="secretaria">SECRETARÍA (SÓLO LECTURA)</option>
+                </select>
+              </div>
+              <label className="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-50 cursor-pointer">
+                <input type="checkbox" checked={usuarioForm.activo} onChange={e => setUsuarioForm({...usuarioForm, activo: e.target.checked})} className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                <span className="text-[10px] font-black text-gray-700 uppercase">Operador Activo</span>
+              </label>
+              <Button type="submit" className="w-full py-5 text-xs font-black uppercase tracking-[0.2em]">{editingUsuario ? 'Actualizar' : 'Registrar Operador'}</Button>
             </form>
           </Card>
         </div>
