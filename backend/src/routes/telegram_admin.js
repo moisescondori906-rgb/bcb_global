@@ -160,7 +160,7 @@ router.get('/historial', async (req, res) => {
   }
 });
 
-// --- USUARIOS TELEGRAM (ROLES DINÁMICOS) ---
+// --- USUARIOS TELEGRAM (SISTEMA DE CONTROL DE OPERADORES) ---
 // Soportar GET /api/admin/telegram-users y POST /api/admin/telegram-users
 
 router.get(['/usuarios', '/'], async (req, res) => {
