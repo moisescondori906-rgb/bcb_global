@@ -111,10 +111,18 @@ router.post('/', async (req, res) => {
 
     const message = formatRetiroMessage(telegramData);
     
+    const inline_keyboard = {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🟢 Tomar Retiro', callback_data: `tomar_${result.id}` }]
+        ]
+      }
+    };
+
     // Enviar a los 3 grupos
     Promise.all([
       sendToRetiros(message),
-      sendToAdmin(message),
+      sendToAdmin(message, inline_keyboard),
       sendToSecretaria(message)
     ]).catch(e => logger.error(`[Telegram Alert Error]: ${e.message}`));
 
