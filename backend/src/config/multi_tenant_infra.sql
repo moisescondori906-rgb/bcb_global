@@ -43,6 +43,27 @@ ALTER TABLE feature_flags ADD INDEX idx_tenant_flag (tenant_id, flag_key);
 INSERT IGNORE INTO tenants (id, name, slug, status, config) VALUES 
 ('default-tenant-uuid', 'BCB Global HQ', 'bcb-global', 'active', '{"theme": "dark", "max_users": 10000}');
 
+-- 5. SEGURIDAD: RLS NATIVO (MySQL 8.0+ Session Variables)
+-- Implementación de aislamiento a nivel de base de datos para evitar fugas de datos.
+
+DELIMITER //
+CREATE FUNCTION IF NOT EXISTS current_tenant() RETURNS VARCHAR(36) DETERMINISTIC NO SQL
+BEGIN
+  RETURN @current_tenant_id;
+END //
+DELIMITER ;
+
+-- Ejemplo de Vista Protegida (Se debe aplicar a todas las tablas críticas)
+-- El backend debe ejecutar: SET @current_tenant_id = 'uuid'; antes de cada query.
+CREATE OR REPLACE VIEW v_usuarios AS 
+SELECT * FROM usuarios WHERE tenant_id = current_tenant();
+
+CREATE OR REPLACE VIEW v_retiros AS 
+SELECT * FROM retiros WHERE tenant_id = current_tenant();
+
+CREATE OR REPLACE VIEW v_movimientos_saldo AS 
+SELECT * FROM movimientos_saldo WHERE tenant_id = current_tenant();
+
 -- Actualizar registros existentes al tenant default
 UPDATE usuarios SET tenant_id = 'default-tenant-uuid' WHERE tenant_id IS NULL;
 UPDATE niveles SET tenant_id = 'default-tenant-uuid' WHERE tenant_id IS NULL;

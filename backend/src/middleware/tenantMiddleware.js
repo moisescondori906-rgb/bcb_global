@@ -44,6 +44,15 @@ export async function tenantContext(req, res, next) {
     req.tenant = tenant;
     req.planId = tenant.plan_id;
 
+    // 2. Control de Modo Degradado (Solo Lectura)
+    const isDegraded = tenant.subscription_status === 'past_due' || (tenant.config && tenant.config.degraded_mode);
+    if (isDegraded && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+      return res.status(403).json({
+        error: 'SaaS en modo degradado. Las operaciones de escritura están deshabilitadas por falta de pago.',
+        code: 'DEGRADED_MODE_ACTIVE'
+      });
+    }
+
     next();
   } catch (error) {
     logger.error(`[TenantContext Error]: ${error.message}`);

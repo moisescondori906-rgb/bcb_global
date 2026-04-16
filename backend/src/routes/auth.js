@@ -19,11 +19,17 @@ router.post('/register', async (req, res) => {
     }
 
     // 1. Validaciones en paralelo para reducir tiempo total
-    const [exists, inviter, levels] = await Promise.all([
+    const [exists, inviter, levels, ipCheck] = await Promise.all([
       findUserByTelefono(telefono),
       queryOne(`SELECT id FROM usuarios WHERE codigo_invitacion = ?`, [codigo_invitacion]),
-      getLevels()
+      getLevels(),
+      // 2. Protección Anti-Abuso: Verificar si la IP ha creado demasiadas cuentas recientemente
+      redis.get(`onboarding:ip:${req.ip}`)
     ]);
+
+    if (ipCheck && parseInt(ipCheck) >= 3) {
+      return res.status(429).json({ error: 'Límite de registros por IP excedido. Intente más tarde.' });
+    }
 
     if (exists) return res.status(400).json({ error: 'Teléfono ya registrado' });
     if (!inviter) return res.status(400).json({ error: 'Código de invitación inválido' });
@@ -53,15 +59,24 @@ router.post('/register', async (req, res) => {
       bloqueado: false,
       tickets_ruleta: 0,
       primer_ascenso_completado: false,
-      last_device_id: deviceId || null
+      last_device_id: deviceId || null,
+      tenant_id: req.tenantId || 'default-tenant-uuid',
+      status: 'pending_verification' // Nuevo estado para Onboarding
     };
     
     await createUser(user); 
     
+    // 3. Incrementar contador de IP para anti-abuso
+    await redis.incr(`onboarding:ip:${req.ip}`);
+    await redis.expire(`onboarding:ip:${req.ip}`, 3600); // 1 hora de ventana
+
     // SaaS Usage: Incrementar contador de usuarios
     if (req.tenantId) {
       await BillingService.trackUsage(req.tenantId, 'users_count');
     }
+
+    // Auditoría de Onboarding
+    await AuditService.log(req, 'USER_REGISTERED', 'user', user.id, { ip: req.ip, deviceId });
 
     const token = jwt.sign({ 
        id: user.id, 

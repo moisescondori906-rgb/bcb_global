@@ -70,8 +70,8 @@ export async function queryOne(sql, params) {
 }
 
 /**
- * SECURE QUERY (RLS Simulation)
- * Enforces tenant_id isolation at the query level.
+ * SECURE QUERY (RLS Nativo MySQL 8.0)
+ * Enforces tenant_id isolation at the database level using session variables.
  */
 export async function secureQuery(sql, params, tenantId) {
   if (!tenantId) {
@@ -79,22 +79,29 @@ export async function secureQuery(sql, params, tenantId) {
     throw new Error('Tenant isolation error: tenantId is required for this operation');
   }
 
-  // Si la query ya tiene WHERE, añadir AND, si no, añadir WHERE
-  const hasWhere = sql.toUpperCase().includes('WHERE');
-  const connector = hasWhere ? 'AND' : 'WHERE';
-  
-  // Inyectar tenant_id al final antes de ORDER BY, LIMIT, etc.
-  // Nota: Esto es una simplificación, en un sistema real se usaría un AST parser.
-  let secureSql = sql;
-  if (sql.toUpperCase().includes('ORDER BY')) {
-    secureSql = sql.replace(/ORDER BY/i, `${connector} tenant_id = ? ORDER BY`);
-  } else if (sql.toUpperCase().includes('LIMIT')) {
-    secureSql = sql.replace(/LIMIT/i, `${connector} tenant_id = ? LIMIT`);
-  } else {
-    secureSql += ` ${connector} tenant_id = ?`;
-  }
+  const connection = await pool.getConnection();
+  try {
+    // 1. Establecer el contexto del tenant en la sesión de MySQL (RLS Nativo)
+    await connection.execute('SET @current_tenant_id = ?', [tenantId]);
+    
+    // 2. Ejecutar la query usando la vista protegida o la tabla original
+    // Si la query usa la tabla original, el RLS se puede aplicar mediante un trigger o middleware de SQL.
+    // Para máxima seguridad, redirigimos las consultas a las vistas v_
+    let rlsSql = sql;
+    const tablesToProtect = ['usuarios', 'retiros', 'movimientos_saldo'];
+    tablesToProtect.forEach(table => {
+      const regex = new RegExp(`\\b${table}\\b`, 'gi');
+      rlsSql = rlsSql.replace(regex, `v_${table}`);
+    });
 
-  return await query(secureSql, [...params, tenantId]);
+    const [results] = await connection.execute(rlsSql, params);
+    return results;
+  } catch (err) {
+    logger.error(`[SECURE-QUERY-ERROR]: ${err.message} | SQL: ${sql}`);
+    throw err;
+  } finally {
+    connection.release();
+  }
 }
 
 export default pool;

@@ -1,11 +1,63 @@
 import { query, queryOne, transaction } from '../config/db.js';
 import logger from '../lib/logger.js';
 import redis from './redisService.js';
+import { Queue, Worker } from 'bullmq';
+import { queueRedis } from './redisService.js';
+
+// Cola para procesamiento de pagos y suscripciones
+const billingQueue = new Queue('saas-billing', {
+  connection: queueRedis,
+  defaultJobOptions: {
+    attempts: 5,
+    backoff: { type: 'exponential', delay: 10000 },
+  }
+});
 
 /**
  * BillingService - Gestión de Planes, Límites y Suspensión Automática.
  */
 export const BillingService = {
+
+  /**
+   * Procesa la renovación automática de un tenant.
+   */
+  async processRenewal(tenantId) {
+    try {
+      const tenant = await queryOne(
+        `SELECT t.*, p.price_monthly FROM tenants t JOIN saas_plans p ON t.plan_id = p.id WHERE t.id = ?`,
+        [tenantId]
+      );
+
+      // 1. Simular integración con Pasarela de Pago (Stripe/Crypto/etc)
+      const paymentSuccess = await this.chargePayment(tenant.id, tenant.price_monthly);
+
+      if (paymentSuccess) {
+        await query(
+          `UPDATE tenants SET subscription_status = 'active', trial_ends_at = NULL WHERE id = ?`,
+          [tenantId]
+        );
+        await AuditService.log({ tenantId }, 'RENEWAL_SUCCESS', 'tenant', tenantId, { amount: tenant.price_monthly });
+      } else {
+        await this.handlePaymentFailure(tenantId);
+      }
+    } catch (err) {
+      logger.error(`[BILLING-RENEWAL] Error for ${tenantId}:`, err.message);
+    }
+  },
+
+  async chargePayment(tenantId, amount) {
+    // Mock de integración de pago real
+    logger.info(`[BILLING-PAYMENT] Cobrando ${amount} al tenant ${tenantId}`);
+    return true; 
+  },
+
+  async handlePaymentFailure(tenantId) {
+    await query(
+      `UPDATE tenants SET subscription_status = 'past_due' WHERE id = ?`,
+      [tenantId]
+    );
+    // Notificar al dueño del tenant...
+  },
 
   /**
    * Verifica si un tenant tiene saldo o días de suscripción activos.
@@ -27,8 +79,9 @@ export const BillingService = {
         const now = new Date();
         const trialEnd = new Date(tenant.trial_ends_at);
         if (now > trialEnd) {
-          await this.suspendTenant(tenantId, 'trial_expired');
-          return false;
+          // En lugar de suspender inmediatamente, pasar a modo degradado
+          await this.enterDegradedMode(tenantId, 'trial_expired');
+          return true; // Sigue activo pero en modo degradado (manejado por middleware)
         }
       }
 
@@ -37,6 +90,14 @@ export const BillingService = {
       logger.error(`[BILLING-CHECK] Error for ${tenantId}:`, err.message);
       return true; // Fail-safe (Permitir acceso si falla el check)
     }
+  },
+
+  async enterDegradedMode(tenantId, reason) {
+    logger.warn(`[SaaS-BILLING] Tenant ${tenantId} entrando en MODO DEGRADADO. Razón: ${reason}`);
+    await query(
+      `UPDATE tenants SET subscription_status = 'past_due', config = JSON_MERGE_PATCH(config, ?) WHERE id = ?`,
+      [JSON.stringify({ degraded_mode: true, degraded_reason: reason }), tenantId]
+    );
   },
 
   /**
@@ -100,8 +161,15 @@ export const BillingService = {
       `UPDATE tenants SET subscription_status = 'suspended', config = JSON_MERGE_PATCH(config, ?) WHERE id = ?`,
       [JSON.stringify({ suspension_reason: reason, suspended_at: new Date() }), tenantId]
     );
-    
-    // Invalidar cache de flags/contexto para forzar logout
-    await redis.del(`tenant_ctx:${tenantId}`);
   }
 };
+
+// Worker para procesar renovaciones y cobros automáticos
+const billingWorker = new Worker('saas-billing', async (job) => {
+  const { tenantId, action } = job.data;
+  if (action === 'renew_subscription') {
+    await BillingService.processRenewal(tenantId);
+  }
+}, { connection: queueRedis });
+
+export default billingQueue;

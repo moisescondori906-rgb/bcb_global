@@ -47,19 +47,37 @@ CREATE TABLE IF NOT EXISTS saas_invoices (
   FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 5. TABLA: AUDITORÍA GLOBAL SAAS (Logs por Tenant)
+-- 5. TABLA: AUDITORÍA GLOBAL SAAS (Logs inmutables - Append Only)
 CREATE TABLE IF NOT EXISTS saas_audit_logs (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  tenant_id VARCHAR(36),
+  tenant_id VARCHAR(36) NOT NULL,
   user_id VARCHAR(36),
-  action VARCHAR(100),
-  resource VARCHAR(50),
+  action VARCHAR(100) NOT NULL,
+  resource VARCHAR(50) NOT NULL,
   resource_id VARCHAR(36),
   details JSON,
   ip_address VARCHAR(45),
+  hash_chain VARCHAR(64), -- Hash del log anterior para inmutabilidad
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_audit_tenant (tenant_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- TRIGGER PARA EVITAR DELETE/UPDATE (Inmutabilidad DB)
+DELIMITER //
+CREATE TRIGGER IF NOT EXISTS tr_audit_logs_immutable_update
+BEFORE UPDATE ON saas_audit_logs
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Audit logs are immutable and cannot be updated.';
+END //
+
+CREATE TRIGGER IF NOT EXISTS tr_audit_logs_immutable_delete
+BEFORE DELETE ON saas_audit_logs
+FOR EACH ROW
+BEGIN
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Audit logs are immutable and cannot be deleted.';
+END //
+DELIMITER ;
 
 -- INSERTAR PLANES INICIALES
 INSERT IGNORE INTO saas_plans (id, name, price_monthly, max_users, max_withdrawals_daily, features) VALUES 
