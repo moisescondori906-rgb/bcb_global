@@ -157,7 +157,7 @@ export const sendToSecretaria = async (message, options = {}) => {
           const result = await transaction(async (conn) => {
             // SELECT FOR UPDATE: Bloqueo de fila para evitar que otros lean el estado pendiente simultáneamente
             const [retiro] = await conn.query(
-              `SELECT estado_operativo, monto, telefono_usuario FROM retiros WHERE id=? FOR UPDATE`, 
+              `SELECT estado_operativo, monto, telefono_usuario, created_at FROM retiros WHERE id=? FOR UPDATE`, 
               [id]
             );
 
@@ -165,12 +165,25 @@ export const sendToSecretaria = async (message, options = {}) => {
               return { success: false, message: "⚠️ Este retiro ya fue tomado o procesado." };
             }
 
+            const ahora = new Date();
+            const tiempoTomaSeg = Math.floor((ahora - new Date(retiro.created_at)) / 1000);
+
             // Realizar la toma atómica
             await conn.query(
               `UPDATE retiros 
-               SET estado_operativo='tomado', tomado_por=?, tomado_por_nombre=?, fecha_toma=NOW() 
+               SET estado_operativo='tomado', tomado_por=?, tomado_por_nombre=?, fecha_toma=? 
                WHERE id=?`,
-              [userId, userName, id]
+              [userId, userName, ahora, id]
+            );
+
+            // --- REGISTRO DE MÉTRICAS (TOMA) ---
+            await conn.query(
+              `INSERT INTO estadisticas_operadores (telegram_id, nombre_operador, fecha, total_tomados, tiempo_total_toma_seg)
+               VALUES (?, ?, CURDATE(), 1, ?)
+               ON DUPLICATE KEY UPDATE 
+                 total_tomados = total_tomados + 1,
+                 tiempo_total_toma_seg = tiempo_total_toma_seg + ?`,
+              [userId, userName, tiempoTomaSeg, tiempoTomaSeg]
             );
 
             // Snapshot para auditoría
@@ -235,7 +248,7 @@ export const sendToSecretaria = async (message, options = {}) => {
           const result = await transaction(async (conn) => {
             // SELECT FOR UPDATE para asegurar estado
             const [retiro] = await conn.query(
-              `SELECT tomado_por, estado_operativo, monto, telefono_usuario FROM retiros WHERE id=? FOR UPDATE`, 
+              `SELECT tomado_por, estado_operativo, monto, telefono_usuario, fecha_toma FROM retiros WHERE id=? FOR UPDATE`, 
               [id]
             );
 
@@ -252,14 +265,28 @@ export const sendToSecretaria = async (message, options = {}) => {
               return { success: false, message: "⚠️ Ya procesado." };
             }
 
+            const ahora = new Date();
+            const tiempoProcesoSeg = Math.floor((ahora - new Date(retiro.fecha_toma)) / 1000);
+
             const nuevoEstado = accion === 'aprobar' ? 'aprobado' : 'rechazado';
             const finalStatus = accion === 'aprobar' ? 'completado' : 'rechazado';
 
             await conn.query(
               `UPDATE retiros 
-               SET estado_operativo=?, procesado_por=?, fecha_procesado=NOW(), estado=? 
+               SET estado_operativo=?, procesado_por=?, fecha_procesado=?, estado=? 
                WHERE id=?`,
-              [nuevoEstado, userId, finalStatus, id]
+              [nuevoEstado, userId, ahora, finalStatus, id]
+            );
+
+            // --- REGISTRO DE MÉTRICAS (PROCESO) ---
+            const colEstado = accion === 'aprobar' ? 'total_aprobados' : 'total_rechazados';
+            await conn.query(
+              `INSERT INTO estadisticas_operadores (telegram_id, nombre_operador, fecha, ${colEstado}, tiempo_total_proceso_seg)
+               VALUES (?, ?, CURDATE(), 1, ?)
+               ON DUPLICATE KEY UPDATE 
+                 ${colEstado} = ${colEstado} + 1,
+                 tiempo_total_proceso_seg = tiempo_total_proceso_seg + ?`,
+              [userId, userName, tiempoProcesoSeg, tiempoProcesoSeg]
             );
 
             // Resetear fallos en acción exitosa
@@ -407,7 +434,7 @@ setInterval(async () => {
     try {
       const { query: dbQuery, queryOne } = await import('../config/db.js');
       
-      // Estadísticas Generales del Día
+      // 1. Estadísticas Generales
       const stats = await queryOne(`
         SELECT 
           COUNT(*) as total,
@@ -415,36 +442,64 @@ setInterval(async () => {
           SUM(CASE WHEN estado_operativo='rechazado' THEN 1 ELSE 0 END) as rechazados,
           AVG(TIMESTAMPDIFF(SECOND, fecha_toma, fecha_procesado)) as avg_time
         FROM retiros 
-        WHERE DATE(fecha_procesado) = CURDATE() OR DATE(fecha_toma) = CURDATE()
+        WHERE DATE(fecha_procesado) = CURDATE()
       `);
 
-      // Top Operador
-      const topOp = await queryOne(`
-        SELECT nombre_usuario, COUNT(*) as cantidad
-        FROM historial_retiros
-        WHERE accion IN ('aprobado', 'rechazado') AND DATE(fecha) = CURDATE()
-        GROUP BY usuario_telegram_id, nombre_usuario
-        ORDER BY cantidad DESC LIMIT 1
+      // 2. Ranking de Operadores (Top, Lentos)
+      const ranking = await dbQuery(`
+        SELECT 
+          nombre_operador,
+          total_tomados,
+          (total_aprobados + total_rechazados) as total_procesados,
+          total_aprobados,
+          total_rechazados,
+          CASE WHEN (total_aprobados + total_rechazados) > 0 
+               THEN ROUND((total_aprobados / (total_aprobados + total_rechazados)) * 100, 1) 
+               ELSE 0 END as tasa_aprobacion,
+          ROUND(tiempo_total_proceso_seg / NULLIF(total_aprobados + total_rechazados, 0), 1) as avg_proceso_seg
+        FROM estadisticas_operadores
+        WHERE fecha = CURDATE()
+        ORDER BY total_procesados DESC
       `);
 
-      const total = stats?.total || 0;
-      const aprobados = stats?.aprobados || 0;
-      const rechazados = stats?.rechazados || 0;
-      const avgMin = stats?.avg_time ? (stats.avg_time / 60).toFixed(1) : 0;
-      const topNombre = topOp?.nombre_usuario || 'N/A';
-      const topCant = topOp?.cantidad || 0;
+      // 3. Operadores Inactivos
+      const inactivos = await dbQuery(`
+        SELECT nombre FROM usuarios_telegram 
+        WHERE activo=1 AND rol != 'secretaria'
+        AND telegram_id NOT IN (SELECT telegram_id FROM estadisticas_operadores WHERE fecha = CURDATE())
+      `);
 
-      const reportMsg = `📊 <b>REPORTE DEL DÍA (${boliviaTime.toLocaleDateString()})</b>\n\n` +
-        `Total procesados: <b>${total}</b>\n` +
-        `✅ Aprobados: ${aprobados}\n` +
-        `❌ Rechazados: ${rechazados}\n\n` +
-        `🏆 <b>Top Operador:</b>\n${topNombre} - ${topCant} retiros\n\n` +
-        `⏱ <b>Tiempo Promedio:</b> ${avgMin} min`;
+      let reportMsg = `📊 <b>REPORTE DE DESEMPEÑO (${boliviaTime.toLocaleDateString()})</b>\n\n` +
+        `📈 <b>General:</b>\n` +
+        `Total procesados: <b>${stats?.total || 0}</b>\n` +
+        `✅ Aprobados: ${stats?.aprobados || 0}\n` +
+        `❌ Rechazados: ${stats?.rechazados || 0}\n` +
+        `⏱ Tiempo Promedio: ${stats?.avg_time ? (stats.avg_time / 60).toFixed(1) : 0} min\n\n`;
+
+      if (ranking.length > 0) {
+        reportMsg += `🏆 <b>TOP OPERADORES:</b>\n`;
+        ranking.slice(0, 3).forEach((op, i) => {
+          reportMsg += `${i+1}. ${op.nombre_operador}: <b>${op.total_procesados}</b> (Aprob: ${op.tasa_aprobacion}% | ${op.avg_proceso_seg}s)\n`;
+        });
+
+        const lentos = ranking.filter(op => op.avg_proceso_seg > 120); // Más de 2 min promedio
+        if (lentos.length > 0) {
+          reportMsg += `\n⚠️ <b>OPERADORES LENTOS (>2min):</b>\n`;
+          lentos.forEach(op => {
+            reportMsg += `- ${op.nombre_operador}: ${op.avg_proceso_seg}s promedio\n`;
+          });
+        }
+      }
+
+      if (inactivos.length > 0) {
+        reportMsg += `\n💤 <b>OPERADORES INACTIVOS:</b>\n`;
+        reportMsg += inactivos.map(u => u.nombre).join(', ');
+      }
 
       await sendToAdmin(reportMsg);
-      console.log("[CRON-REPORT] Reporte diario enviado.");
+      console.log("[CRON-REPORT] Reporte de métricas avanzado enviado.");
     } catch (err) {
       console.error("[CRON-REPORT] Error:", err.message);
     }
   }
-}, 60 * 1000); // Revisar cada minuto
+}, 60 * 1000);
