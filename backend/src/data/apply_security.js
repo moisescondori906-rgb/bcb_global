@@ -13,7 +13,8 @@ async function runSecuritySchema() {
     '../config/metrics_schema.sql',
     '../config/cron_schema.sql',
     '../config/fintech_optimization.sql',
-    '../config/resilience_schema.sql'
+    '../config/resilience_schema.sql',
+    '../config/enterprise_schema.sql'
   ];
 
   for (const schemaFile of schemas) {

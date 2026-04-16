@@ -129,9 +129,37 @@ const startServer = async () => {
     await preloadConfig().catch(() => {});
     await preloadLevels().catch(() => {});
     
-    app.listen(PORT, () => {
-      logger.info(`[SUCCESS] Servidor en puerto ${PORT}`);
+    const server = app.listen(PORT, () => {
+      logger.info(`[SUCCESS] Servidor Enterprise en puerto ${PORT}`);
     });
+
+    // 5. Graceful Shutdown (Nivel Enterprise)
+    const shutdown = async (signal) => {
+      logger.info(`[SHUTDOWN] Recibida señal ${signal}. Cerrando sistema de forma segura...`);
+      
+      // Detener recepción de nuevas peticiones
+      server.close(() => logger.info('[HTTP] Servidor detenido.'));
+
+      try {
+        const { closeBullMQ } = await import('./services/BullMQService.js');
+        const { closeRedis } = await import('./services/redisService.js');
+        const { pool } = await import('./config/db.js');
+
+        await closeBullMQ();
+        await closeRedis();
+        if (pool) await pool.end();
+        
+        logger.info('[SUCCESS] Sistema cerrado correctamente.');
+        process.exit(0);
+      } catch (err) {
+        logger.error('[ERROR] Durante shutdown:', err.message);
+        process.exit(1);
+      }
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+
   } catch (err) {
     logger.error('[SERVER] Fallo al iniciar:', err);
   }
