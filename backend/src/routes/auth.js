@@ -13,22 +13,26 @@ const JWT_SECRET = process.env.JWT_SECRET || 'sav-demo-secret';
 
 router.post('/register', async (req, res) => {
   try {
-    const { telefono, nombre_usuario, password, codigo_invitacion, deviceId } = req.body;
+    const { telefono, nombre_usuario, password, codigo_invitacion, deviceId, fingerprint } = req.body;
     if (!telefono || !nombre_usuario || !password || !codigo_invitacion) {
       return res.status(400).json({ error: 'Faltan campos requeridos' });
     }
 
-    // 1. Validaciones en paralelo para reducir tiempo total
-    const [exists, inviter, levels, ipCheck] = await Promise.all([
+    // 1. Validaciones en paralelo con Fingerprinting
+    const [exists, inviter, levels, ipCheck, fpCheck] = await Promise.all([
       findUserByTelefono(telefono),
       queryOne(`SELECT id FROM usuarios WHERE codigo_invitacion = ?`, [codigo_invitacion]),
       getLevels(),
-      // 2. Protección Anti-Abuso: Verificar si la IP ha creado demasiadas cuentas recientemente
-      redis.get(`onboarding:ip:${req.ip}`)
+      // Protección Anti-Abuso: IP + Fingerprint
+      redis.get(`onboarding:ip:${req.ip}`),
+      fingerprint ? redis.get(`onboarding:fp:${fingerprint}`) : null
     ]);
 
-    if (ipCheck && parseInt(ipCheck) >= 3) {
-      return res.status(429).json({ error: 'Límite de registros por IP excedido. Intente más tarde.' });
+    if ((ipCheck && parseInt(ipCheck) >= 3) || (fpCheck && parseInt(fpCheck) >= 1)) {
+      return res.status(429).json({ 
+        error: 'Actividad sospechosa detectada. Por razones de seguridad, el registro ha sido bloqueado.',
+        code: 'ANTI_ABUSE_LOCK'
+      });
     }
 
     if (exists) return res.status(400).json({ error: 'Teléfono ya registrado' });
@@ -66,17 +70,20 @@ router.post('/register', async (req, res) => {
     
     await createUser(user); 
     
-    // 3. Incrementar contador de IP para anti-abuso
-    await redis.incr(`onboarding:ip:${req.ip}`);
-    await redis.expire(`onboarding:ip:${req.ip}`, 3600); // 1 hora de ventana
+    // 3. Persistir Fingerprint y Bloquear IPs sospechosas
+    await Promise.all([
+      redis.incr(`onboarding:ip:${req.ip}`),
+      fingerprint ? redis.set(`onboarding:fp:${fingerprint}`, '1', 'EX', 86400 * 30) : Promise.resolve()
+    ]);
+    await redis.expire(`onboarding:ip:${req.ip}`, 3600);
 
     // SaaS Usage: Incrementar contador de usuarios
     if (req.tenantId) {
       await BillingService.trackUsage(req.tenantId, 'users_count');
     }
 
-    // Auditoría de Onboarding
-    await AuditService.log(req, 'USER_REGISTERED', 'user', user.id, { ip: req.ip, deviceId });
+    // Auditoría de Onboarding con Fingerprint
+    await AuditService.log(req, 'USER_REGISTERED', 'user', user.id, { ip: req.ip, deviceId, fingerprint });
 
     const token = jwt.sign({ 
        id: user.id, 

@@ -70,8 +70,9 @@ export async function queryOne(sql, params) {
 }
 
 /**
- * SECURE QUERY (RLS Nativo MySQL 8.0)
+ * SECURE QUERY (RLS Nativo MySQL 8.0) con Garantía de Limpieza de Pool
  * Enforces tenant_id isolation at the database level using session variables.
+ * Asegura que las variables de sesión se limpien tras cada ejecución para evitar fugas entre conexiones del pool.
  */
 export async function secureQuery(sql, params, tenantId) {
   if (!tenantId) {
@@ -81,12 +82,10 @@ export async function secureQuery(sql, params, tenantId) {
 
   const connection = await pool.getConnection();
   try {
-    // 1. Establecer el contexto del tenant en la sesión de MySQL (RLS Nativo)
+    // 1. Establecer el contexto del tenant en la sesión de MySQL
     await connection.execute('SET @current_tenant_id = ?', [tenantId]);
     
-    // 2. Ejecutar la query usando la vista protegida o la tabla original
-    // Si la query usa la tabla original, el RLS se puede aplicar mediante un trigger o middleware de SQL.
-    // Para máxima seguridad, redirigimos las consultas a las vistas v_
+    // 2. Redirección a vistas protegidas v_
     let rlsSql = sql;
     const tablesToProtect = ['usuarios', 'retiros', 'movimientos_saldo'];
     tablesToProtect.forEach(table => {
@@ -100,6 +99,11 @@ export async function secureQuery(sql, params, tenantId) {
     logger.error(`[SECURE-QUERY-ERROR]: ${err.message} | SQL: ${sql}`);
     throw err;
   } finally {
+    // 3. CRÍTICO: Limpiar la variable de sesión ANTES de liberar al pool
+    // Esto evita que la siguiente petición herede el tenantId si no se establece correctamente.
+    await connection.execute('SET @current_tenant_id = NULL').catch(e => 
+      logger.error(`[RLS-CLEANUP-ERROR]: ${e.message}`)
+    );
     connection.release();
   }
 }

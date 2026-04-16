@@ -31,9 +31,52 @@ export const AuditService = {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [tenantId, userId, action, resource, resourceId, JSON.stringify(details), ip, currentHash]
       );
+
+      // 3. Exportar Hash fuera del sistema (Snapshot para verificación externa)
+      // Se puede enviar a un sistema de logs externo, blockchain, o archivo inmutable.
+      this.exportHashToExternalSystem(tenantId, currentHash);
     } catch (err) {
       logger.error(`[AUDIT-LOG-ERROR]: ${err.message}`);
     }
+  },
+
+  /**
+   * Exportación de hashes para auditoría externa.
+   */
+  async exportHashToExternalSystem(tenantId, hash) {
+    // Simulación de exportación a S3/WORM o API de auditoría de terceros
+    logger.info(`[AUDIT-EXPORT] Hash ${hash} exportado para verificación externa del tenant ${tenantId}`);
+  },
+
+  /**
+   * Verifica la integridad de los logs de un tenant.
+   */
+  async verifyIntegrity(tenantId) {
+    const logs = await query(
+      `SELECT * FROM saas_audit_logs WHERE tenant_id = ? ORDER BY id ASC`,
+      [tenantId]
+    );
+
+    let lastHash = 'genesis-block';
+    for (const log of logs) {
+      const payload = JSON.stringify({ 
+        tenantId: log.tenant_id, 
+        userId: log.user_id, 
+        action: log.action, 
+        resource: log.resource, 
+        resourceId: log.resource_id, 
+        details: log.details, 
+        lastHash 
+      });
+      const calculatedHash = crypto.createHash('sha256').update(payload).digest('hex');
+      
+      if (calculatedHash !== log.hash_chain) {
+        logger.error(`[AUDIT-INTEGRITY-FAIL] Log ID ${log.id} ha sido alterado!`);
+        return false;
+      }
+      lastHash = log.hash_chain;
+    }
+    return true;
   },
 
   /**

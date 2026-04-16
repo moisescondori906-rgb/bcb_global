@@ -1,22 +1,57 @@
 import { query, queryOne, transaction } from '../config/db.js';
 import logger from '../lib/logger.js';
-import redis from './redisService.js';
+import redis, { queueRedis } from './redisService.js';
 import { Queue, Worker } from 'bullmq';
-import { queueRedis } from './redisService.js';
 
-// Cola para procesamiento de pagos y suscripciones
-const billingQueue = new Queue('saas-billing', {
+// Cola dedicada exclusivamente para facturación (Prioridad Alta)
+const billingQueue = new Queue('saas-billing-dedicated', {
   connection: queueRedis,
   defaultJobOptions: {
     attempts: 5,
     backoff: { type: 'exponential', delay: 10000 },
+    removeOnComplete: true,
   }
 });
 
 /**
- * BillingService - Gestión de Planes, Límites y Suspensión Automática.
+ * BillingService - Gestión de Planes y Facturación (Source of Truth)
+ * Garantiza consistencia total entre pagos externos y estado interno.
  */
 export const BillingService = {
+
+  /**
+   * Sincroniza estado de facturación desde una fuente externa (Stripe Webhook, etc).
+   * Este es el único punto de verdad para el estado de la suscripción.
+   */
+  async syncSubscriptionState(tenantId, externalStatus, metadata = {}) {
+    return await transaction(async (conn) => {
+      // 1. Obtener estado actual con bloqueo de fila
+      const current = await conn.execute(
+        'SELECT subscription_status FROM tenants WHERE id = ? FOR UPDATE',
+        [tenantId]
+      );
+      
+      // 2. Mapear estado externo a interno
+      const statusMap = {
+        'active': 'active',
+        'past_due': 'past_due',
+        'canceled': 'suspended',
+        'trialing': 'trial'
+      };
+      const internalStatus = statusMap[externalStatus] || 'suspended';
+
+      // 3. Actualizar tenant
+      await conn.execute(
+        'UPDATE tenants SET subscription_status = ?, config = JSON_MERGE_PATCH(config, ?) WHERE id = ?',
+        [internalStatus, JSON.stringify({ billing_sync: metadata, last_sync: new Date() }), tenantId]
+      );
+
+      // 4. Invalidar caché en Redis para propagar cambio inmediato
+      await redis.del(`tenant_ctx:${tenantId}`);
+      
+      logger.info(`[BILLING-SYNC] Tenant ${tenantId} actualizado a ${internalStatus}`);
+    });
+  },
 
   /**
    * Procesa la renovación automática de un tenant.
@@ -28,15 +63,11 @@ export const BillingService = {
         [tenantId]
       );
 
-      // 1. Simular integración con Pasarela de Pago (Stripe/Crypto/etc)
+      // 1. Integración con Pasarela de Pago
       const paymentSuccess = await this.chargePayment(tenant.id, tenant.price_monthly);
 
       if (paymentSuccess) {
-        await query(
-          `UPDATE tenants SET subscription_status = 'active', trial_ends_at = NULL WHERE id = ?`,
-          [tenantId]
-        );
-        await AuditService.log({ tenantId }, 'RENEWAL_SUCCESS', 'tenant', tenantId, { amount: tenant.price_monthly });
+        await this.syncSubscriptionState(tenantId, 'active', { amount: tenant.price_monthly, method: 'automatic' });
       } else {
         await this.handlePaymentFailure(tenantId);
       }

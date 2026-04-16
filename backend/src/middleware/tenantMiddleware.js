@@ -44,13 +44,20 @@ export async function tenantContext(req, res, next) {
     req.tenant = tenant;
     req.planId = tenant.plan_id;
 
-    // 2. Control de Modo Degradado (Solo Lectura)
+    // 2. Control de Modo Degradado (Solo Lectura) con Allowlist
     const isDegraded = tenant.subscription_status === 'past_due' || (tenant.config && tenant.config.degraded_mode);
+    
     if (isDegraded && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
-      return res.status(403).json({
-        error: 'SaaS en modo degradado. Las operaciones de escritura están deshabilitadas por falta de pago.',
-        code: 'DEGRADED_MODE_ACTIVE'
-      });
+      // Allowlist de operaciones críticas (Ej: Pagos para salir de modo degradado, Soporte urgente)
+      const allowlistPaths = ['/api/v1/billing/pay', '/api/v1/support/ticket'];
+      const isAdminOverride = req.requestUser?.rol === 'admin'; // Override para Global Admin
+
+      if (!allowlistPaths.some(path => req.path.startsWith(path)) && !isAdminOverride) {
+        return res.status(403).json({
+          error: 'SaaS en modo degradado. Las operaciones de escritura están deshabilitadas por falta de pago.',
+          code: 'DEGRADED_MODE_ACTIVE'
+        });
+      }
     }
 
     next();
