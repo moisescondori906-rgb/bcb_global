@@ -119,12 +119,29 @@ router.post('/', async (req, res) => {
       }
     };
 
-    // Enviar a los 3 grupos
-    Promise.all([
-      sendToRetiros(message),
-      sendToAdmin(message, inline_keyboard),
-      sendToSecretaria(message)
-    ]).catch(e => logger.error(`[Telegram Alert Error]: ${e.message}`));
+    // Enviar a los 3 grupos y guardar IDs para sincronización
+    try {
+      const [sentRetiros, sentAdmin, sentSecretaria] = await Promise.allSettled([
+        sendToRetiros(message),
+        sendToAdmin(message, inline_keyboard),
+        sendToSecretaria(message)
+      ]);
+
+      const msgIds = {
+        retiros: sentRetiros.status === 'fulfilled' ? sentRetiros.value?.message_id : null,
+        admin: sentAdmin.status === 'fulfilled' ? sentAdmin.value?.message_id : null,
+        secretaria: sentSecretaria.status === 'fulfilled' ? sentSecretaria.value?.message_id : null
+      };
+
+      if (msgIds.admin || msgIds.retiros || msgIds.secretaria) {
+        await query(
+          `UPDATE retiros SET msg_id_admin=?, msg_id_retiros=?, msg_id_secretaria=? WHERE id=?`,
+          [msgIds.admin, msgIds.retiros, msgIds.secretaria, result.id]
+        );
+      }
+    } catch (e) {
+      logger.error(`[Telegram Alert Error]: ${e.message}`);
+    }
 
     res.json({ id: result.id, ok: true });
   } catch (err) {
