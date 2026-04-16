@@ -32,16 +32,28 @@ export const setupWebhooks = async (app) => {
   for (const [key, token] of Object.entries(tokens)) {
     if (token) {
       const webhookPath = `/api/telegram-webhook/${key}`;
-      await (key === 'admin' ? botAdmin : key === 'retiros' ? botRetiros : botSecretaria)
-        .setWebHook(`${url}${webhookPath}`);
+      const secretToken = process.env.TELEGRAM_WEBHOOK_SECRET || 'bcb_secret_token_2024';
       
-      logger.info(`[WEBHOOK] ${key.toUpperCase()} configurado en ${webhookPath}`);
+      await (key === 'admin' ? botAdmin : key === 'retiros' ? botRetiros : botSecretaria)
+        .setWebHook(`${url}${webhookPath}`, {
+          secret_token: secretToken
+        });
+      
+      logger.info(`[WEBHOOK] ${key.toUpperCase()} configurado con Secret Token.`);
     }
   }
 
-  // Endpoints para Webhooks
+  // Endpoints para Webhooks con Validación de Seguridad
   app.post('/api/telegram-webhook/:botType', (req, res) => {
     const { botType } = req.params;
+    const secretToken = req.headers['x-telegram-bot-api-secret-token'];
+    const expectedToken = process.env.TELEGRAM_WEBHOOK_SECRET || 'bcb_secret_token_2024';
+
+    if (secretToken !== expectedToken) {
+      logger.error(`[SECURITY] Intento de Webhook no autorizado para ${botType}`);
+      return res.sendStatus(403);
+    }
+
     const bot = botType === 'admin' ? botAdmin : botType === 'retiros' ? botRetiros : botSecretaria;
     
     if (bot) {

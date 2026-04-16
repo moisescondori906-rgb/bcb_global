@@ -1,91 +1,92 @@
+import { v4 as uuidv4 } from 'uuid';
 import { botAdmin, botRetiros, botSecretaria } from './telegramBot.js';
 import { WithdrawalRepository, TelegramUserRepository } from '../repositories/telegramRepository.js';
 import { WithdrawalService } from '../services/withdrawalService.js';
-import { checkGlobalRateLimit, acquireLock, releaseLock } from '../services/redisService.js';
-import worker from '../services/TelegramWorker.js';
+import { checkGlobalRateLimit, acquireLock, releaseLock, checkIdempotencyRedis } from '../services/redisService.js';
 import { query } from '../config/db.js';
 import logger from '../lib/logger.js';
 
 /**
- * handleCallbackQuery - Punto de entrada único para Webhooks.
- * Implementa Idempotencia, Locks Distribuidos y Rate Limit Global.
+ * handleCallbackQuery - Blindado para Resiliencia Total.
  */
 export const handleCallbackQuery = async (bot, queryData) => {
-  const { data, message, from } = queryData;
+  const { data, from, id: callbackId } = queryData;
   if (!data || !from) return;
 
-  const [accion, id] = data.split('_');
-  const userId = from.id;
-  const userName = from.first_name || from.username || 'Operador';
-
+  // 1. Trazabilidad & Idempotencia Persistente
+  const traceId = uuidv4();
+  const [accion, retiroId] = data.split('_');
+  
   try {
-    // 1. Idempotencia & Locks Distribuidos (Redis)
-    // Evita que dos instancias o dos clics rápidos procesen lo mismo
-    const lockKey = `callback:${id}:${accion}`;
-    const hasLock = await acquireLock(lockKey, 10000); // 10s lock
-    if (!hasLock) {
-      return bot.answerCallbackQuery(queryData.id, { text: "⚠️ Procesando... por favor espera.", show_alert: false });
+    // A. Check Idempotencia (Redis + DB Persistente)
+    const isProcessedRedis = await checkIdempotencyRedis(callbackId);
+    if (isProcessedRedis) return bot.answerCallbackQuery(callbackId, { text: "⚠️ Acción ya procesada (Cache)." });
+
+    const yaProcesadoDB = await queryOne(
+      `SELECT id FROM idempotencia_callbacks WHERE callback_id=?`, [callbackId]
+    );
+    if (yaProcesadoDB) return bot.answerCallbackQuery(callbackId, { text: "⚠️ Acción ya procesada (DB)." });
+
+    // B. Locks Seguros con Redlock (Renovación automática)
+    const lock = await acquireLock(`callback:${retiroId}:${accion}`, 10000);
+    if (!lock) {
+      return bot.answerCallbackQuery(callbackId, { text: "⏳ Procesando en otra instancia, espera..." });
     }
 
     // 2. Rate Limit Global (Redis)
-    const isAllowed = await checkGlobalRateLimit(userId);
+    const isAllowed = await checkGlobalRateLimit(from.id, traceId);
     if (!isAllowed) {
-      await query(
-        `INSERT INTO seguridad_logs (telegram_id, accion, resultado, detalles) 
-         VALUES (?, 'rate_limit', 'rate_limit', 'Excedió 10 acciones/min (Redis Global)')`,
-        [userId]
-      );
-      await releaseLock(lockKey);
-      return bot.answerCallbackQuery(queryData.id, { text: "⚠️ Límite excedido. Espera un minuto.", show_alert: true });
+      await releaseLock(lock);
+      return bot.answerCallbackQuery(callbackId, { text: "⚠️ Rate limit excedido." });
     }
 
-    // 3. Seguridad & Roles
-    const user = await TelegramUserRepository.findById(userId);
+    // 3. Seguridad de Operadores
+    const user = await TelegramUserRepository.findById(from.id);
     if (!user || user.activo === 0 || user.intentos_fallidos >= 5) {
-      await releaseLock(lockKey);
-      return bot.answerCallbackQuery(queryData.id, { text: "🔒 Acceso denegado o cuenta bloqueada.", show_alert: true });
-    }
-    if (user.rol === 'secretaria') {
-      await releaseLock(lockKey);
-      return bot.answerCallbackQuery(queryData.id, { text: "⚠️ Solo lectura.", show_alert: true });
+      await releaseLock(lock);
+      return bot.answerCallbackQuery(callbackId, { text: "🔒 Acceso denegado." });
     }
 
-    // 4. Lógica de Negocio (Servicio Transaccional)
+    // 4. Lógica de Negocio (Inyectando traceId)
     if (accion === 'tomar') {
-      await WithdrawalService.takeWithdrawal(id, { userId, userName });
-      const withdrawal = await WithdrawalRepository.findByIdWithLevel(id);
-      const text = formatRobustMessage(withdrawal, `🔒 Tomado por: ${userName}`);
-      await syncMessageAcrossGroups(withdrawal, text, id, true);
-      await bot.answerCallbackQuery(queryData.id, { text: "✅ Has tomado el retiro" });
+      await WithdrawalService.takeWithdrawal(retiroId, { userId: from.id, userName: from.first_name, traceId });
+      const withdrawal = await WithdrawalRepository.findByIdWithLevel(retiroId);
+      const text = formatRobustMessage(withdrawal, `🔒 Tomado por: ${from.first_name}\n🆔 Trace: <code>${traceId}</code>`);
+      await syncMessageAcrossGroups(withdrawal, text, retiroId, true, traceId);
     } else if (accion === 'aprobar' || accion === 'rechazar') {
-      const nuevoEstado = await WithdrawalService.processWithdrawal(id, accion, { userId, userName });
-      const withdrawal = await WithdrawalRepository.findByIdWithLevel(id);
+      const nuevoEstado = await WithdrawalService.processWithdrawal(retiroId, accion, { userId: from.id, userName: from.first_name, traceId });
+      const withdrawal = await WithdrawalRepository.findByIdWithLevel(retiroId);
       const emoji = nuevoEstado === 'aprobado' ? '✅' : '❌';
-      const text = formatRobustMessage(withdrawal, `${emoji} ${nuevoEstado.toUpperCase()} por: ${userName}`);
-      await syncMessageAcrossGroups(withdrawal, text, id, false);
-      await bot.answerCallbackQuery(queryData.id, { text: `✅ Caso ${nuevoEstado.toUpperCase()} correctamente` });
+      const text = formatRobustMessage(withdrawal, `${emoji} ${nuevoEstado.toUpperCase()} por: ${from.first_name}\n🆔 Trace: <code>${traceId}</code>`);
+      await syncMessageAcrossGroups(withdrawal, text, retiroId, false, traceId);
     }
 
-    // Liberar lock tras éxito
-    await releaseLock(lockKey);
+    // C. Registrar Idempotencia en DB tras éxito
+    await query(
+      `INSERT INTO idempotencia_callbacks (callback_id, trace_id, telegram_id, retiro_id, accion) 
+       VALUES (?, ?, ?, ?, ?)`,
+      [callbackId, traceId, from.id, retiroId, accion]
+    );
+
+    await releaseLock(lock);
+    await bot.answerCallbackQuery(callbackId, { text: "✅ Operación exitosa" });
 
   } catch (err) {
-    logger.error(`[TELEGRAM-CALLBACK] ${err.message}`, { userId, id, accion });
-    await bot.answerCallbackQuery(queryData.id, { text: `❌ ${err.message}`, show_alert: true }).catch(() => {});
+    logger.error(`[RESILIENCIA] Error crítico en callback`, { traceId, error: err.message });
+    await bot.answerCallbackQuery(callbackId, { text: `❌ ${err.message}`, show_alert: true }).catch(() => {});
   }
 };
 
 const formatRobustMessage = (withdrawal, footer = "") => {
-  return `📌 <b>SISTEMA FINTECH DISTRIBUIDO</b>\n\n` +
+  return `📌 <b>BCB GLOBAL - RESILIENCIA TOTAL</b>\n\n` +
     `🆔 ID: <b>${withdrawal.id}</b>\n` +
     `👤 Usuario: ${withdrawal.telefono_usuario}\n` +
-    `🏅 Nivel: ${withdrawal.nivel_nombre}\n` +
     `💵 Monto: <b>${withdrawal.monto} Bs</b>\n` +
     `🕒 Solicitado: ${new Date(withdrawal.created_at).toLocaleString('es-BO', { timeZone: 'America/La_Paz' })}\n\n` +
     `${footer}`;
 };
 
-const syncMessageAcrossGroups = async (withdrawal, text, id, withButtons = false) => {
+const syncMessageAcrossGroups = async (withdrawal, text, id, withButtons, traceId) => {
   const keyboard = withButtons ? {
     inline_keyboard: [[
       { text: '✅ Aprobar', callback_data: `aprobar_${id}` },
@@ -99,15 +100,13 @@ const syncMessageAcrossGroups = async (withdrawal, text, id, withButtons = false
     { b: botSecretaria, cid: process.env.TELEGRAM_CHAT_SECRETARIA, mid: withdrawal.msg_id_secretaria }
   ];
 
+  const { enqueueTelegramMessage } = await import('../services/BullMQService.js');
   for (const g of groups) {
     if (g.b && g.mid) {
-      // Usar import dinámico para evitar circularidad si es necesario, 
-      // pero aquí usamos el worker directamente que ya maneja la cola.
-      const { enqueueTelegramMessage } = await import('../services/BullMQService.js');
       await enqueueTelegramMessage(g.b.token, g.cid, text, { 
         edit_message_id: g.mid, 
         reply_markup: keyboard 
-      });
+      }, traceId);
     }
   }
 };

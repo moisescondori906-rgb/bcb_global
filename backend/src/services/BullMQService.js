@@ -3,67 +3,85 @@ import redis from './redisService.js';
 import logger from '../lib/logger.js';
 import 'dotenv/config';
 
-// 1. Configuración de Cola para Mensajes de Telegram
+// 1. Configuración de Cola Principal para Telegram
 const telegramQueue = new Queue('telegram-notifications', {
   connection: redis,
   defaultJobOptions: {
     attempts: 5,
     backoff: {
       type: 'exponential',
-      delay: 2000, // 2s -> 4s -> 8s -> 16s -> 32s
+      delay: 2000,
     },
     removeOnComplete: true,
-    removeOnFail: { age: 24 * 3600 }, // Guardar fallos por 24h
+    removeOnFail: { age: 7 * 24 * 3600 }, // Guardar fallos por 7 días (Auditoría)
   },
 });
 
-const queueEvents = new QueueEvents('telegram-notifications', { connection: redis });
+// 2. Circuit Breaker - Monitoreo de salud de la API de Telegram
+let isTelegramPaused = false;
+let consecutiveFailures = 0;
+const FAILURE_THRESHOLD = 15; // Aumentado para mayor tolerancia
 
 /**
- * Worker para procesar la cola de Telegram.
- * Separa el envío físico de la lógica de negocio.
+ * Worker con Dead Letter Queue implícito y Circuit Breaker Robusto.
  */
 const telegramWorker = new Worker('telegram-notifications', async (job) => {
-  const { botToken, chatId, message, options } = job.data;
-  
-  if (!botToken || !chatId || !message) {
-    throw new Error('Faltan parámetros críticos para el envío.');
+  if (isTelegramPaused) {
+    logger.warn(`[CIRCUIT-BREAKER] Omitiendo job ${job.id} - Telegram en pausa.`);
+    throw new Error('Telegram API pausada temporalmente por fallos críticos.');
   }
 
-  // Importar dinámicamente para evitar dependencias circulares
-  const { default: TelegramBot } = await import('node-telegram-bot-api');
-  const bot = new TelegramBot(botToken);
-
+  const { botToken, chatId, message, options, traceId } = job.data;
+  
   try {
+    const { default: TelegramBot } = await import('node-telegram-bot-api');
+    const bot = new TelegramBot(botToken);
     const res = await bot.sendMessage(chatId, message, options);
-    logger.info(`[BULLMQ] Job ${job.id} OK para ${chatId}`);
+    
+    // Éxito: Resetear Circuit Breaker gradualmente
+    if (consecutiveFailures > 0) consecutiveFailures--;
     return res;
   } catch (err) {
-    logger.error(`[BULLMQ] Error en Job ${job.id} (${chatId}): ${err.message}`);
-    throw err; // BullMQ manejará el reintento exponencial
+    consecutiveFailures++;
+    logger.error(`[BULLMQ] Error en envío (${chatId}): ${err.message}`, { traceId });
+
+    // Activar Circuit Breaker si se supera el umbral crítico
+    if (consecutiveFailures >= FAILURE_THRESHOLD && !isTelegramPaused) {
+      isTelegramPaused = true;
+      logger.error(`[CIRCUIT-BREAKER] ACTIVADO tras ${consecutiveFailures} fallos. Pausando envíos por 2 min.`);
+      
+      setTimeout(() => {
+        isTelegramPaused = false;
+        consecutiveFailures = Math.floor(FAILURE_THRESHOLD / 2); // Reanudar en modo "Half-Open"
+        logger.info('[CIRCUIT-BREAKER] Reintentando comunicación con Telegram (Modo Half-Open).');
+      }, 2 * 60 * 1000);
+    }
+
+    throw err;
   }
 }, { 
   connection: redis,
-  concurrency: 5, // 5 mensajes simultáneos
+  concurrency: 20, // Mayor capacidad de procesamiento paralelo
   limiter: {
-    max: 30, // 30 mensajes por segundo (Telegram global limit)
+    max: 25, // Un poco más conservador por segundo
     duration: 1000,
   }
 });
 
 telegramWorker.on('failed', (job, err) => {
-  logger.error(`[BULLMQ] Job ${job.id} falló permanentemente: ${err.message}`);
+  logger.error(`[BULLMQ] Job ${job.id} falló permanentemente. Enviado a DLQ (Fallidos).`, { 
+    error: err.message,
+    traceId: job.data.traceId 
+  });
 });
 
-/**
- * Añade un mensaje a la cola.
- */
-export const enqueueTelegramMessage = async (botToken, chatId, message, options = {}) => {
+export const enqueueTelegramMessage = async (botToken, chatId, message, options = {}, traceId = 'system') => {
   return await telegramQueue.add('send-message', {
     botToken,
     chatId,
     message,
-    options: { parse_mode: 'HTML', ...options }
+    options: { parse_mode: 'HTML', ...options },
+    traceId
   });
 };
 

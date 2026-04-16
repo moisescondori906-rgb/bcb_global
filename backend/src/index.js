@@ -61,19 +61,44 @@ setupWebhooks(app).then(() => {
   logger.info('[SERVER] Webhooks de Telegram configurados.');
 });
 
-// 3. Health Check Distribuido
+// 3. Health Check Avanzado (Métricas de Resiliencia)
 app.get('/api/health', async (req, res) => {
+  const start = Date.now();
   try {
     const { query } = await import('./config/db.js');
     const { default: redis } = await import('./services/redisService.js');
+    const { default: telegramQueue } = await import('./services/BullMQService.js');
+    
+    // Medir latencia DB
+    const dbStart = Date.now();
     await query('SELECT 1');
+    const dbLatency = Date.now() - dbStart;
+
+    // Medir latencia Redis
+    const redisStart = Date.now();
     const redisStatus = await redis.ping();
+    const redisLatency = Date.now() - redisStart;
+
+    // Salud de la Cola
+    const queueJobCounts = await telegramQueue.getJobCounts('waiting', 'active', 'failed', 'completed');
+    
     res.json({ 
       status: 'ok', 
-      services: { database: 'connected', redis: redisStatus === 'PONG' ? 'connected' : 'error' },
+      uptime: process.uptime(),
+      latencies: {
+        database: `${dbLatency}ms`,
+        redis: `${redisLatency}ms`,
+        total_response: `${Date.now() - start}ms`
+      },
+      services: {
+        database: 'connected',
+        redis: redisStatus === 'PONG' ? 'connected' : 'error',
+        queue: queueJobCounts
+      },
       timestamp: new Date().toISOString()
     });
   } catch (err) {
+    logger.error('[HEALTH-CHECK] Fallo:', err.message);
     res.status(500).json({ status: 'error', message: err.message });
   }
 });

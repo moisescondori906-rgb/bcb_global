@@ -108,13 +108,36 @@ export const WithdrawalService = {
 
       // 4. Auditoría Final
       await conn.query(
-        `INSERT INTO historial_retiros (retiro_id, accion, usuario_telegram_id, nombre_usuario, metadata) 
-         VALUES (?, ?, ?, ?, ?)`,
-        [withdrawalId, nuevoEstadoOp, userId, userName, snapshot]
+        `INSERT INTO historial_retiros (retiro_id, trace_id, accion, usuario_telegram_id, nombre_usuario, metadata) 
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [withdrawalId, traceId, nuevoEstadoOp, userId, userName, snapshot]
       );
 
-      logger.info(`[FINTECH] Retiro ${withdrawalId} ${nuevoEstadoOp} por ${userName}`);
+      logger.info(`[FINTECH] Retiro ${withdrawalId} ${nuevoEstadoOp} por ${userName}`, { traceId });
       return nuevoEstadoOp;
+    });
+  },
+
+  /**
+   * Liberación automática por timeout con Trazabilidad.
+   */
+  async releaseByTimeout(withdrawalId, { traceId }) {
+    return transaction(async (conn) => {
+      const [check] = await conn.query(`SELECT estado_operativo, tomado_por_nombre FROM retiros WHERE id=? FOR UPDATE`, [withdrawalId]);
+      if (!check || check.estado_operativo !== 'tomado') return;
+
+      await conn.query(
+        `UPDATE retiros SET estado_operativo='pendiente', tomado_por_telegram_user_id=NULL, tomado_por_nombre=NULL, tomado_en=NULL WHERE id=?`, 
+        [withdrawalId]
+      );
+      
+      await conn.query(
+        `INSERT INTO historial_retiros (retiro_id, trace_id, accion, detalles) 
+         VALUES (?, ?, 'liberado_timeout', ?)`, 
+        [withdrawalId, traceId, `Excedió 10 min (Operador: ${check.tomado_por_nombre})`]
+      );
+
+      logger.warn(`[FINTECH] Retiro ${withdrawalId} liberado por timeout`, { traceId });
     });
   }
 };
