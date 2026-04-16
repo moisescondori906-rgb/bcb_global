@@ -1,12 +1,12 @@
 import { Queue, Worker } from 'bullmq';
-import redis from './redisService.js';
+import { queueRedis } from './redisService.js';
 import logger from '../lib/logger.js';
 import { query } from '../config/db.js';
 import 'dotenv/config';
 
 // 1. Configuración de Cola Principal con Dead Letter Queue (DLQ)
 const telegramQueue = new Queue('telegram-notifications', {
-  connection: redis,
+  connection: queueRedis,
   defaultJobOptions: {
     attempts: 10, // Reintentos agresivos nivel enterprise
     backoff: { type: 'exponential', delay: 5000 },
@@ -50,7 +50,7 @@ const telegramWorker = new Worker('telegram-notifications', async (job) => {
     }
     throw err;
   }
-}, { connection: redis, concurrency: 50 });
+}, { connection: queueRedis, concurrency: 50 });
 
 // 3. Sistema de Replay Automático para DLQ (MySQL Sync)
 telegramWorker.on('failed', async (job, err) => {

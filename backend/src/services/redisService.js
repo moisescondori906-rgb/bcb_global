@@ -4,48 +4,55 @@ import logger from '../lib/logger.js';
 import 'dotenv/config';
 
 /**
- * Enterprise Redis Cluster Configuration.
- * Soporta múltiples nodos para quorum en Redlock.
+ * Enterprise Redis Cluster & Separation of Responsibilities.
+ * - Cache: Almacenamiento temporal y Feature Flags.
+ * - Locks: Redlock para concurrencia.
+ * - Queues: BullMQ.
+ * - State: Sesiones y Rate Limiting.
  */
-const nodes = [
-  { host: process.env.REDIS_HOST || '127.0.0.1', port: process.env.REDIS_PORT || 6379 }
-  // Agregar más nodos en producción:
-  // { host: process.env.REDIS_HOST_2, port: 6379 },
-  // { host: process.env.REDIS_HOST_3, port: 6379 }
-];
-
-const redisClients = nodes.map(node => new Redis({
-  ...node,
+const redisConfig = {
+  host: process.env.REDIS_HOST || '127.0.0.1',
+  port: process.env.REDIS_PORT || 6379,
   password: process.env.REDIS_PASSWORD,
   retryStrategy: times => Math.min(times * 50, 2000),
   maxRetriesPerRequest: null,
-}));
+};
 
-// Cliente principal para BullMQ y Cache
-const redis = redisClients[0];
+// 1. Cliente para Cache y Estado (Instancia principal)
+const redis = new Redis(redisConfig);
 
-// Configuración de Redlock Enterprise (Quorum distribuido)
-const redlock = new Redlock(redisClients, {
+// 2. Cliente para Colas (Dedicado para evitar bloqueos)
+const queueRedis = new Redis(redisConfig);
+
+// 3. Soporte para Cluster Real (Si se define en ENV)
+let cluster = null;
+if (process.env.REDIS_CLUSTER_NODES) {
+  const clusterNodes = JSON.parse(process.env.REDIS_CLUSTER_NODES);
+  cluster = new Redis.Cluster(clusterNodes, {
+    redisOptions: { password: process.env.REDIS_PASSWORD }
+  });
+}
+
+// 4. Configuración de Redlock (Quorum)
+// Se pueden usar múltiples clientes si hay varios nodos independientes.
+const redlock = new Redlock([redis], {
   driftFactor: 0.01,
-  retryCount: 15,
-  retryDelay: 150,
+  retryCount: 20,
+  retryDelay: 100,
   retryJitter: 100,
-  automaticExtensionThreshold: 1000, // Extensión automática para jobs largos
+  automaticExtensionThreshold: 2000,
 });
 
-redlock.on('error', (err) => {
-  if (err instanceof Redlock.ExecutionError) return; // Ignorar fallos de adquisición esperados
-  logger.error('[REDLOCK] Error Crítico:', err);
-});
-
-redis.on('connect', () => logger.info('[REDIS] Nodo Principal Conectado.'));
+redis.on('connect', () => logger.info('[REDIS] Cache/State Conectado.'));
+queueRedis.on('connect', () => logger.info('[REDIS] Queue Dedicated Conectado.'));
 
 /**
- * Adquiere un Lock Distribuido Enterprise.
+ * Adquiere un Lock Distribuido Enterprise con soporte multi-tenant.
  */
-export const acquireLock = async (resource, ttl = 10000) => {
+export const acquireLock = async (resource, ttl = 10000, tenantId = null) => {
+  const lockKey = tenantId ? `lock:${tenantId}:${resource}` : `lock:${resource}`;
   try {
-    return await redlock.acquire([`lock:${resource}`], ttl);
+    return await redlock.acquire([lockKey], ttl);
   } catch (err) {
     return null;
   }
@@ -56,31 +63,35 @@ export const releaseLock = async (lock) => {
   try {
     await lock.release();
   } catch (err) {
-    // Lock ya expirado o liberado
+    // Ya liberado o expirado
   }
 };
 
-export const checkGlobalRateLimit = async (userId, traceId = 'enterprise') => {
-  const key = `ratelimit:${userId}`;
+/**
+ * Rate Limit segmentado por Tenant.
+ */
+export const checkGlobalRateLimit = async (userId, traceId = 'enterprise', tenantId = null) => {
+  const key = tenantId ? `ratelimit:${tenantId}:${userId}` : `ratelimit:${userId}`;
   const current = await redis.incr(key);
   if (current === 1) await redis.expire(key, 60);
-  return current <= 10;
+  return current <= 20; // Umbral aumentado para Enterprise
 };
 
-export const checkIdempotencyRedis = async (id) => {
-  const key = `idem:${id}`;
+export const checkIdempotencyRedis = async (id, tenantId = null) => {
+  const key = tenantId ? `idem:${tenantId}:${id}` : `idem:${id}`;
   const exists = await redis.get(key);
   if (exists) return true;
-  await redis.set(key, '1', 'EX', 172800); // 48h para nivel Enterprise
+  await redis.set(key, '1', 'EX', 172800); // 48h
   return false;
 };
 
 /**
- * Cierre limpio para Graceful Shutdown.
+ * Cierre limpio.
  */
 export const closeRedis = async () => {
   logger.info('[REDIS] Cerrando conexiones de cluster...');
-  await Promise.all(redisClients.map(client => client.quit()));
+  await Promise.all([redis.quit(), queueRedis.quit()]);
+  if (cluster) await cluster.quit();
 };
 
-export default redis;
+export { redis as default, queueRedis, cluster };

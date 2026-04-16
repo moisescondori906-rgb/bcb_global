@@ -69,4 +69,32 @@ export async function queryOne(sql, params) {
   return results[0] || null;
 }
 
+/**
+ * SECURE QUERY (RLS Simulation)
+ * Enforces tenant_id isolation at the query level.
+ */
+export async function secureQuery(sql, params, tenantId) {
+  if (!tenantId) {
+    logger.warn(`[RLS-VIOLATION] Query sin tenantId detectada: ${sql}`);
+    throw new Error('Tenant isolation error: tenantId is required for this operation');
+  }
+
+  // Si la query ya tiene WHERE, añadir AND, si no, añadir WHERE
+  const hasWhere = sql.toUpperCase().includes('WHERE');
+  const connector = hasWhere ? 'AND' : 'WHERE';
+  
+  // Inyectar tenant_id al final antes de ORDER BY, LIMIT, etc.
+  // Nota: Esto es una simplificación, en un sistema real se usaría un AST parser.
+  let secureSql = sql;
+  if (sql.toUpperCase().includes('ORDER BY')) {
+    secureSql = sql.replace(/ORDER BY/i, `${connector} tenant_id = ? ORDER BY`);
+  } else if (sql.toUpperCase().includes('LIMIT')) {
+    secureSql = sql.replace(/LIMIT/i, `${connector} tenant_id = ? LIMIT`);
+  } else {
+    secureSql += ` ${connector} tenant_id = ?`;
+  }
+
+  return await query(secureSql, [...params, tenantId]);
+}
+
 export default pool;

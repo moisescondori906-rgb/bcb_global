@@ -267,20 +267,38 @@ export async function canWithdraw(userId, dateStr = boliviaTime.todayStr()) {
 
 const USER_FIELDS = `id, telefono, nombre_usuario, nombre_real, codigo_invitacion, invitado_por, nivel_id, avatar_url, saldo_principal, saldo_comisiones, rol, bloqueado, tickets_ruleta, primer_ascenso_completado, last_device_id, created_at`;
 
-export async function findUserById(id) {
+export async function findUserById(id, tenantId = null) {
   const now = Date.now();
-  if (userCache.has(id)) {
-    const cached = userCache.get(id);
+  const cacheKey = tenantId ? `${tenantId}:${id}` : id;
+
+  if (userCache.has(cacheKey)) {
+    const cached = userCache.get(cacheKey);
     if (now - cached.timestamp < USER_CACHE_TTL) return cached.data;
   }
 
-  const user = await queryOne(`SELECT ${USER_FIELDS} FROM usuarios WHERE id = ?`, [id]);
-  if (user) userCache.set(id, { data: user, timestamp: now });
+  let sql = `SELECT ${USER_FIELDS} FROM usuarios WHERE id = ?`;
+  const params = [id];
+
+  if (tenantId) {
+    sql += ` AND tenant_id = ?`;
+    params.push(tenantId);
+  }
+
+  const user = await queryOne(sql, params);
+  if (user) userCache.set(cacheKey, { data: user, timestamp: now });
   return user;
 }
 
-export async function findUserByTelefono(telefono) {
-  return await queryOne(`SELECT password_hash, ${USER_FIELDS} FROM usuarios WHERE telefono = ?`, [telefono]);
+export async function findUserByTelefono(telefono, tenantId = null) {
+  let sql = `SELECT password_hash, ${USER_FIELDS} FROM usuarios WHERE telefono = ?`;
+  const params = [telefono];
+
+  if (tenantId) {
+    sql += ` AND tenant_id = ?`;
+    params.push(tenantId);
+  }
+
+  return await queryOne(sql, params);
 }
 
 export async function findUserWithAuthSecrets(id) {

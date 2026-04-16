@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { findUserByTelefono, createUser, getLevels, updateUser } from '../lib/queries.js';
 import { queryOne } from '../config/db.js';
+import { BillingService } from '../services/billingService.js';
 import { DEMO_USER_ID, DEMO_USER_DATA } from '../middleware/requestContext.js';
 import logger from '../lib/logger.js';
 
@@ -26,6 +27,12 @@ router.post('/register', async (req, res) => {
 
     if (exists) return res.status(400).json({ error: 'Teléfono ya registrado' });
     if (!inviter) return res.status(400).json({ error: 'Código de invitación inválido' });
+
+    // SaaS Check: Límite de usuarios por plan
+    if (req.tenantId) {
+      const canAddUser = await BillingService.checkLimits(req.tenantId, 'users_count');
+      if (!canAddUser) return res.status(403).json({ error: 'Límite de usuarios alcanzado para su plan SaaS.' });
+    }
     
     const internarLevel = levels.find(l => String(l.codigo).toLowerCase() === 'internar' || String(l.id) === 'l1');
     
@@ -51,7 +58,17 @@ router.post('/register', async (req, res) => {
     
     await createUser(user); 
     
-    const token = jwt.sign({ id: user.id, rol: user.rol }, JWT_SECRET, { expiresIn: '7d' });
+    // SaaS Usage: Incrementar contador de usuarios
+    if (req.tenantId) {
+      await BillingService.trackUsage(req.tenantId, 'users_count');
+    }
+
+    const token = jwt.sign({ 
+       id: user.id, 
+       rol: user.rol, 
+       tenantId: user.tenant_id,
+       region: req.tenant?.region || 'global'
+     }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ user: sanitizeUser(user, levels), token });
   } catch (e) {
     logger.error('[Auth] Error en register:', e);
@@ -96,17 +113,17 @@ router.post('/login', async (req, res) => {
     }
 
     // 2. findUserByTelefono ya tiene deduplicación y timeout rápido en queries.js
-    const user = await findUserByTelefono(telefono);
+    const user = await findUserByTelefono(telefono, req.tenantId);
     
     if (!user) {
-      logger.warn(`[Auth] Intento de login fallido para ${telefono}: No existe`);
-      return res.status(401).json({ error: 'Credenciales incorrectas' });
+      logger.warn(`[Auth] Intento de login fallido para ${telefono} en tenant ${req.tenantId}: No existe`);
+      return res.status(401).json({ error: 'Credenciales incorrectas o el usuario no pertenece a esta empresa' });
     }
     
     if (user.bloqueado) {
       logger.warn(`[Auth] Usuario bloqueado intentó entrar: ${telefono}`);
       return res.status(403).json({ 
-        error: 'Tu cuenta ha sido bloqueada por cometer una infracción. Debes comunicarte con el gerente para poder desbloquearla.' 
+        error: 'Tu cuenta ha sido bloqueada. Contacta a administración.' 
       });
     }
     
@@ -116,22 +133,20 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Credenciales incorrectas' });
     }
 
-    // 2. No bloqueamos el login por esta actualización (deviceId), se lanza en background
+    // JWT con Contexto SaaS (Tenant + Rol)
+    const token = jwt.sign({ 
+      id: user.id, 
+      rol: user.rol, 
+      tenantId: user.tenant_id,
+      region: req.tenant?.region || 'global'
+    }, JWT_SECRET, { expiresIn: '7d' });
+
+    // Actualizar deviceId si es necesario
     if (deviceId && user.last_device_id !== deviceId) {
-      updateUser(user.id, { last_device_id: deviceId }).catch(err => {
-        logger.error(`[Auth] Error de fondo actualizando deviceId para ${user.nombre_usuario}:`, err.message);
-      });
+      updateUser(user.id, { last_device_id: deviceId }).catch(() => {});
     }
 
-    // 3. getLevels tiene caché de 5 minutos en memoria (no genera carga real)
     const levels = await getLevels();
-    
-    const token = jwt.sign({ id: user.id, rol: user.rol }, JWT_SECRET, { expiresIn: '7d' });
-    
-    if (Date.now() - startTime > 2000) {
-      logger.info(`[Auth] /login tardó ${Date.now() - startTime}ms para ${user.nombre_usuario}`);
-    }
-    
     res.json({ user: sanitizeUser(user, levels), token });
   } catch (e) {
     logger.error(`[Auth] Error crítico en login [${Date.now() - startTime}ms]:`, e.message || e);

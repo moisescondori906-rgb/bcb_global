@@ -10,16 +10,37 @@ export const authenticate = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'sav-demo-secret');
-    req.user = decoded;
+    
+    // Inyectar datos del token en la request
+    req.user = {
+      id: decoded.id,
+      rol: decoded.rol,
+      tenantId: decoded.tenantId,
+      region: decoded.region
+    };
+
     next();
   } catch {
     return res.status(401).json({ error: 'Token inválido o expirado' });
   }
 };
 
+/**
+ * Solo permite acceso a administradores del tenant actual o admins globales.
+ */
 export const requireAdmin = (req, res, next) => {
-  if (req.user?.rol !== 'admin') {
-    return res.status(403).json({ error: 'Acceso denegado' });
+  if (req.user?.rol !== 'admin' && req.user?.rol !== 'global_admin') {
+    return res.status(403).json({ error: 'Acceso denegado: Se requiere rol de Administrador' });
+  }
+  next();
+};
+
+/**
+ * Solo para administradores de la plataforma SaaS (Dueños del sistema).
+ */
+export const requireGlobalAdmin = (req, res, next) => {
+  if (req.user?.rol !== 'global_admin') {
+    return res.status(403).json({ error: 'Acceso denegado: Se requiere rol de Administrador Global' });
   }
   next();
 };

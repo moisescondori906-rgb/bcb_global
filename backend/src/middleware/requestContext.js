@@ -55,7 +55,16 @@ export async function attachRequestUser(req, res, next) {
   }
 
   try {
-    req.requestUser = await findUserById(req.user.id);
+    req.requestUser = await findUserById(req.user.id, req.tenantId);
+    
+    // Doble validación: El usuario debe pertenecer al tenant del contexto
+    if (req.requestUser && req.tenantId && req.requestUser.tenant_id !== req.tenantId) {
+      return res.status(403).json({ 
+        error: 'Acceso denegado: El usuario no pertenece a este tenant',
+        code: 'TENANT_MISMATCH'
+      });
+    }
+
     next();
   } catch (e) {
     next(e);

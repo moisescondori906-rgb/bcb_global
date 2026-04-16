@@ -47,28 +47,29 @@ export const handleCallbackQuery = async (bot, queryData) => {
       return bot.answerCallbackQuery(callbackId, { text: "⚠️ Rate limit excedido." });
     }
 
-    // 3. Seguridad de Operadores
+    // 3. Seguridad de Operadores & Contexto de Tenant
     const user = await TelegramUserRepository.findById(from.id);
     if (!user || user.activo === 0 || user.intentos_fallidos >= 5) {
       await releaseLock(lock);
       return bot.answerCallbackQuery(callbackId, { text: "🔒 Acceso denegado." });
     }
+    const tenantId = user.tenant_id;
 
-    // 4. Lógica de Negocio (Inyectando traceId)
+    // 4. Lógica de Negocio (Inyectando traceId y tenantId)
     if (accion === 'tomar') {
-      await WithdrawalService.takeWithdrawal(retiroId, { userId: from.id, userName: from.first_name, traceId });
+      await WithdrawalService.takeWithdrawal(retiroId, { userId: from.id, userName: from.first_name, traceId, tenantId });
       
       // Motor de Detección de Fraude (Análisis asíncrono)
-      FraudDetectionService.analyzeOperation(from.id, traceId, { action: accion, withdrawalId: retiroId });
+      FraudDetectionService.analyzeOperation(from.id, traceId, { action: accion, withdrawalId: retiroId }, tenantId);
 
       const withdrawal = await WithdrawalRepository.findByIdWithLevel(retiroId);
-      const text = formatRobustMessage(withdrawal, `🔒 Tomado por: ${from.first_name}\n🆔 Trace: <code>${traceId}</code>`);
+      const text = formatRobustMessage(withdrawal, `🔒 Tomado por: ${from.first_name}\n🆔 Trace: <code>${traceId}</code>\n🏢 Empresa: <b>${tenantId || 'Default'}</b>`);
       await syncMessageAcrossGroups(withdrawal, text, retiroId, true, traceId);
     } else if (accion === 'aprobar' || accion === 'rechazar') {
-      const nuevoEstado = await WithdrawalService.processWithdrawal(retiroId, accion, { userId: from.id, userName: from.first_name, traceId });
+      const nuevoEstado = await WithdrawalService.processWithdrawal(retiroId, accion, { userId: from.id, userName: from.first_name, traceId, tenantId });
       
       // Análisis de anomalías
-      FraudDetectionService.analyzeOperation(from.id, traceId, { action: accion, withdrawalId: retiroId });
+      FraudDetectionService.analyzeOperation(from.id, traceId, { action: accion, withdrawalId: retiroId }, tenantId);
 
       const withdrawal = await WithdrawalRepository.findByIdWithLevel(retiroId);
       const emoji = nuevoEstado === 'aprobado' ? '✅' : '❌';

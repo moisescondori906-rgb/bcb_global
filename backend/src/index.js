@@ -18,11 +18,14 @@ import telegramRoutes from './routes/telegram.js';
 import adminRoutes from './routes/admin.js';
 import telegramAdminRoutes from './routes/telegram_admin.js';
 import sorteoRoutes from './routes/sorteo.js';
+import saasRoutes from './routes/saas.js';
 import telegramWebhookRoutes from './routes/telegram_webhook.js';
 import { preloadConfig, preloadLevels } from './lib/queries.js';
 import { query } from './config/db.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { tenantContext } from './middleware/tenantMiddleware.js';
+import { slaMiddleware } from './middleware/slaMiddleware.js';
 
 // Forzar Zona Horaria de Bolivia
 process.env.TZ = 'America/La_Paz';
@@ -112,16 +115,33 @@ app.get('/api/health', async (req, res) => {
 });
 
 // 4. Rutas de API
-app.use('/api/auth', rateLimiter(60000, 15), authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/tasks', rateLimiter(60000, 40), taskRoutes);
-app.use('/api/levels', levelRoutes);
-app.use('/api/recharges', rechargeRoutes);
-app.use('/api/withdrawals', withdrawalRoutes);
-app.use('/api/telegram', telegramRoutes);
-app.use('/api/admin/telegram', telegramAdminRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/sorteo', sorteoRoutes);
+const apiV1 = express.Router();
+
+// Inyectar contexto de Tenant y métricas de SLA
+apiV1.use(tenantContext);
+apiV1.use(slaMiddleware);
+
+apiV1.use('/auth', rateLimiter(60000, 15), authRoutes);
+apiV1.use('/users', userRoutes);
+apiV1.use('/tasks', rateLimiter(60000, 40), taskRoutes);
+apiV1.use('/levels', levelRoutes);
+apiV1.use('/recharges', rechargeRoutes);
+apiV1.use('/withdrawals', withdrawalRoutes);
+apiV1.use('/telegram', telegramRoutes);
+apiV1.use('/admin/telegram', telegramAdminRoutes);
+apiV1.use('/admin', adminRoutes);
+apiV1.use('/sorteo', sorteoRoutes);
+apiV1.use('/saas', saasRoutes);
+
+// Registrar Versiones de API
+app.use('/api/v1', apiV1);
+app.use('/api', apiV1); // Retrocompatibilidad para clientes antiguos
+
+// Rutas de V2 (Sistema Autónomo Inteligente)
+const apiV2 = express.Router();
+apiV2.use(tenantContext);
+// apiV2.use('/fraud', fraudV2Routes); // A implementar
+app.use('/api/v2', apiV2);
 
 // Servir archivos estáticos
 const publicPath = path.join(__dirname, '../../frontend/public');

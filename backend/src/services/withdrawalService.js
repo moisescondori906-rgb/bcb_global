@@ -1,5 +1,8 @@
 import { transaction, query } from '../config/db.js';
 import { WithdrawalRepository, TelegramUserRepository } from '../repositories/telegramRepository.js';
+import { OperatorService } from './operatorService.js';
+import { ResilienceService } from './resilienceService.js';
+import { BillingService } from './billingService.js';
 import logger from '../lib/logger.js';
 
 /**
@@ -10,8 +13,19 @@ export const WithdrawalService = {
   /**
    * Toma un retiro con bloqueo de fila para evitar race conditions.
    */
-  async takeWithdrawal(withdrawalId, { userId, userName }) {
+  async takeWithdrawal(withdrawalId, { userId, userName, traceId, tenantId = null }) {
+    const start = Date.now();
+    
+    // SaaS Check: Límite de retiros diarios
+    if (tenantId) {
+      const canProceed = await BillingService.checkLimits(tenantId, 'withdrawals_today');
+      if (!canProceed) throw new Error("⚠️ Se ha alcanzado el límite diario de retiros para su plan SaaS.");
+    }
+
     return transaction(async (conn) => {
+      // Chaos Engine: Simular latencia controlada
+      await ResilienceService.injectFailure('latency', { userId, tenantId });
+
       // 1. Bloqueo nivel fila y validación de estado
       const [retiro] = await conn.query(
         `SELECT id, estado_operativo, created_at FROM retiros WHERE id=? FOR UPDATE`, 
@@ -32,24 +46,25 @@ export const WithdrawalService = {
         userId, userName, fecha_toma: ahora, snapshot 
       });
 
-      // 3. Registrar métricas de eficiencia
-      await conn.query(
-        `INSERT INTO estadisticas_operadores (telegram_id, nombre_operador, fecha, total_tomados, tiempo_total_toma_seg)
-         VALUES (?, ?, CURDATE(), 1, ?)
-         ON DUPLICATE KEY UPDATE 
-           total_tomados = total_tomados + 1,
-           tiempo_total_toma_seg = tiempo_total_toma_seg + ?`,
-        [userId, userName, tiempoTomaSeg, tiempoTomaSeg]
-      );
+      // 3. Registrar métricas de eficiencia (SaaS Ready)
+      await OperatorService.recordOperation(userId, {
+        action: 'tomar',
+        durationToma: tiempoTomaSeg
+      }, tenantId);
+
+      // SaaS Usage: Incrementar contador de retiros
+      if (tenantId) {
+        await BillingService.trackUsage(tenantId, 'withdrawals_today');
+      }
 
       // 4. Historial de Auditoría
       await conn.query(
-        `INSERT INTO historial_retiros (retiro_id, accion, usuario_telegram_id, nombre_usuario, metadata) 
-         VALUES (?, 'tomar', ?, ?, ?)`,
-        [withdrawalId, userId, userName, snapshot]
+        `INSERT INTO historial_retiros (retiro_id, trace_id, accion, usuario_telegram_id, nombre_usuario, metadata, tenant_id) 
+         VALUES (?, ?, 'tomar', ?, ?, ?, ?)`,
+        [withdrawalId, traceId, userId, userName, snapshot, tenantId]
       );
 
-      logger.info(`[FINTECH] Retiro ${withdrawalId} tomado por ${userName} (${userId})`);
+      logger.info(`[FINTECH] Retiro ${withdrawalId} tomado por ${userName} (${userId})`, { traceId, tenantId });
       return true;
     });
   },
@@ -57,7 +72,7 @@ export const WithdrawalService = {
   /**
    * Procesa la aprobación o rechazo de un retiro.
    */
-  async processWithdrawal(withdrawalId, action, { userId, userName }) {
+  async processWithdrawal(withdrawalId, action, { userId, userName, traceId, tenantId = null }) {
     return transaction(async (conn) => {
       // 1. Bloqueo y validación de operador responsable
       const [retiro] = await conn.query(
@@ -80,11 +95,19 @@ export const WithdrawalService = {
 
       const ahora = new Date();
       const tiempoProcesoSeg = Math.floor((ahora - new Date(retiro.tomado_en)) / 1000);
+      
+      // 2. Detección de Anomalías (Perfilado de Operador)
+      const anomaly = await OperatorService.detectOperatorAnomaly(userId, { action, durationSeg: tiempoProcesoSeg }, tenantId);
+      if (anomaly) {
+        logger.warn(`[SECURITY] Anomalía detectada en proceso: ${anomaly.type}`, { traceId, userId });
+        // Podríamos bloquear el proceso aquí o solo alertar
+      }
+
       const nuevoEstadoOp = action === 'aprobar' ? 'aprobado' : 'rechazado';
       const finalStatus = action === 'aprobar' ? 'completado' : 'rechazado';
       const snapshot = JSON.stringify(retiro);
 
-      // 2. Actualizar estado final
+      // 3. Actualizar estado final
       await WithdrawalRepository.updateStatus(conn, withdrawalId, { 
         estado_operativo: nuevoEstadoOp, 
         procesado_por: userId, 
@@ -93,27 +116,22 @@ export const WithdrawalService = {
         snapshot
       });
 
-      // 3. Registrar métricas y resetear fallos
-      const colEstado = action === 'aprobar' ? 'total_aprobados' : 'total_rechazados';
-      await conn.query(
-        `INSERT INTO estadisticas_operadores (telegram_id, nombre_operador, fecha, ${colEstado}, tiempo_total_proceso_seg)
-         VALUES (?, ?, CURDATE(), 1, ?)
-         ON DUPLICATE KEY UPDATE 
-           ${colEstado} = ${colEstado} + 1,
-           tiempo_total_proceso_seg = tiempo_total_proceso_seg + ?`,
-        [userId, userName, tiempoProcesoSeg, tiempoProcesoSeg]
-      );
+      // 4. Registrar métricas y resetear fallos
+      await OperatorService.recordOperation(userId, {
+        action,
+        durationProceso: tiempoProcesoSeg
+      }, tenantId);
 
       await TelegramUserRepository.resetFailedAttempts(conn, userId);
 
-      // 4. Auditoría Final
+      // 5. Auditoría Final
       await conn.query(
-        `INSERT INTO historial_retiros (retiro_id, trace_id, accion, usuario_telegram_id, nombre_usuario, metadata) 
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [withdrawalId, traceId, nuevoEstadoOp, userId, userName, snapshot]
+        `INSERT INTO historial_retiros (retiro_id, trace_id, accion, usuario_telegram_id, nombre_usuario, metadata, tenant_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [withdrawalId, traceId, nuevoEstadoOp, userId, userName, snapshot, tenantId]
       );
 
-      logger.info(`[FINTECH] Retiro ${withdrawalId} ${nuevoEstadoOp} por ${userName}`, { traceId });
+      logger.info(`[FINTECH] Retiro ${withdrawalId} ${nuevoEstadoOp} por ${userName}`, { traceId, tenantId });
       return nuevoEstadoOp;
     });
   },

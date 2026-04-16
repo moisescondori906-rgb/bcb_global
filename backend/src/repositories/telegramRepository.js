@@ -53,7 +53,7 @@ export const WithdrawalRepository = {
 export const TelegramUserRepository = {
   async findById(telegramId) {
     return queryOne(
-      `SELECT telegram_id, nombre, rol, activo, intentos_fallidos, COALESCE(ultima_actividad, created_at) as ultima_actividad 
+      `SELECT telegram_id, nombre, rol, activo, intentos_fallidos, tenant_id, COALESCE(ultima_actividad, created_at) as ultima_actividad 
        FROM usuarios_telegram WHERE telegram_id=?`,
       [telegramId]
     );
