@@ -79,10 +79,38 @@ export const sendToSecretaria = async (message, options = {}) => {
       const userId = from.id;
       const userName = from.first_name || from.username || 'Operador';
 
-      console.log(`[TELEGRAM] ${accion} retiro ${id} por ${userName} (${userId})`);
-
       // 2. Importar DB dinámicamente
       const { query: dbQuery, queryOne } = await import('../config/db.js');
+
+      // --- VALIDACIÓN DE ROLES DINÁMICOS ---
+      const userTelegram = await queryOne(
+        `SELECT rol FROM usuarios_telegram WHERE telegram_id=? AND activo=1`,
+        [userId]
+      );
+
+      if (!userTelegram) {
+        console.log(`[TELEGRAM] Acceso denegado para ${userName} (${userId})`);
+        return query.answer({ 
+          text: "❌ No tienes acceso al sistema operativo de Telegram. Contacta al Admin.", 
+          show_alert: true 
+        });
+      }
+
+      const rol = userTelegram.rol;
+      console.log(`[TELEGRAM] ${accion} retiro ${id} por ${userName} (Rol: ${rol})`);
+
+      // REGLAS DE ROLES:
+      // - admin: todo
+      // - retiro: tomar, aprobar, rechazar
+      // - secretaria: solo visual (bloqueado aquí)
+      if (rol === 'secretaria') {
+        return query.answer({ text: "⚠️ Tu rol es solo de lectura. No puedes realizar acciones.", show_alert: true });
+      }
+
+      if (rol === 'retiro' && !['tomar', 'aprobar', 'rechazar'].includes(accion)) {
+        return query.answer({ text: "❌ Acción no permitida para tu rol.", show_alert: true });
+      }
+      // -------------------------------------
 
       // 3. LÓGICA DE TOMAR RETIRO (BLOQUEO REAL)
       if (accion === 'tomar') {

@@ -154,7 +154,57 @@ router.get('/historial', async (req, res) => {
       ORDER BY l.fecha DESC
       LIMIT 100
     `);
-    res.json(logs);
+   res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- USUARIOS TELEGRAM (ROLES DINÁMICOS) ---
+
+router.get('/usuarios', async (req, res) => {
+  try {
+    const usuarios = await query('SELECT * FROM usuarios_telegram ORDER BY fecha_registro DESC');
+    res.json(usuarios);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/usuarios', async (req, res) => {
+  try {
+    const { telegram_id, nombre, rol, activo } = req.body;
+    if (!telegram_id || !nombre || !rol) return res.status(400).json({ error: 'Faltan campos obligatorios' });
+
+    await query(`
+      INSERT INTO usuarios_telegram (telegram_id, nombre, rol, activo)
+      VALUES (?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), rol = VALUES(rol), activo = VALUES(activo)
+    `, [telegram_id, nombre, rol, activo !== undefined ? activo : 1]);
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/usuarios/:id', async (req, res) => {
+  try {
+    const { nombre, rol, activo } = req.body;
+    await query(`
+      UPDATE usuarios_telegram SET nombre = ?, rol = ?, activo = ?
+      WHERE id = ?
+    `, [nombre, rol, activo ? 1 : 0, req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/usuarios/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM usuarios_telegram WHERE id = ?', [req.params.id]);
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
