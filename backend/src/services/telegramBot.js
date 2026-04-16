@@ -1,5 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import 'dotenv/config';
+import worker from './TelegramWorker.js';
 
 // Inicialización de múltiples bots
 export const botAdmin = process.env.TELEGRAM_BOT_TOKEN_ADMIN 
@@ -16,44 +17,17 @@ export const botSecretaria = process.env.TELEGRAM_BOT_TOKEN_SECRETARIA
 
 console.log("Sistema Multi-Bot iniciado (Admin, Retiros, Secretaria)");
 
-// Funciones de utilidad mejoradas para multi-bot
+// Funciones de utilidad mejoradas usando el Worker (Cola y Reintentos)
 export const sendToAdmin = async (message, options = {}) => {
-  if (!botAdmin) return false;
-  try {
-    const opts = { parse_mode: 'HTML', ...options };
-    const res = await botAdmin.sendMessage(process.env.TELEGRAM_CHAT_ADMIN, message, opts);
-    console.log("✅ Admin: Mensaje enviado");
-    return res;
-  } catch (e) {
-    console.error("❌ Admin Error:", e.message);
-    return false;
-  }
+  return worker.addToQueue(botAdmin, process.env.TELEGRAM_CHAT_ADMIN, message, options);
 };
 
 export const sendToRetiros = async (message, options = {}) => {
-  if (!botRetiros) return false;
-  try {
-    const opts = { parse_mode: 'HTML', ...options };
-    const res = await botRetiros.sendMessage(process.env.TELEGRAM_CHAT_RETIROS, message, opts);
-    console.log("✅ Retiros: Mensaje enviado");
-    return res;
-  } catch (e) {
-    console.error("❌ Retiros Error:", e.message);
-    return false;
-  }
+  return worker.addToQueue(botRetiros, process.env.TELEGRAM_CHAT_RETIROS, message, options);
 };
 
 export const sendToSecretaria = async (message, options = {}) => {
-  if (!botSecretaria) return false;
-  try {
-    const opts = { parse_mode: 'HTML', ...options };
-    const res = await botSecretaria.sendMessage(process.env.TELEGRAM_CHAT_SECRETARIA, message, opts);
-    console.log("✅ Secretaria: Mensaje enviado");
-    return res;
-  } catch (e) {
-    console.error("❌ Secretaria Error:", e.message);
-    return false;
-  }
+  return worker.addToQueue(botSecretaria, process.env.TELEGRAM_CHAT_SECRETARIA, message, options);
 };
 
 /**
@@ -95,6 +69,13 @@ export const sendToSecretaria = async (message, options = {}) => {
            VALUES (?, 'intento_acceso', 'fallo', 'Usuario no registrado intenta interactuar')`,
           [userId]
         );
+        
+        await worker.sendCriticalAlert(
+          botAdmin, process.env.TELEGRAM_CHAT_ADMIN, 
+          "Intento No Autorizado", 
+          `Usuario: ${userName} (${userId})\nAcción: ${accion}\nID Retiro: ${id}`
+        );
+
         return query.answer({ 
           text: "❌ ACCESO DENEGADO: Tu ID no está autorizado en el sistema central.", 
           show_alert: true 
@@ -340,8 +321,15 @@ export const sendToSecretaria = async (message, options = {}) => {
 
     } catch (err) {
       console.error("❌ ERROR CALLBACK:", err.message);
+      
+      await worker.sendCriticalAlert(
+        botAdmin, process.env.TELEGRAM_CHAT_ADMIN, 
+        "Error en Callback Telegram", 
+        `Error: ${err.message}\nUsuario: ${from?.first_name} (${from?.id})\nData: ${query?.data}`
+      );
+
       try {
-        await query.answer({ text: "❌ Error interno", show_alert: true });
+        await query.answer({ text: "❌ Error interno en el sistema operativo.", show_alert: true });
       } catch {}
     }
   });
@@ -404,25 +392,49 @@ setInterval(async () => {
 
       console.log(`[CRON] Retiro ${ret.id} liberado por timeout.`);
 
-      // Notificar en grupos sobre la liberación (Opcional, pero recomendado)
-      const alertMsg = `⚠️ <b>RETIRO LIBERADO</b>\nEl caso de ID: ${ret.id} ha sido liberado por inactividad de ${ret.tomado_por_nombre || 'el operador'}. Está disponible nuevamente.`;
+      // Notificar liberación por inactividad
+      const alertMsg = `⚠️ <b>RETIRO LIBERADO POR INACTIVIDAD</b>\n\n` +
+        `El caso de ID: <b>${ret.id}</b> ha sido liberado porque el operador <b>${ret.tomado_por_nombre || 'desconocido'}</b> no lo procesó en 10 minutos.\n\n` +
+        `🔄 El retiro vuelve a estar <b>PENDIENTE</b> para todo el equipo.`;
       
-      const syncGroups = [
-        { b: botAdmin, cid: process.env.TELEGRAM_CHAT_ADMIN },
-        { b: botRetiros, cid: process.env.TELEGRAM_CHAT_RETIROS },
-        { b: botSecretaria, cid: process.env.TELEGRAM_CHAT_SECRETARIA }
-      ];
+      await sendToAdmin(alertMsg);
+      await sendToRetiros(alertMsg);
+      await sendToSecretaria(alertMsg);
 
-      for (const g of syncGroups) {
-        if (g.b && g.cid) {
-          await g.b.sendMessage(g.cid, alertMsg, { parse_mode: 'HTML' }).catch(() => {});
-        }
-      }
+      // Alerta Crítica al Admin
+      await worker.sendCriticalAlert(
+        botAdmin, process.env.TELEGRAM_CHAT_ADMIN, 
+        "Liberación por Inactividad", 
+        `ID: ${ret.id}\nOperador: ${ret.tomado_por_nombre || 'N/A'}\n\n⚠️ El operador tomó el caso pero no lo resolvió en el tiempo límite.`
+      );
     }
   } catch (err) {
     console.error("[CRON-TIMEOUT] Error:", err.message);
   }
 }, 5 * 60 * 1000);
+
+// 2. Job para Alerta de Retiros sin tomar > 5 minutos
+setInterval(async () => {
+  try {
+    const { query: dbQuery } = await import('../config/db.js');
+    
+    // Buscar retiros pendientes creados hace más de 5 minutos
+    const pendientes = await dbQuery(
+      `SELECT id, monto, telefono_usuario FROM retiros 
+       WHERE estado_operativo='pendiente' AND created_at < NOW() - INTERVAL 5 MINUTE`
+    );
+
+    for (const ret of pendientes) {
+      await worker.sendCriticalAlert(
+        botAdmin, process.env.TELEGRAM_CHAT_ADMIN, 
+        "Retiro Sin Atender", 
+        `ID: ${ret.id}\nMonto: ${ret.monto} Bs\nUsuario: ${ret.telefono_usuario}\n\n⚠️ Este retiro lleva más de 5 minutos sin ser tomado por ningún operador.`
+      );
+    }
+  } catch (err) {
+    console.error("[CRON-ALERT] Error:", err.message);
+  }
+}, 2 * 60 * 1000); // Revisar cada 2 minutos
 
 // 2. Reporte Diario Automático (23:30 Bolivia)
 setInterval(async () => {
@@ -477,14 +489,14 @@ setInterval(async () => {
         `⏱ Tiempo Promedio: ${stats?.avg_time ? (stats.avg_time / 60).toFixed(1) : 0} min\n\n`;
 
       if (ranking.length > 0) {
-        reportMsg += `🏆 <b>TOP OPERADORES:</b>\n`;
+        reportMsg += `🏆 <b>TOP OPERADORES (Volumen):</b>\n`;
         ranking.slice(0, 3).forEach((op, i) => {
-          reportMsg += `${i+1}. ${op.nombre_operador}: <b>${op.total_procesados}</b> (Aprob: ${op.tasa_aprobacion}% | ${op.avg_proceso_seg}s)\n`;
+          reportMsg += `${i+1}. ${op.nombre_operador}: <b>${op.total_procesados}</b> (Eficiencia: ${op.tasa_aprobacion}% | ${op.avg_proceso_seg}s)\n`;
         });
 
         const lentos = ranking.filter(op => op.avg_proceso_seg > 120); // Más de 2 min promedio
         if (lentos.length > 0) {
-          reportMsg += `\n⚠️ <b>OPERADORES LENTOS (>2min):</b>\n`;
+          reportMsg += `\n🐢 <b>OPERADORES LENTOS (>2min):</b>\n`;
           lentos.forEach(op => {
             reportMsg += `- ${op.nombre_operador}: ${op.avg_proceso_seg}s promedio\n`;
           });
