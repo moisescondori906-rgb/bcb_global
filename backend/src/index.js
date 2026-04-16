@@ -1,4 +1,6 @@
 import 'dotenv/config';
+// Forzar Zona Horaria de Bolivia a nivel de proceso Node.js
+process.env.TZ = 'America/La_Paz';
 import logger from './lib/logger.js';
 // Importar bot de telegram para inicialización automática
 import './services/telegramBot.js';

@@ -1,30 +1,57 @@
 import TelegramBot from 'node-telegram-bot-api';
 import 'dotenv/config';
 
-const token = process.env.TELEGRAM_BOT_TOKEN;
+// Inicialización de múltiples bots
+export const botAdmin = process.env.TELEGRAM_BOT_TOKEN_ADMIN 
+  ? new TelegramBot(process.env.TELEGRAM_BOT_TOKEN_ADMIN, { polling: true }) 
+  : null;
 
-if (!token) {
-  console.error("TOKEN NO DEFINIDO");
-}
+export const botRetiros = process.env.TELEGRAM_BOT_TOKEN_RETIROS 
+  ? new TelegramBot(process.env.TELEGRAM_BOT_TOKEN_RETIROS, { polling: true }) 
+  : null;
 
-const bot = new TelegramBot(token, { polling: true });
+export const botSecretaria = process.env.TELEGRAM_BOT_TOKEN_SECRETARIA 
+  ? new TelegramBot(process.env.TELEGRAM_BOT_TOKEN_SECRETARIA, { polling: true }) 
+  : null;
 
-console.log("Telegram bot iniciado correctamente");
+console.log("Sistema Multi-Bot iniciado (Admin, Retiros, Secretaria)");
 
-// Funciones de utilidad para mantener compatibilidad con el resto del sistema
-export const sendMessage = async (chatId, message) => {
+// Funciones de utilidad mejoradas para multi-bot
+export const sendToAdmin = async (message) => {
+  if (!botAdmin) return false;
   try {
-    await bot.sendMessage(chatId, message, { parse_mode: 'HTML' });
+    await botAdmin.sendMessage(process.env.TELEGRAM_CHAT_ADMIN, message, { parse_mode: 'HTML' });
+    console.log("✅ Admin: Mensaje enviado");
     return true;
-  } catch (error) {
-    console.error("Error Telegram:", error.message);
+  } catch (e) {
+    console.error("❌ Admin Error:", e.message);
     return false;
   }
 };
 
-export const sendToAdmin = (message) => sendMessage(process.env.TELEGRAM_CHAT_ADMIN, message);
-export const sendToRetiros = (message) => sendMessage(process.env.TELEGRAM_CHAT_RETIROS, message);
-export const sendToSecretaria = (message) => sendMessage(process.env.TELEGRAM_CHAT_SECRETARIA, message);
+export const sendToRetiros = async (message) => {
+  if (!botRetiros) return false;
+  try {
+    await botRetiros.sendMessage(process.env.TELEGRAM_CHAT_RETIROS, message, { parse_mode: 'HTML' });
+    console.log("✅ Retiros: Mensaje enviado");
+    return true;
+  } catch (e) {
+    console.error("❌ Retiros Error:", e.message);
+    return false;
+  }
+};
+
+export const sendToSecretaria = async (message) => {
+  if (!botSecretaria) return false;
+  try {
+    await botSecretaria.sendMessage(process.env.TELEGRAM_CHAT_SECRETARIA, message, { parse_mode: 'HTML' });
+    console.log("✅ Secretaria: Mensaje enviado");
+    return true;
+  } catch (e) {
+    console.error("❌ Secretaria Error:", e.message);
+    return false;
+  }
+};
 
 export const formatRetiroMessage = (data) => {
   const { telefono, nivel, monto, hora } = data;
@@ -36,4 +63,14 @@ export const formatRecargaMessage = (data) => {
   return `📌 <b>NUEVA RECARGA</b>\n\n👤 Usuario: ${telefono}\n🏅 Nivel: ${nivel}\n💵 Monto: ${monto} Bs`;
 };
 
-export default bot;
+// Exportar objeto por defecto para compatibilidad
+export default {
+  botAdmin,
+  botRetiros,
+  botSecretaria,
+  sendToAdmin,
+  sendToRetiros,
+  sendToSecretaria,
+  formatRetiroMessage,
+  formatRecargaMessage
+};

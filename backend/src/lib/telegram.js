@@ -1,4 +1,4 @@
-import { bot } from '../services/telegramBot.js';
+import { botAdmin as bot } from '../services/telegramBot.js';
 import { query, queryOne, transaction } from '../config/db.js';
 import { boliviaTime } from '../lib/queries.js';
 import logger from '../lib/logger.js';
