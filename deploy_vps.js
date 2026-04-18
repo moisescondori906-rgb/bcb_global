@@ -16,8 +16,14 @@ conn.on('ready', () => {
   console.log('✅ Conexión SSH establecida.');
   
   const commands = [
-    'mysql -u root -p14738941lp bcb_global -e "INSERT IGNORE INTO tenants (id, name, slug, status, config) VALUES (\'default-tenant-uuid\', \'BCB Global HQ\', \'bcb-global\', \'active\', \'{\\\"theme\\\": \\\"dark\\\", \\\"max_users\\\": 10000}\');"',
-    'mysql -u root -p14738941lp bcb_global -e "SELECT * FROM tenants;"'
+    'pm2 delete bcb-global || true',
+    'fuser -k 4000/tcp || true',
+    'lsof -ti:4000 | xargs kill -9 || true',
+    'sleep 2',
+    'cd /var/www/bcb_global/backend && pm2 start src/index.js --name bcb-global',
+    'sleep 5',
+    'pm2 status',
+    'curl -s http://localhost:4000/api/health'
   ];
 
   const executeNext = (index) => {

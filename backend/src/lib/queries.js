@@ -17,6 +17,7 @@ const DEFAULT_CONFIG = {
   soporte_canal_url: 'https://t.me/bcb_oficial',
   soporte_gerente_url: 'https://wa.me/59170000000',
   ruleta_activa: true,
+  recompensas_visibles: true,
   banners: []
 };
 
@@ -301,18 +302,30 @@ export async function findUserWithAuthSecrets(id) {
 }
 
 export async function createUser(userData) {
-  const sql = `INSERT INTO usuarios (id, telefono, nombre_usuario, nombre_real, password_hash, password_fondo_hash, codigo_invitacion, invitado_por, nivel_id, rol) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const sql = `
+    INSERT INTO usuarios (
+      id, tenant_id, telefono, nombre_usuario, nombre_real, 
+      password_hash, password_fondo_hash, codigo_invitacion, 
+      invitado_por, nivel_id, rol, last_device_id, 
+      saldo_principal, saldo_comisiones, tickets_ruleta
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
   const params = [
     userData.id || uuidv4(),
+    userData.tenant_id || 'default-tenant-uuid',
     userData.telefono,
     userData.nombre_usuario,
-    userData.nombre_real,
+    userData.nombre_real || userData.nombre_usuario,
     userData.password_hash,
-    userData.password_fondo_hash,
+    userData.password_fondo_hash || null,
     userData.codigo_invitacion,
-    userData.invitado_por,
+    userData.invitado_por || null,
     userData.nivel_id,
-    userData.rol || 'usuario'
+    userData.rol || 'usuario',
+    userData.last_device_id || null,
+    userData.saldo_principal || 0,
+    userData.saldo_comisiones || 0,
+    userData.tickets_ruleta || 0
   ];
   await query(sql, params);
   return await findUserById(params[0]);
@@ -323,7 +336,7 @@ export async function updateUser(id, updates) {
   if (keys.length === 0) return null;
 
   const setClause = keys.map(k => `${k} = ?`).join(', ');
-  const params = [...Object.values(updates), id];
+  const params = [...Object.values(updates).map(v => v === undefined ? null : v), id];
   
   await query(`UPDATE usuarios SET ${setClause} WHERE id = ?`, params);
   userCache.delete(id); // Invalidar caché

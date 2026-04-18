@@ -30,7 +30,9 @@ const pool = mysql.createPool(poolConfig);
  */
 export async function query(sql, params) {
   try {
-    const [results] = await pool.execute(sql, params);
+    // Sanitización preventiva: convertir undefined a null para evitar Error 500
+    const sanitizedParams = params ? params.map(v => v === undefined ? null : v) : [];
+    const [results] = await pool.execute(sql, sanitizedParams);
     return results;
   } catch (err) {
     logger.error(`[DB Query Error]: ${err.message} | SQL: ${sql}`);

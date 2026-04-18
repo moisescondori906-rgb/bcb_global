@@ -34,7 +34,7 @@ export default function Invite() {
     setLoading(false);
   }, []);
 
-  const inviteLink = `https://bcb-global.vercel.app/register?ref=${user?.codigo_invitacion || ''}`;
+  const inviteLink = `https://bcb-global.com/register?ref=${user?.codigo_invitacion || ''}`;
 
   const handleCopyCode = async () => {
     if (!user?.codigo_invitacion) return;
