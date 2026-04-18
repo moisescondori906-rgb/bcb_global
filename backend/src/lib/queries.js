@@ -446,48 +446,55 @@ export async function getTaskById(id) {
 }
 
 /**
- * Acredita una tarea con Idempotencia real y Transacción
+ * Acredita una tarea con Blindaje Senior:
+ * 1. Idempotencia en DB.
+ * 2. Bloqueo Pesimista (SELECT FOR UPDATE) en Usuario y Tarea Diaria.
+ * 3. Auditoría Forense Atómica.
  */
 export async function completeTask(userId, taskId, idempotencyKey = null) {
-  const todayStr = boliviaTime.todayStr();
   const traceId = uuidv4();
+  const operacion = 'TASK_REWARD';
+  const todayBolivia = boliviaTime.todayStr();
   
   return await transaction(async (conn) => {
-    // 0. Idempotencia Centralizada
+    // 0. IDEMPOTENCIA EN DB
     if (idempotencyKey) {
-      const [existing] = await conn.query('SELECT response_body FROM idempotencia WHERE idempotency_key = ?', [idempotencyKey]);
+      const [existing] = await conn.query(
+        'SELECT response_body FROM idempotencia WHERE idempotency_key = ? FOR UPDATE', 
+        [idempotencyKey]
+      );
       if (existing.length > 0) return JSON.parse(existing[0].response_body);
     }
 
-    // 1. Bloqueo de usuario para evitar concurrencia de saldo
+    // 1. LOCK USUARIO
     const [userRows] = await conn.query('SELECT * FROM usuarios WHERE id = ? FOR UPDATE', [userId]);
     const user = userRows[0];
     if (!user) throw new Error('Usuario no encontrado');
-    if (user.bloqueado) throw new Error('Tu cuenta ha sido bloqueada.');
+    if (user.bloqueado) throw new Error('Tu cuenta se encuentra bloqueada.');
 
-    // 2. Verificar si la tarea específica ya se hizo hoy
+    // 2. LOCK ACTIVIDAD: Evita doble acreditación simultánea
     const [taskCheck] = await conn.query(
       'SELECT id FROM actividad_tareas WHERE usuario_id = ? AND tarea_id = ? AND fecha_dia = ? FOR UPDATE',
-      [userId, taskId, todayStr]
+      [userId, taskId, todayBolivia]
     );
-    if (taskCheck.length > 0) throw new Error('Tarea ya completada hoy');
+    if (taskCheck.length > 0) throw new Error('Esta tarea ya fue completada y pagada hoy.');
 
-    // 3. Verificar límite de tareas del nivel
+    // 3. VALIDAR LÍMITE DIARIO
     const [countResult] = await conn.query(
       'SELECT COUNT(*) as total FROM actividad_tareas WHERE usuario_id = ? AND fecha_dia = ? FOR UPDATE',
-      [userId, todayStr]
+      [userId, todayBolivia]
     );
     const todayCount = countResult[0]?.total || 0;
 
-    const [levels] = await conn.query('SELECT * FROM niveles');
-    const level = levels.find(l => String(l.id) === String(user.nivel_id));
-    if (!level) throw new Error('Nivel no configurado');
+    const [levelRows] = await conn.query('SELECT * FROM niveles WHERE id = ? FOR UPDATE', [user.nivel_id]);
+    const level = levelRows[0];
+    if (!level) throw new Error('Configuración de nivel no encontrada');
 
     if (todayCount >= Number(level.num_tareas_diarias)) {
-      throw new Error('Has alcanzado tu límite de tareas diarias para tu nivel.');
+      throw new Error(`Límite diario alcanzado (${level.num_tareas_diarias} tareas).`);
     }
 
-    // 4. Registrar actividad y pagar
+    // 4. ACREDITACIÓN ATÓMICA
     const amount = Number(level.ganancia_tarea);
     const oldBalance = Number(user.saldo_principal);
     const newBalance = oldBalance + amount;
@@ -497,30 +504,34 @@ export async function completeTask(userId, taskId, idempotencyKey = null) {
     const activityId = uuidv4();
     await conn.query(
       'INSERT INTO actividad_tareas (id, usuario_id, tarea_id, monto_ganado, fecha_dia) VALUES (?, ?, ?, ?, ?)',
-      [activityId, userId, taskId, amount, todayStr]
+      [activityId, userId, taskId, amount, todayBolivia]
     );
 
+    // 5. MOVIMIENTO Y AUDITORÍA
+    const movimientoId = uuidv4();
     await conn.query(
-      'INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [uuidv4(), userId, 'principal', 'tarea_completada', amount, oldBalance, newBalance, activityId, `Pago por tarea publicitaria`]
+      'INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
+       VALUES (?, ?, 'principal', 'tarea_completada', ?, ?, ?, ?, ?)',
+      [movimientoId, userId, amount, oldBalance, newBalance, activityId, 'Pago por tarea realizada']
     );
 
-    // 5. Auditoría de Estado Financiero
     await conn.query(
       `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
-       VALUES (?, ?, 'TASK_COMPLETE', 'principal', ?, ?, ?, ?)`,
-      [traceId, userId, amount, oldBalance, newBalance, activityId]
+       VALUES (?, ?, ?, 'principal', ?, ?, ?, ?)`,
+      [traceId, userId, operacion, amount, oldBalance, newBalance, activityId]
     );
 
-    const response = { success: true, amount, traceId };
+    const res = { success: true, amount, traceId, message: 'Tarea acreditada con éxito' };
 
-    // 6. Registrar Idempotencia
+    // 6. REGISTRAR IDEMPOTENCIA
     if (idempotencyKey) {
-      await conn.query('INSERT INTO idempotencia (idempotency_key, response_body) VALUES (?, ?)', 
-        [idempotencyKey, JSON.stringify(response)]);
+      await conn.query(
+        'INSERT INTO idempotencia (idempotency_key, response_body, operacion, usuario_id) VALUES (?, ?, ?, ?)', 
+        [idempotencyKey, JSON.stringify(res), operacion, userId]
+      );
     }
 
-    return response;
+    return res;
   });
 }
 
@@ -542,29 +553,144 @@ export async function createLevelPurchase(userId, nivelId, monto, comprobanteUrl
 }
 
 /**
- * Aprueba una compra de nivel (LEVEL_PURCHASE)
- * REGLA: No devuelve dinero, solo cambia el nivel.
+ * Solicitar Retiro con Blindaje Extremo (Nivel Senior):
+ * 1. Idempotencia en DB (No Redis).
+ * 2. Bloqueo Pesimista (SELECT FOR UPDATE).
+ * 3. Validación de 1 Retiro/Día usando Timezone Bolivia (America/La_Paz).
+ * 4. Auditoría Forense Atómica.
  */
-export async function approveLevelPurchase(compraId, adminId) {
+export async function requestWithdrawal(userId, { monto, tipo_billetera, tarjeta_id, idempotencyKey }) {
   const traceId = uuidv4();
-  return await transaction(async (conn) => {
-    // 1. Bloqueo de Compra
-    const [compraRows] = await conn.query(
-      `SELECT * FROM compras_nivel WHERE id = ? AND estado = 'pendiente' FOR UPDATE`, 
-      [compraId]
-    );
-    const compra = compraRows[0];
-    if (!compra) throw new Error('Compra no encontrada o ya procesada');
+  const operacion = 'WITHDRAW_REQUEST';
 
-    // 2. Bloqueo de Usuario
-    const [userRows] = await conn.query(`SELECT * FROM usuarios WHERE id = ? FOR UPDATE`, [compra.usuario_id]);
+  return await transaction(async (conn) => {
+    // 0. IDEMPOTENCIA EN DB: Fuente de Verdad Única
+    if (idempotencyKey) {
+      const [existing] = await conn.query(
+        'SELECT response_body FROM idempotencia WHERE idempotency_key = ? FOR UPDATE', 
+        [idempotencyKey]
+      );
+      if (existing.length > 0) return JSON.parse(existing[0].response_body);
+    }
+
+    // 1. LOCK USUARIO: Previene condiciones de carrera en saldo
+    const balanceField = tipo_billetera === 'comisiones' ? 'saldo_comisiones' : 'saldo_principal';
+    const [userRows] = await conn.query(
+      `SELECT id, ${balanceField} as balance, nivel_id FROM usuarios WHERE id = ? FOR UPDATE`, 
+      [userId]
+    );
     const user = userRows[0];
     if (!user) throw new Error('Usuario no encontrado');
 
-    // 3. Actualizar Nivel y Tickets
-    const [levels] = await conn.query(`SELECT * FROM niveles WHERE id = ?`, [compra.nivel_id]);
+    const m = Number(monto);
+    const oldBalance = Number(user.balance);
+    if (oldBalance < m) throw new Error('Saldo insuficiente para realizar el retiro');
+
+    // 2. BLINDAJE 1 RETIRO/DÍA: Validación estricta con CONVERT_TZ
+    // Comprobamos si existe algún retiro (pendiente, aprobado o pagado) para el día de hoy en Bolivia
+    const [withdrawCount] = await conn.query(
+      `SELECT COUNT(*) as total FROM retiros 
+       WHERE usuario_id = ? 
+       AND DATE(CONVERT_TZ(created_at, '+00:00', '-04:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '-04:00'))
+       AND estado IN ('pendiente', 'aprobado', 'pagado') FOR UPDATE`,
+      [userId]
+    );
+    
+    if (withdrawCount[0].total > 0) {
+      throw new Error('Límite excedido: Solo se permite 1 retiro por día (Hora Bolivia).');
+    }
+
+    // 3. DESCONTAR SALDO (ACID)
+    const newBalance = oldBalance - m;
+    await conn.query(`UPDATE usuarios SET ${balanceField} = ? WHERE id = ?`, [newBalance, userId]);
+
+    // 4. CREAR REGISTRO DE RETIRO
+    const retiroId = uuidv4();
+    const config = await getPublicContent();
+    const comisionPercent = Number(config.comision_retiro || 12);
+    const comisionMonto = Number((m * (comisionPercent / 100)).toFixed(2));
+    const montoNeto = m - comisionMonto;
+
+    const [tarjetas] = await conn.query(
+      `SELECT * FROM tarjetas_bancarias WHERE id = ? AND usuario_id = ? FOR UPDATE`, 
+      [tarjeta_id, userId]
+    );
+    if (tarjetas.length === 0) throw new Error('Tarjeta bancaria no válida o no pertenece al usuario');
+
+    // fecha_dia se guarda en UTC pero la lógica de validación usa CONVERT_TZ
+    const todayBolivia = boliviaTime.todayStr(); 
+    await conn.query(
+      `INSERT INTO retiros (id, usuario_id, monto, monto_neto, comision_aplicada, tipo_billetera, estado, datos_bancarios, fecha_dia) 
+       VALUES (?, ?, ?, ?, ?, ?, 'pendiente', ?, ?)`,
+      [retiroId, userId, m, montoNeto, comisionMonto, tipo_billetera, JSON.stringify(tarjetas[0]), todayBolivia]
+    );
+
+    // 5. MOVIMIENTO Y AUDITORÍA FORENSE
+    const movimientoId = uuidv4();
+    await conn.query(
+      `INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
+       VALUES (?, ?, ?, 'retiro', ?, ?, ?, ?, ?)`,
+      [movimientoId, userId, tipo_billetera, -m, oldBalance, newBalance, retiroId, 'Solicitud de retiro']
+    );
+
+    await conn.query(
+      `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [traceId, userId, operacion, tipo_billetera, m, oldBalance, newBalance, retiroId]
+    );
+
+    const res = { success: true, retiroId, traceId, message: 'Retiro procesado correctamente' };
+
+    // 6. REGISTRAR IDEMPOTENCIA EN DB (Final de la transacción)
+    if (idempotencyKey) {
+      await conn.query(
+        'INSERT INTO idempotencia (idempotency_key, response_body, operacion, usuario_id) VALUES (?, ?, ?, ?)', 
+        [idempotencyKey, JSON.stringify(res), operacion, userId]
+      );
+    }
+
+    return res;
+  });
+}
+
+/**
+ * Aprueba una compra de nivel con Blindaje Senior:
+ * 1. Lock en Compra y Usuario.
+ * 2. Validación de Estado 'pendiente'.
+ * 3. Actualización Atómica.
+ */
+export async function approveLevelPurchase(compraId, adminId, idempotencyKey = null) {
+  const traceId = uuidv4();
+  const operacion = 'LEVEL_UPGRADE';
+
+  return await transaction(async (conn) => {
+    // 0. Idempotencia
+    if (idempotencyKey) {
+      const [existing] = await conn.query(
+        'SELECT response_body FROM idempotencia WHERE idempotency_key = ? FOR UPDATE', 
+        [idempotencyKey]
+      );
+      if (existing.length > 0) return JSON.parse(existing[0].response_body);
+    }
+
+    // 1. LOCK COMPRA: Evita doble aprobación
+    const [compraRows] = await conn.query(
+      `SELECT * FROM compras_nivel WHERE id = ? FOR UPDATE`, 
+      [compraId]
+    );
+    const compra = compraRows[0];
+    if (!compra) throw new Error('Orden de compra no encontrada');
+    if (compra.estado !== 'pendiente') throw new Error(`La orden ya se encuentra en estado: ${compra.estado}`);
+
+    // 2. LOCK USUARIO
+    const [userRows] = await conn.query(`SELECT * FROM usuarios WHERE id = ? FOR UPDATE`, [compra.usuario_id]);
+    const user = userRows[0];
+    if (!user) throw new Error('Usuario asociado a la compra no encontrado');
+
+    // 3. ACTUALIZACIÓN ATÓMICA
+    const [levels] = await conn.query(`SELECT * FROM niveles WHERE id = ? FOR UPDATE`, [compra.nivel_id]);
     const targetLevel = levels[0];
-    if (!targetLevel) throw new Error('Nivel destino no existe');
+    if (!targetLevel) throw new Error('Nivel de destino inválido');
 
     const ticketsToAdd = Number(targetLevel.orden);
     await conn.query(
@@ -572,47 +698,54 @@ export async function approveLevelPurchase(compraId, adminId) {
       [targetLevel.id, ticketsToAdd, compra.usuario_id]
     );
 
-    // 4. Cerrar Compra
     await conn.query(
       `UPDATE compras_nivel SET estado = 'completada', procesado_por = ?, procesado_at = NOW() WHERE id = ?`, 
       [adminId, compraId]
     );
 
-    // 5. Auditoría
+    // 4. AUDITORÍA
     await conn.query(
       `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id, metadata) 
-       VALUES (?, ?, 'LEVEL_UPGRADE', 'principal', ?, ?, ?, ?, ?)`,
-      [traceId, compra.usuario_id, compra.monto, Number(user.saldo_principal), Number(user.saldo_principal), compraId, JSON.stringify({ old_level: user.nivel_id, new_level: targetLevel.id })]
+       VALUES (?, ?, ?, 'principal', ?, ?, ?, ?, ?)`,
+      [traceId, compra.usuario_id, operacion, compra.monto, Number(user.saldo_principal), Number(user.saldo_principal), compraId, JSON.stringify({ old_level: user.nivel_id, new_level: targetLevel.id })]
     );
 
-    return { success: true, traceId };
+    const res = { success: true, traceId, message: `Ascenso a ${targetLevel.nombre} completado` };
+    
+    if (idempotencyKey) {
+      await conn.query(
+        'INSERT INTO idempotencia (idempotency_key, response_body, operacion, usuario_id) VALUES (?, ?, ?, ?)', 
+        [idempotencyKey, JSON.stringify(res), operacion, adminId]
+      );
+    }
+
+    return res;
   });
 }
 
 /**
- * Procesa la DEVOLUCIÓN (Upgrade) de un nivel anterior
- * REGLA: Solo si el nuevo_nivel > nivel_actual. Devuelve a wallet_comisiones.
+ * Reembolso de Nivel Anterior (Upgrade Refund) con Blindaje Pesimista
  */
 export async function refundPreviousLevel(userId, idempotencyKey) {
   const traceId = uuidv4();
+  const operacion = 'LEVEL_REFUND';
+
   return await transaction(async (conn) => {
-    // 0. Idempotencia
+    // 0. Idempotencia en DB
     if (idempotencyKey) {
-      const [existing] = await conn.query('SELECT response_body FROM idempotencia WHERE idempotency_key = ?', [idempotencyKey]);
+      const [existing] = await conn.query(
+        'SELECT response_body FROM idempotencia WHERE idempotency_key = ? FOR UPDATE', 
+        [idempotencyKey]
+      );
       if (existing.length > 0) return JSON.parse(existing[0].response_body);
     }
 
-    // 1. Bloqueo de Usuario
+    // 1. LOCK USUARIO
     const [userRows] = await conn.query(`SELECT * FROM usuarios WHERE id = ? FOR UPDATE`, [userId]);
     const user = userRows[0];
     if (!user) throw new Error('Usuario no encontrado');
 
-    // 2. Obtener Nivel Actual
-    const [levels] = await conn.query(`SELECT * FROM niveles ORDER BY orden ASC`);
-    const currentLevel = levels.find(l => String(l.id) === String(user.nivel_id));
-    if (!currentLevel || currentLevel.codigo === 'internar') throw new Error('Nivel actual no elegible para devolución');
-
-    // 3. Buscar la compra completada más reciente de este nivel que no haya sido reembolsada
+    // 2. BUSCAR COMPRA ORIGINAL (LOCK PESIMISTA)
     const [purchaseRows] = await conn.query(
       `SELECT * FROM compras_nivel 
        WHERE usuario_id = ? AND nivel_id = ? AND estado = 'completada' AND reembolsado = 0 
@@ -620,9 +753,9 @@ export async function refundPreviousLevel(userId, idempotencyKey) {
       [userId, user.nivel_id]
     );
     const purchase = purchaseRows[0];
-    if (!purchase) throw new Error('No se encontró una compra válida para devolver');
+    if (!purchase) throw new Error('No se encontró una compra de nivel activa elegible para devolución.');
 
-    // 4. Acreditar a wallet_comisiones
+    // 3. ACREDITACIÓN ATÓMICA A WALLET COMISIONES
     const amount = Number(purchase.monto);
     const oldBalance = Number(user.saldo_comisiones);
     const newBalance = oldBalance + amount;
@@ -630,23 +763,27 @@ export async function refundPreviousLevel(userId, idempotencyKey) {
     await conn.query(`UPDATE usuarios SET saldo_comisiones = ? WHERE id = ?`, [newBalance, userId]);
     await conn.query(`UPDATE compras_nivel SET reembolsado = 1 WHERE id = ?`, [purchase.id]);
 
-    // 5. Movimiento y Auditoría
+    // 4. MOVIMIENTO Y AUDITORÍA
     const movimientoId = uuidv4();
     await conn.query(
       `INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
        VALUES (?, ?, 'comisiones', 'devolucion_nivel', ?, ?, ?, ?, ?)`,
-      [movimientoId, userId, amount, oldBalance, newBalance, purchase.id, `Devolución por ascenso desde ${currentLevel.nombre}`]
+      [movimientoId, userId, amount, oldBalance, newBalance, purchase.id, 'Devolución de inversión por ascenso de nivel']
     );
 
     await conn.query(
       `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
-       VALUES (?, ?, 'LEVEL_REFUND', 'comisiones', ?, ?, ?, ?)`,
-      [traceId, userId, amount, oldBalance, newBalance, purchase.id]
+       VALUES (?, ?, ?, 'comisiones', ?, ?, ?, ?)`,
+      [traceId, userId, operacion, amount, oldBalance, newBalance, purchase.id]
     );
 
-    const res = { success: true, amount, traceId };
+    const res = { success: true, amount, traceId, message: 'Inversión devuelta a billetera de comisiones' };
+    
     if (idempotencyKey) {
-      await conn.query('INSERT INTO idempotencia (idempotency_key, response_body) VALUES (?, ?)', [idempotencyKey, JSON.stringify(res)]);
+      await conn.query(
+        'INSERT INTO idempotencia (idempotency_key, response_body, operacion, usuario_id) VALUES (?, ?, ?, ?)', 
+        [idempotencyKey, JSON.stringify(res), operacion, userId]
+      );
     }
 
     return res;
@@ -654,126 +791,134 @@ export async function refundPreviousLevel(userId, idempotencyKey) {
 }
 
 /**
- * Solicitar Retiro con Blindaje: Máximo 1 por día y validación estricta de billetera.
+ * Aprueba un Retiro con Blindaje Senior:
+ * 1. Lock en Retiro y Usuario.
+ * 2. Validación de Estado 'pendiente'.
+ * 3. Auditoría de finalización.
  */
-export async function requestWithdrawal(userId, { monto, tipo_billetera, tarjeta_id, idempotencyKey }) {
+export async function approveRetiro(retiroId, adminId, idempotencyKey = null) {
   const traceId = uuidv4();
-  const today = boliviaTime.todayStr();
+  const operacion = 'WITHDRAW_APPROVE';
 
   return await transaction(async (conn) => {
-    // 0. Idempotencia
+    // 0. Idempotencia en DB
     if (idempotencyKey) {
-      const [existing] = await conn.query('SELECT response_body FROM idempotencia WHERE idempotency_key = ?', [idempotencyKey]);
+      const [existing] = await conn.query(
+        'SELECT response_body FROM idempotencia WHERE idempotency_key = ? FOR UPDATE', 
+        [idempotencyKey]
+      );
       if (existing.length > 0) return JSON.parse(existing[0].response_body);
     }
 
-    // 1. Bloqueo de Usuario y Validación de Saldo
-    const balanceField = tipo_billetera === 'comisiones' ? 'saldo_comisiones' : 'saldo_principal';
-    const [userRows] = await conn.query(`SELECT id, ${balanceField} as balance, nivel_id FROM usuarios WHERE id = ? FOR UPDATE`, [userId]);
-    const user = userRows[0];
-    if (!user) throw new Error('Usuario no encontrado');
-
-    const m = Number(monto);
-    const oldBalance = Number(user.balance);
-    if (oldBalance < m) throw new Error('Saldo insuficiente en la billetera seleccionada');
-
-    // 2. Blindaje: Máximo 1 retiro por día (Global)
-    const [withdrawCount] = await conn.query(
-      `SELECT COUNT(*) as total FROM retiros 
-       WHERE usuario_id = ? AND fecha_dia = ? AND estado IN ('pendiente', 'aprobado', 'pagado') FOR UPDATE`,
-      [userId, today]
+    // 1. LOCK RETIRO: Evita doble aprobación
+    const [retiroRows] = await conn.query(
+      `SELECT * FROM retiros WHERE id = ? FOR UPDATE`, 
+      [retiroId]
     );
-    if (withdrawCount[0].total > 0) throw new Error('Ya has realizado un retiro hoy. Límite: 1 por día.');
+    const retiro = retiroRows[0];
+    if (!retiro) throw new Error('Retiro no encontrado');
+    if (retiro.estado !== 'pendiente') throw new Error(`El retiro ya se encuentra en estado: ${retiro.estado}`);
 
-    // 3. Descontar Saldo
-    const newBalance = oldBalance - m;
-    await conn.query(`UPDATE usuarios SET ${balanceField} = ? WHERE id = ?`, [newBalance, userId]);
-
-    // 4. Crear Registro de Retiro
-    const retiroId = uuidv4();
-    const config = await getPublicContent();
-    const comisionPercent = Number(config.comision_retiro || 12);
-    const comisionMonto = Number((m * (comisionPercent / 100)).toFixed(2));
-    const montoNeto = m - comisionMonto;
-
-    const [tarjetas] = await conn.query(`SELECT * FROM tarjetas_bancarias WHERE id = ? AND usuario_id = ?`, [tarjeta_id, userId]);
-    if (tarjetas.length === 0) throw new Error('Tarjeta bancaria no válida');
-
+    // 2. ACTUALIZACIÓN ATÓMICA
     await conn.query(
-      `INSERT INTO retiros (id, usuario_id, monto, monto_neto, comision_aplicada, tipo_billetera, estado, datos_bancarios, fecha_dia) 
-       VALUES (?, ?, ?, ?, ?, ?, 'pendiente', ?, ?)`,
-      [retiroId, userId, m, montoNeto, comisionMonto, tipo_billetera, JSON.stringify(tarjetas[0]), today]
+      `UPDATE retiros SET estado = 'completado', procesado_por = ?, procesado_at = NOW() WHERE id = ?`, 
+      [adminId, retiroId]
     );
 
-    // 5. Auditoría
+    // 3. AUDITORÍA (El saldo ya fue descontado al solicitar)
     await conn.query(
       `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
-       VALUES (?, ?, 'WITHDRAW_REQUEST', ?, ?, ?, ?, ?)`,
-      [traceId, userId, tipo_billetera, m, oldBalance, newBalance, retiroId]
+       VALUES (?, ?, ?, ?, ?, 0, 0, ?)`,
+      [traceId, retiro.usuario_id, operacion, retiro.tipo_billetera, retiro.monto, retiroId]
     );
 
-    const res = { success: true, retiroId, traceId };
+    const res = { success: true, traceId, message: 'Retiro aprobado correctamente' };
+
     if (idempotencyKey) {
-      await conn.query('INSERT INTO idempotencia (idempotency_key, response_body) VALUES (?, ?)', [idempotencyKey, JSON.stringify(res)]);
+      await conn.query(
+        'INSERT INTO idempotencia (idempotency_key, response_body, operacion, usuario_id) VALUES (?, ?, ?, ?)', 
+        [idempotencyKey, JSON.stringify(res), operacion, adminId]
+      );
     }
 
     return res;
   });
 }
 
-export async function approveRetiro(retiroId, adminId) {
+/**
+ * Rechaza un Retiro con Reembolso Atómico:
+ * 1. Lock en Retiro y Usuario.
+ * 2. Validación de Estado 'pendiente'.
+ * 3. Reembolso de Saldo Atómico.
+ */
+export async function rejectRetiro(retiroId, adminId, motivo, idempotencyKey = null) {
   const traceId = uuidv4();
+  const operacion = 'WITHDRAW_REJECT_REFUND';
+
   return await transaction(async (conn) => {
-    const [retiroRows] = await conn.query(`SELECT * FROM retiros WHERE id = ? AND estado = 'pendiente' FOR UPDATE`, [retiroId]);
-    const retiro = retiroRows[0];
-    if (!retiro) throw new Error('Retiro no encontrado o ya procesado');
+    // 0. Idempotencia en DB
+    if (idempotencyKey) {
+      const [existing] = await conn.query(
+        'SELECT response_body FROM idempotencia WHERE idempotency_key = ? FOR UPDATE', 
+        [idempotencyKey]
+      );
+      if (existing.length > 0) return JSON.parse(existing[0].response_body);
+    }
 
-    await conn.query(`UPDATE retiros SET estado = 'completado', procesado_por = ?, procesado_at = NOW() WHERE id = ?`, [adminId, retiroId]);
-
-    // Auditoría (El saldo ya se descontó al solicitar)
-    await conn.query(
-      `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
-       VALUES (?, ?, 'WITHDRAW_APPROVE', ?, ?, 0, 0, ?)`,
-      [traceId, retiro.usuario_id, retiro.tipo_billetera, retiro.monto, retiroId]
+    // 1. LOCK RETIRO
+    const [retiroRows] = await conn.query(
+      `SELECT * FROM retiros WHERE id = ? FOR UPDATE`, 
+      [retiroId]
     );
-
-    return { success: true, traceId };
-  });
-}
-
-export async function rejectRetiro(retiroId, adminId, motivo) {
-  const traceId = uuidv4();
-  return await transaction(async (conn) => {
-    const [retiroRows] = await conn.query(`SELECT * FROM retiros WHERE id = ? AND estado = 'pendiente' FOR UPDATE`, [retiroId]);
     const retiro = retiroRows[0];
-    if (!retiro) throw new Error('Retiro no encontrado o ya procesada');
+    if (!retiro) throw new Error('Retiro no encontrado');
+    if (retiro.estado !== 'pendiente') throw new Error(`El retiro ya se encuentra en estado: ${retiro.estado}`);
 
-    const { usuario_id, monto, tipo_billetera } = retiro;
-    const field = tipo_billetera === 'comisiones' ? 'saldo_comisiones' : 'saldo_principal';
-
-    const [userRows] = await conn.query(`SELECT ${field} as balance FROM usuarios WHERE id = ? FOR UPDATE`, [usuario_id]);
+    // 2. LOCK USUARIO Y REEMBOLSO
+    const balanceField = retiro.tipo_billetera === 'comisiones' ? 'saldo_comisiones' : 'saldo_principal';
+    const [userRows] = await conn.query(
+      `SELECT id, ${balanceField} as balance FROM usuarios WHERE id = ? FOR UPDATE`, 
+      [retiro.usuario_id]
+    );
     const user = userRows[0];
-    if (!user) throw new Error('Usuario no encontrado');
+    if (!user) throw new Error('Usuario asociado al retiro no encontrado');
 
+    const amount = Number(retiro.monto);
     const oldBalance = Number(user.balance);
-    const newBalance = oldBalance + Number(monto);
+    const newBalance = oldBalance + amount;
 
-    await conn.query(`UPDATE usuarios SET ${field} = ? WHERE id = ?`, [newBalance, usuario_id]);
+    await conn.query(`UPDATE usuarios SET ${balanceField} = ? WHERE id = ?`, [newBalance, user.id]);
 
-    await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
-      VALUES (?, ?, ?, 'reembolso_retiro', ?, ?, ?, ?, ?)`, 
-      [uuidv4(), usuario_id, tipo_billetera, monto, oldBalance, newBalance, retiroId, `Reembolso por retiro rechazado: ${motivo}`]);
-
-    // Auditoría Financiera
+    // 3. ACTUALIZAR ESTADO RETIRO
     await conn.query(
-      `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
-       VALUES (?, ?, 'WITHDRAW_REJECT_REFUND', ?, ?, ?, ?, ?)`,
-      [traceId, usuario_id, tipo_billetera, monto, oldBalance, newBalance, retiroId]
+      `UPDATE retiros SET estado = 'rechazado', admin_notas = ?, procesado_por = ?, procesado_at = NOW() WHERE id = ?`, 
+      [motivo, adminId, retiroId]
     );
 
-    await conn.query(`UPDATE retiros SET estado = 'rechazado', admin_notas = ?, procesado_por = ?, procesado_at = NOW() WHERE id = ?`, [motivo, adminId, retiroId]);
+    // 4. MOVIMIENTO Y AUDITORÍA
+    const movimientoId = uuidv4();
+    await conn.query(
+      `INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
+       VALUES (?, ?, ?, 'reembolso_retiro', ?, ?, ?, ?, ?)`,
+      [movimientoId, user.id, retiro.tipo_billetera, amount, oldBalance, newBalance, retiroId, `Reembolso por retiro rechazado: ${motivo}`]
+    );
 
-    return { success: true, traceId };
+    await conn.query(
+      `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [traceId, user.id, operacion, amount, oldBalance, newBalance, retiroId]
+    );
+
+    const res = { success: true, traceId, message: 'Retiro rechazado y saldo reembolsado' };
+
+    if (idempotencyKey) {
+      await conn.query(
+        'INSERT INTO idempotencia (idempotency_key, response_body, operacion, usuario_id) VALUES (?, ?, ?, ?)', 
+        [idempotencyKey, JSON.stringify(res), operacion, adminId]
+      );
+    }
+
+    return res;
   });
 }
 

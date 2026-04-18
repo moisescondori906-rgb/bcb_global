@@ -209,22 +209,25 @@ CREATE TABLE IF NOT EXISTS sorteos_ganadores (
   INDEX idx_sorteos_usuario (usuario_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 15. TABLA DE IDEMPOTENCIA (Blindaje Financiero)
--- Previene doble ejecución de la misma operación lógica.
+-- 15. TABLA DE IDEMPOTENCIA (Blindaje Financiero Nivel Senior)
+-- Previene doble ejecución mediante clave única en DB.
 CREATE TABLE IF NOT EXISTS idempotencia (
   idempotency_key VARCHAR(100) PRIMARY KEY,
-  response_body JSON,
+  response_body JSON NOT NULL,
   status_code INT DEFAULT 200,
+  operacion VARCHAR(50), -- TASK, WITHDRAWAL, LEVEL_UPGRADE, etc.
+  usuario_id VARCHAR(36),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_idempotencia_user (usuario_id),
   INDEX idx_idempotencia_fecha (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 16. AUDITORÍA DE ESTADO FINANCIERO (Before/After)
+-- 16. AUDITORÍA DE ESTADO FINANCIERO (Before/After con Trazabilidad Total)
 CREATE TABLE IF NOT EXISTS auditoria_financiera (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   trace_id VARCHAR(36) NOT NULL,
   usuario_id VARCHAR(36) NOT NULL,
-  operacion VARCHAR(50) NOT NULL,
+  operacion VARCHAR(50) NOT NULL, -- TASK, LEVEL_UP, LEVEL_REFUND, WITHDRAW_REQUEST, ADMIN_ADJUST
   billetera ENUM('principal', 'comisiones') NOT NULL,
   monto DECIMAL(20, 2) NOT NULL,
   saldo_anterior DECIMAL(20, 2) NOT NULL,
@@ -233,7 +236,8 @@ CREATE TABLE IF NOT EXISTS auditoria_financiera (
   metadata JSON,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_audit_fin_usuario (usuario_id),
-  INDEX idx_audit_fin_trace (trace_id)
+  INDEX idx_audit_fin_trace (trace_id),
+  INDEX idx_audit_fin_fecha (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 15. RESPUESTAS CUESTIONARIO
