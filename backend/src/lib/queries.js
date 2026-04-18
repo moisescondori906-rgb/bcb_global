@@ -510,8 +510,8 @@ export async function completeTask(userId, taskId, idempotencyKey = null) {
     // 5. MOVIMIENTO Y AUDITORÍA
     const movimientoId = uuidv4();
     await conn.query(
-      'INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
-       VALUES (?, ?, 'principal', 'tarea_completada', ?, ?, ?, ?, ?)',
+      `INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
+       VALUES (?, ?, 'principal', 'tarea_completada', ?, ?, ?, ?, ?)`,
       [movimientoId, userId, amount, oldBalance, newBalance, activityId, 'Pago por tarea realizada']
     );
 
