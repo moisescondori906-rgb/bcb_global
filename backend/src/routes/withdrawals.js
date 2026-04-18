@@ -8,6 +8,7 @@ import {
 import { query } from '../config/db.js';
 import { authenticate } from '../middleware/auth.js';
 import { attachRequestUser } from '../middleware/requestContext.js';
+import { dynamicControlMiddleware } from '../middleware/dynamicControl.js';
 import { 
   sendToRetiros, 
   sendToAdmin, 
@@ -55,10 +56,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', withdrawRateLimit, async (req, res) => {
+router.post('/', withdrawRateLimit, dynamicControlMiddleware('withdrawal'), async (req, res) => {
   try {
     const { monto, tipo_billetera, password_fondo, tarjeta_id, idempotency_key } = req.body;
     const user = req.requestUser;
+    const traceId = req.traceId; // Inyectado por dynamicControlMiddleware
 
     const iKey = idempotency_key || req.headers['x-idempotency-key'];
     if (!iKey) return res.status(400).json({ error: 'Falta clave de idempotencia' });

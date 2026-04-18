@@ -6,6 +6,7 @@ import {
 } from '../lib/queries.js';
 import { authenticate } from '../middleware/auth.js';
 import { attachRequestUser, DEMO_USER_ID } from '../middleware/requestContext.js';
+import { dynamicControlMiddleware } from '../middleware/dynamicControl.js';
 import { query } from '../config/db.js';
 import logger from '../lib/logger.js';
 import redis from '../services/redisService.js';
@@ -45,7 +46,7 @@ const taskRateLimit = async (req, res, next) => {
   }
 };
 
-router.get('/', async (req, res) => {
+router.get('/', dynamicControlMiddleware('task_list'), async (req, res) => {
   try {
     const user = req.requestUser;
     if (!user?.id) return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -122,7 +123,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/:id/responder', taskRateLimit, async (req, res) => {
+router.post('/:id/responder', taskRateLimit, dynamicControlMiddleware('task_complete'), async (req, res) => {
   try {
     const { respuesta, idempotency_key } = req.body;
     const user = req.requestUser;
@@ -163,7 +164,7 @@ router.post('/:id/responder', taskRateLimit, async (req, res) => {
     
     res.json({ success: true, monto: result.amount, trace_id: result.traceId });
   } catch (err) {
-    if (err.message === 'Tarea ya completada hoy' || err.message === 'Has alcanzado tu límite de tareas diarias para tu nivel.') {
+    if (err.message === 'Esta tarea ya fue completada y pagada hoy.' || err.message.includes('Límite diario alcanzado')) {
       return res.status(400).json({ error: err.message });
     }
     logger.error('[Tasks] responder:', err);

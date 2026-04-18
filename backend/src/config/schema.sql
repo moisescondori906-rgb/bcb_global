@@ -240,24 +240,58 @@ CREATE TABLE IF NOT EXISTS auditoria_financiera (
   INDEX idx_audit_fin_fecha (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 15. RESPUESTAS CUESTIONARIO
-CREATE TABLE IF NOT EXISTS respuestas_cuestionario (
-  id VARCHAR(36) PRIMARY KEY,
-  usuario_id VARCHAR(36) NOT NULL,
-  respuestas JSON NOT NULL,
-  fecha_dia DATE NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-  UNIQUE KEY unique_user_questionnaire_day (usuario_id, fecha_dia)
+-- 17. FEATURE FLAGS (Control de Funcionalidades en Caliente)
+CREATE TABLE IF NOT EXISTS feature_flags (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  feature_name VARCHAR(50) NOT NULL,
+  enabled TINYINT(1) DEFAULT 1,
+  region VARCHAR(20) DEFAULT 'GLOBAL', -- GLOBAL, BO, PE, etc.
+  rollout_percentage INT DEFAULT 100, -- 0-100 para Canary Releases
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_feature_region (feature_name, region),
+  INDEX idx_ff_region (region)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 16. NOTIFICACIONES
-CREATE TABLE IF NOT EXISTS notificaciones (
-  id VARCHAR(36) PRIMARY KEY,
-  usuario_id VARCHAR(36) NOT NULL,
-  titulo VARCHAR(200) NOT NULL,
-  mensaje TEXT NOT NULL,
-  leida TINYINT(1) DEFAULT 0,
+-- 18. HORARIOS DE OPERACIÓN (Control Dinámico por Región)
+CREATE TABLE IF NOT EXISTS horarios_operacion (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  operacion_tipo VARCHAR(30) NOT NULL, -- withdrawal, deposit, task, level_purchase
+  region VARCHAR(20) DEFAULT 'GLOBAL',
+  dias_permitidos VARCHAR(20) DEFAULT '1,2,3,4,5,6,0', -- 1=Lun, 0=Dom
+  hora_inicio TIME DEFAULT '00:00:00',
+  hora_fin TIME DEFAULT '23:59:59',
+  habilitado TINYINT(1) DEFAULT 1,
+  timezone VARCHAR(50) DEFAULT 'America/La_Paz',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_horarios_region_tipo (region, operacion_tipo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 19. VENTANAS DE MANTENIMIENTO (Bloqueo Programado)
+CREATE TABLE IF NOT EXISTS ventanas_mantenimiento (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  region VARCHAR(20) DEFAULT 'GLOBAL',
+  inicio_at DATETIME NOT NULL,
+  fin_at DATETIME NOT NULL,
+  motivo VARCHAR(255),
+  activo TINYINT(1) DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_mantenimiento_rango (inicio_at, fin_at, activo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 20. AUDITORÍA DE CONTROL OPERACIONAL
+CREATE TABLE IF NOT EXISTS auditoria_operacional (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  trace_id VARCHAR(36) NOT NULL,
+  usuario_id VARCHAR(36),
+  operacion VARCHAR(50),
+  region VARCHAR(20),
+  resultado ENUM('permitido', 'bloqueado', 'override') NOT NULL,
+  motivo_bloqueo VARCHAR(255),
+  metadata JSON,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_audit_op_trace (trace_id),
+  INDEX idx_audit_op_user (usuario_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
   INDEX idx_notif_usuario_leida (usuario_id, leida)
