@@ -39,8 +39,12 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { monto, tipo_billetera, password_fondo, tarjeta_id, qr_retiro, firma_digital } = req.body;
+    const { monto, tipo_billetera, password_fondo, tarjeta_id, qr_retiro, firma_digital, idempotency_key } = req.body;
     const user = req.requestUser;
+
+    // 0. Idempotencia Centralizada
+    const iKey = idempotency_key || req.headers['x-idempotency-key'];
+    if (!iKey) return res.status(400).json({ error: 'Falta clave de idempotencia' });
 
     // 1. Validaciones básicas
     const m = parseFloat(monto);
@@ -62,6 +66,10 @@ router.post('/', async (req, res) => {
 
     // 4. Ejecución Transaccional del Retiro
     const result = await transaction(async (conn) => {
+      // Check Idempotencia
+      const [existing] = await conn.query('SELECT response_body FROM idempotencia WHERE idempotency_key = ?', [iKey]);
+      if (existing.length > 0) return JSON.parse(existing[0].response_body);
+
       // Bloquear usuario para evitar race conditions de saldo
       const [u] = await conn.query(`SELECT saldo_principal, saldo_comisiones FROM usuarios WHERE id = ? FOR UPDATE`, [user.id]);
       const field = tipo_billetera === 'comisiones' ? 'saldo_comisiones' : 'saldo_principal';
@@ -77,15 +85,10 @@ router.post('/', async (req, res) => {
 
       const newBalance = saldoActual - m;
       const id = uuidv4();
+      const traceId = uuidv4();
 
       // Descontar saldo
       await conn.query(`UPDATE usuarios SET ${field} = ? WHERE id = ?`, [newBalance, user.id]);
-
-      // Asegurar columnas (Intento silencioso por si no existen)
-      try {
-        await conn.query(`ALTER TABLE retiros ADD COLUMN IF NOT EXISTS qr_retiro LONGTEXT`);
-        await conn.query(`ALTER TABLE retiros ADD COLUMN IF NOT EXISTS firma_digital TINYINT(1) DEFAULT 0`);
-      } catch (e) { /* Ya existen o no se permite ALTER */ }
 
       // Crear registro de retiro
       await conn.query(`INSERT INTO retiros (id, usuario_id, monto, monto_neto, comision_aplicada, tipo_billetera, estado, qr_retiro, firma_digital) 
@@ -96,10 +99,25 @@ router.post('/', async (req, res) => {
         VALUES (?, ?, ?, 'retiro', ?, ?, ?, ?, ?)`, 
         [uuidv4(), user.id, tipo_billetera, -m, saldoActual, newBalance, id, 'Solicitud de retiro enviada con firma digital']);
 
-      return { id, ok: true, neto, levels: await getLevels() };
+      // 5. Auditoría de Estado Financiero
+      await conn.query(
+        `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
+         VALUES (?, ?, 'WITHDRAW_REQUEST', ?, ?, ?, ?, ?)`,
+        [traceId, user.id, tipo_billetera, m, saldoActual, newBalance, id]
+      );
+
+      const response = { id, ok: true, neto, levels: await getLevels(), traceId };
+      
+      // Registrar Idempotencia
+      await conn.query('INSERT INTO idempotencia (idempotency_key, response_body) VALUES (?, ?)', [iKey, JSON.stringify(response)]);
+
+      return response;
     });
 
-    // 5. Alerta de Telegram (Fuera de la transacción para no bloquear el API si falla el bot)
+    if (result.alreadyExecuted) return res.json(result);
+
+    // 5. Alerta de Telegram (Fuera de la transacción)
+    // ... rest of telegram logic ...
     const userLevel = result.levels.find(l => String(l.id) === String(req.requestUser.nivel_id));
     
     const telegramData = {
@@ -143,7 +161,7 @@ router.post('/', async (req, res) => {
       logger.error(`[Telegram Alert Error]: ${e.message}`);
     }
 
-    res.json({ id: result.id, ok: true });
+    res.json({ id: result.id, ok: true, trace_id: result.traceId });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

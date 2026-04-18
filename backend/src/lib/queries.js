@@ -448,31 +448,38 @@ export async function getTaskById(id) {
 /**
  * Acredita una tarea con Idempotencia real y Transacción
  */
-export async function completeTask(userId, taskId) {
+export async function completeTask(userId, taskId, idempotencyKey = null) {
   const todayStr = boliviaTime.todayStr();
+  const traceId = uuidv4();
   
   return await transaction(async (conn) => {
-    // 1. Bloqueo de usuario para evitar concurrencia
+    // 0. Idempotencia Centralizada
+    if (idempotencyKey) {
+      const [existing] = await conn.query('SELECT response_body FROM idempotencia WHERE idempotency_key = ?', [idempotencyKey]);
+      if (existing.length > 0) return JSON.parse(existing[0].response_body);
+    }
+
+    // 1. Bloqueo de usuario para evitar concurrencia de saldo
     const [userRows] = await conn.query('SELECT * FROM usuarios WHERE id = ? FOR UPDATE', [userId]);
     const user = userRows[0];
     if (!user) throw new Error('Usuario no encontrado');
     if (user.bloqueado) throw new Error('Tu cuenta ha sido bloqueada.');
 
-    // 2. Verificar si la tarea específica ya se hizo hoy (Idempotencia)
-    const [existing] = await conn.query(
-      'SELECT id FROM actividad_tareas WHERE usuario_id = ? AND tarea_id = ? AND fecha_dia = ?',
+    // 2. Verificar si la tarea específica ya se hizo hoy
+    const [taskCheck] = await conn.query(
+      'SELECT id FROM actividad_tareas WHERE usuario_id = ? AND tarea_id = ? AND fecha_dia = ? FOR UPDATE',
       [userId, taskId, todayStr]
     );
-    if (existing.length > 0) throw new Error('Tarea ya completada hoy');
+    if (taskCheck.length > 0) throw new Error('Tarea ya completada hoy');
 
     // 3. Verificar límite de tareas del nivel
     const [countResult] = await conn.query(
-      'SELECT COUNT(*) as total FROM actividad_tareas WHERE usuario_id = ? AND fecha_dia = ?',
+      'SELECT COUNT(*) as total FROM actividad_tareas WHERE usuario_id = ? AND fecha_dia = ? FOR UPDATE',
       [userId, todayStr]
     );
     const todayCount = countResult[0]?.total || 0;
 
-    const levels = await getLevels();
+    const [levels] = await conn.query('SELECT * FROM niveles');
     const level = levels.find(l => String(l.id) === String(user.nivel_id));
     if (!level) throw new Error('Nivel no configurado');
 
@@ -487,17 +494,33 @@ export async function completeTask(userId, taskId) {
 
     await conn.query('UPDATE usuarios SET saldo_principal = ? WHERE id = ?', [newBalance, userId]);
     
+    const activityId = uuidv4();
     await conn.query(
       'INSERT INTO actividad_tareas (id, usuario_id, tarea_id, monto_ganado, fecha_dia) VALUES (?, ?, ?, ?, ?)',
-      [uuidv4(), userId, taskId, amount, todayStr]
+      [activityId, userId, taskId, amount, todayStr]
     );
 
     await conn.query(
       'INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [uuidv4(), userId, 'principal', 'tarea_completada', amount, oldBalance, newBalance, taskId, `Pago por tarea publicitaria`]
+      [uuidv4(), userId, 'principal', 'tarea_completada', amount, oldBalance, newBalance, activityId, `Pago por tarea publicitaria`]
     );
 
-    return { amount };
+    // 5. Auditoría de Estado Financiero
+    await conn.query(
+      `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
+       VALUES (?, ?, 'TASK_COMPLETE', 'principal', ?, ?, ?, ?)`,
+      [traceId, userId, amount, oldBalance, newBalance, activityId]
+    );
+
+    const response = { success: true, amount, traceId };
+
+    // 6. Registrar Idempotencia
+    if (idempotencyKey) {
+      await conn.query('INSERT INTO idempotencia (idempotency_key, response_body) VALUES (?, ?)', 
+        [idempotencyKey, JSON.stringify(response)]);
+    }
+
+    return response;
   });
 }
 
@@ -506,53 +529,58 @@ export async function completeTask(userId, taskId) {
 // ========================
 
 export async function approveRecarga(recargaId, adminId) {
+  const traceId = uuidv4();
   return await transaction(async (conn) => {
+    // 1. Bloqueo de Recarga y Validación de Estado
     const [recargaRows] = await conn.query(`SELECT * FROM recargas WHERE id = ? AND estado = 'pendiente' FOR UPDATE`, [recargaId]);
     const recarga = recargaRows[0];
     if (!recarga) throw new Error('Recarga no encontrada o ya procesada');
 
     const { usuario_id, monto } = recarga;
 
-    const [levels] = await conn.query(`SELECT * FROM niveles ORDER BY deposito DESC`);
-    const targetLevel = levels.find(l => Number(l.deposito) === Number(monto));
-
+    // 2. Bloqueo de Usuario
     const [userRows] = await conn.query(`SELECT * FROM usuarios WHERE id = ? FOR UPDATE`, [usuario_id]);
     const user = userRows[0];
     if (!user) throw new Error('Usuario no encontrado');
     if (user.bloqueado) throw new Error('Usuario bloqueado.');
+
     const oldBalance = Number(user.saldo_principal);
+    const [levels] = await conn.query(`SELECT * FROM niveles ORDER BY deposito DESC`);
+    const targetLevel = levels.find(l => Number(l.deposito) === Number(monto));
 
     if (targetLevel) {
       // Ascenso de Nivel
-      const ticketsToAdd = Number(targetLevel.orden); // Regla: global1=1, global2=2...
-      
+      const ticketsToAdd = Number(targetLevel.orden);
       await conn.query(`UPDATE usuarios SET nivel_id = ?, tickets_ruleta = tickets_ruleta + ? WHERE id = ?`, 
         [targetLevel.id, ticketsToAdd, usuario_id]);
       
-      // Registrar notificación de ascenso
       await conn.query(`INSERT INTO notificaciones (id, usuario_id, titulo, mensaje) VALUES (?, ?, ?, ?)`,
         [uuidv4(), usuario_id, '¡Felicidades!', `Has ascendido a ${targetLevel.nombre}. Recibiste ${ticketsToAdd} tickets de ruleta.`]);
-      
-      logger.info(`[RECHARGE] Usuario ${usuario_id} ascendido a ${targetLevel.nombre} por monto ${monto}`);
     } else {
-      // Recarga de Saldo simple
+      // Recarga de Saldo
       const newBalance = oldBalance + Number(monto);
       await conn.query(`UPDATE usuarios SET saldo_principal = ? WHERE id = ?`, [newBalance, usuario_id]);
       
       await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
         VALUES (?, ?, 'principal', 'recarga', ?, ?, ?, ?, ?)`, 
         [uuidv4(), usuario_id, monto, oldBalance, newBalance, recargaId, 'Recarga de saldo aprobada']);
-      
-      logger.info(`[RECHARGE] Saldo de usuario ${usuario_id} incrementado en ${monto}`);
+
+      // Auditoría Financiera
+      await conn.query(
+        `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
+         VALUES (?, ?, 'RECHARGE_APPROVE', 'principal', ?, ?, ?, ?)`,
+        [traceId, usuario_id, monto, oldBalance, newBalance, recargaId]
+      );
     }
 
     await conn.query(`UPDATE recargas SET estado = 'aprobada', procesado_por = ?, procesado_at = NOW() WHERE id = ?`, [adminId, recargaId]);
 
-    return { success: true, levelUp: !!targetLevel };
+    return { success: true, levelUp: !!targetLevel, traceId };
   });
 }
 
 export async function approveRetiro(retiroId, adminId) {
+  const traceId = uuidv4();
   return await transaction(async (conn) => {
     const [retiroRows] = await conn.query(`SELECT * FROM retiros WHERE id = ? AND estado = 'pendiente' FOR UPDATE`, [retiroId]);
     const retiro = retiroRows[0];
@@ -560,12 +588,19 @@ export async function approveRetiro(retiroId, adminId) {
 
     await conn.query(`UPDATE retiros SET estado = 'completado', procesado_por = ?, procesado_at = NOW() WHERE id = ?`, [adminId, retiroId]);
 
-    logger.info(`[WITHDRAWAL] Retiro ${retiroId} aprobado por admin ${adminId}`);
-    return { success: true };
+    // Auditoría (El saldo ya se descontó al solicitar)
+    await conn.query(
+      `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
+       VALUES (?, ?, 'WITHDRAW_APPROVE', ?, ?, 0, 0, ?)`,
+      [traceId, retiro.usuario_id, retiro.tipo_billetera, retiro.monto, retiroId]
+    );
+
+    return { success: true, traceId };
   });
 }
 
 export async function rejectRetiro(retiroId, adminId, motivo) {
+  const traceId = uuidv4();
   return await transaction(async (conn) => {
     const [retiroRows] = await conn.query(`SELECT * FROM retiros WHERE id = ? AND estado = 'pendiente' FOR UPDATE`, [retiroId]);
     const retiro = retiroRows[0];
@@ -577,6 +612,7 @@ export async function rejectRetiro(retiroId, adminId, motivo) {
     const [userRows] = await conn.query(`SELECT ${field} as balance FROM usuarios WHERE id = ? FOR UPDATE`, [usuario_id]);
     const user = userRows[0];
     if (!user) throw new Error('Usuario no encontrado');
+
     const oldBalance = Number(user.balance);
     const newBalance = oldBalance + Number(monto);
 
@@ -586,10 +622,16 @@ export async function rejectRetiro(retiroId, adminId, motivo) {
       VALUES (?, ?, ?, 'reembolso_retiro', ?, ?, ?, ?, ?)`, 
       [uuidv4(), usuario_id, tipo_billetera, monto, oldBalance, newBalance, retiroId, `Reembolso por retiro rechazado: ${motivo}`]);
 
+    // Auditoría Financiera
+    await conn.query(
+      `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
+       VALUES (?, ?, 'WITHDRAW_REJECT_REFUND', ?, ?, ?, ?, ?)`,
+      [traceId, usuario_id, tipo_billetera, monto, oldBalance, newBalance, retiroId]
+    );
+
     await conn.query(`UPDATE retiros SET estado = 'rechazado', admin_notas = ?, procesado_por = ?, procesado_at = NOW() WHERE id = ?`, [motivo, adminId, retiroId]);
 
-    logger.info(`[WITHDRAWAL] Retiro ${retiroId} rechazado. Motivo: ${motivo}. Reembolso de ${monto} a ${tipo_billetera}`);
-    return { success: true };
+    return { success: true, traceId };
   });
 }
 
@@ -631,7 +673,7 @@ export async function distributeInvestmentCommissions(userId, amount) {
     const user = await findUserById(userId);
     if (!user || !user.invitado_por) return;
 
-    const levels = await getLevels();
+    const [levels] = await query(`SELECT * FROM niveles`);
     const userLevel = levels.find(l => String(l.id) === String(user.nivel_id));
     if (!userLevel) return;
 
@@ -645,22 +687,23 @@ export async function distributeInvestmentCommissions(userId, amount) {
     for (const config of configs) {
       if (!currentUplineId) break;
       
-      const upline = await findUserById(currentUplineId);
-      if (!upline) break;
+      const uplineId = currentUplineId; // Guardar ID actual para el loop
 
       await transaction(async (conn) => {
+        // Bloqueo de upline
         const [uplineRows] = await conn.query(`
           SELECT u.*, n.orden as nivel_orden, n.codigo as nivel_codigo 
           FROM usuarios u 
           LEFT JOIN niveles n ON u.nivel_id = n.id 
-          WHERE u.id = ? FOR UPDATE`, [currentUplineId]);
+          WHERE u.id = ? FOR UPDATE`, [uplineId]);
         
         const uplineData = uplineRows[0];
         if (!uplineData) return;
 
-        // REGLA DE JERARQUÍA: 
-        // 1. Internares no cobran comisiones.
-        // 2. El nivel del upline debe ser mayor o igual al nivel del usuario que genera la comisión.
+        // Avanzar al siguiente upline para la próxima iteración
+        currentUplineId = uplineData.invitado_por;
+
+        // REGLA DE JERARQUÍA
         if (uplineData.nivel_codigo === 'internar' || Number(uplineData.nivel_orden) < Number(userLevel.orden)) {
           return;
         }
@@ -669,16 +712,23 @@ export async function distributeInvestmentCommissions(userId, amount) {
         if (commission > 0) {
           const oldBalance = Number(uplineData.saldo_comisiones);
           const newBalance = oldBalance + commission;
+          const traceId = uuidv4();
 
-          await conn.query(`UPDATE usuarios SET saldo_comisiones = ? WHERE id = ?`, [newBalance, uplineData.id]);
+          await conn.query(`UPDATE usuarios SET saldo_comisiones = ? WHERE id = ?`, [newBalance, uplineId]);
           
+          const movimientoId = uuidv4();
           await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
             VALUES (?, ?, 'comisiones', 'comision_inversion', ?, ?, ?, ?, ?)`, 
-            [uuidv4(), uplineData.id, commission, oldBalance, newBalance, user.id, `Comisión Inversión Nivel ${config.key} de ${user.nombre_usuario}`]);
+            [movimientoId, uplineId, commission, oldBalance, newBalance, user.id, `Comisión Inversión Nivel ${config.key} de ${user.nombre_usuario}`]);
+
+          // Auditoría Financiera
+          await conn.query(
+            `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
+             VALUES (?, ?, 'COMMISSION_CREDIT', 'comisiones', ?, ?, ?, ?)`,
+            [traceId, uplineId, commission, oldBalance, newBalance, movimientoId]
+          );
         }
       });
-
-      currentUplineId = upline.invitado_por;
     }
   } catch (err) {
     logger.error(`[Commissions Error]: ${err.message}`);

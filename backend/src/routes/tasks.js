@@ -93,9 +93,15 @@ router.get('/', async (req, res) => {
 
 router.post('/:id/responder', async (req, res) => {
   try {
-    const { respuesta } = req.body;
+    const { respuesta, idempotency_key } = req.body;
     const user = req.requestUser;
     if (!user?.id) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    // 0. Idempotencia Preventiva (Header o Body)
+    const iKey = idempotency_key || req.headers['x-idempotency-key'];
+    if (!iKey) {
+      return res.status(400).json({ error: 'Falta clave de idempotencia (idempotency_key)' });
+    }
 
     // 1. VALIDACIÓN CENTRALIZADA (CALENDARIO & FERIADOS)
     const opStatus = await canPerformTasks(user.id);
@@ -114,13 +120,12 @@ router.post('/:id/responder', async (req, res) => {
 
     // Acreditación Transaccional e Idempotente
     if (user.id === DEMO_USER_ID) {
-      const levels = await getLevels();
-      const level = levels.find(l => String(l.codigo) === 'global1') || levels[1] || { ganancia_tarea: 1.80 };
-      return res.json({ success: true, monto: Number(level.ganancia_tarea) });
+      return res.json({ success: true, monto: 1.80 });
     }
-    const result = await completeTask(user.id, task.id);
     
-    res.json({ success: true, monto: result.amount });
+    const result = await completeTask(user.id, task.id, iKey);
+    
+    res.json({ success: true, monto: result.amount, trace_id: result.traceId });
   } catch (err) {
     if (err.message === 'Tarea ya completada hoy' || err.message === 'Has alcanzado tu límite de tareas diarias para tu nivel.') {
       return res.status(400).json({ error: err.message });
