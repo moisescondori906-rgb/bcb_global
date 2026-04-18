@@ -52,11 +52,12 @@ CREATE TABLE IF NOT EXISTS turnos_operadores (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 5. AJUSTES EN TABLA RETIROS PARA CONCURRENCIA Y TIMEOUT
+-- Si las columnas ya existen, este bloque fallará, pero en una base limpia es necesario.
 ALTER TABLE retiros 
-ADD COLUMN IF NOT EXISTS fecha_toma DATETIME,
-ADD COLUMN IF NOT EXISTS msg_id_admin VARCHAR(100),
-ADD COLUMN IF NOT EXISTS msg_id_retiros VARCHAR(100),
-ADD COLUMN IF NOT EXISTS msg_id_secretaria VARCHAR(100);
+ADD COLUMN fecha_toma DATETIME,
+ADD COLUMN msg_id_admin VARCHAR(100),
+ADD COLUMN msg_id_retiros VARCHAR(100),
+ADD COLUMN msg_id_secretaria VARCHAR(100);
 
 -- Insertar administrador inicial (ejemplo basado en project memory)
 INSERT IGNORE INTO usuarios_telegram (telegram_id, nombre, rol, activo) 

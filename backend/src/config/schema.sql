@@ -289,9 +289,17 @@ CREATE TABLE IF NOT EXISTS auditoria_operacional (
   motivo_bloqueo VARCHAR(255),
   metadata JSON,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_audit_op_trace (trace_id),
-  INDEX idx_audit_op_user (usuario_id)
+    INDEX idx_audit_op_trace (trace_id),
+    INDEX idx_audit_op_user (usuario_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 21. NOTIFICACIONES
+CREATE TABLE IF NOT EXISTS notificaciones (
+  id VARCHAR(36) PRIMARY KEY,
+  usuario_id VARCHAR(36) NOT NULL,
+  titulo VARCHAR(200) NOT NULL,
+  mensaje TEXT NOT NULL,
+  leida TINYINT(1) DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
   INDEX idx_notif_usuario_leida (usuario_id, leida)
