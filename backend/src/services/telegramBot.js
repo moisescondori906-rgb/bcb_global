@@ -70,6 +70,22 @@ export const formatRetiroMessage = ({ telefono, nivel, monto, hora }) => {
 };
 
 /**
+ * Formateador de alertas de recarga institucional
+ */
+export const formatRecargaMessage = ({ telefono, nivel, monto }) => {
+  return `
+💳 <b>NUEVA RECARGA</b>
+━━━━━━━━━━━━━━━━━━
+👤 <b>Usuario:</b> <code>${telefono}</code>
+🏆 <b>Nivel:</b> <code>${nivel}</code>
+💵 <b>Monto:</b> <code>${monto} BOB</code>
+🕒 <b>Hora:</b> <code>${new Date().toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' })}</code>
+━━━━━━━━━━━━━━━━━━
+<i>Verificar comprobante en panel administrativo.</i>
+  `.trim();
+};
+
+/**
  * Configuración de Webhooks (Llamar al iniciar el servidor)
  */
 export const setupWebhooks = async () => {
