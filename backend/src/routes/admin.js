@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 import { 
   getUsers, getLevels, findUserById, updateUser, 
-  getPublicContent, approveRecarga, rejectRetiro,
+  getPublicContent, approveLevelPurchase, rejectRetiro,
   boliviaTime, distributeInvestmentCommissions, refreshPublicContent, 
   invalidateLevelsCache, preloadLevels, syncLevels,
   getMensajesGlobales, createMensajeGlobal, deleteMensajeGlobal
@@ -42,12 +42,27 @@ router.get('/dashboard', async (req, res) => {
     const stats = await query(`
       SELECT 
         (SELECT COUNT(*) FROM usuarios WHERE rol = 'usuario') as total_usuarios,
-        (SELECT COALESCE(SUM(monto), 0) FROM recargas WHERE estado = 'aprobada') as total_recargas,
+        (SELECT COALESCE(SUM(monto), 0) FROM compras_nivel WHERE estado = 'completada') as total_ventas_nivel,
         (SELECT COALESCE(SUM(monto), 0) FROM retiros WHERE estado = 'pagado') as total_retiros,
         (SELECT COUNT(*) FROM retiros WHERE estado = 'pendiente') as pendientes_retiro,
-        (SELECT COUNT(*) FROM recargas WHERE estado = 'pendiente') as pendientes_recarga
+        (SELECT COUNT(*) FROM compras_nivel WHERE estado = 'pendiente') as pendientes_compra_nivel
     `);
     res.json(stats[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/compras-nivel', async (req, res) => {
+  try {
+    const rows = await query(`
+      SELECT c.*, u.nombre_usuario, u.telefono, n.nombre as nivel_nombre 
+      FROM compras_nivel c
+      JOIN usuarios u ON c.usuario_id = u.id
+      JOIN niveles n ON c.nivel_id = n.id
+      ORDER BY c.created_at DESC
+    `);
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -72,16 +87,29 @@ router.get('/usuarios', async (req, res) => {
   }
 });
 
-router.post('/recargas/:id/aprobar', async (req, res) => {
+router.post('/compras-nivel/:id/aprobar', async (req, res) => {
   try {
-    const result = await approveRecarga(req.params.id, req.user.id);
-    const recarga = await queryOne(`SELECT * FROM recargas WHERE id = ?`, [req.params.id]);
-    if (recarga) {
-      await distributeInvestmentCommissions(recarga.usuario_id, recarga.monto);
+    const result = await approveLevelPurchase(req.params.id, req.user.id);
+    const compra = await queryOne(`SELECT * FROM compras_nivel WHERE id = ?`, [req.params.id]);
+    if (compra) {
+      await distributeInvestmentCommissions(compra.usuario_id, compra.monto);
     }
-    res.json({ ok: true });
+    res.json({ ok: true, trace_id: result.traceId });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+router.post('/compras-nivel/:id/rechazar', async (req, res) => {
+  try {
+    const { motivo } = req.body;
+    await query(
+      `UPDATE compras_nivel SET estado = 'rechazada', admin_notas = ?, procesado_por = ?, procesado_at = NOW() WHERE id = ?`,
+      [motivo, req.user.id, req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

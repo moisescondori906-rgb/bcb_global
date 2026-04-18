@@ -92,24 +92,28 @@ CREATE TABLE IF NOT EXISTS movimientos_saldo (
   INDEX idx_movimientos_tipo (tipo_movimiento)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 6. RECARGAS
-CREATE TABLE IF NOT EXISTS recargas (
+-- 6. COMPRAS DE NIVEL (LEVEL_PURCHASES)
+-- Sustituye el concepto de "recarga" para adquisición de estatus.
+CREATE TABLE IF NOT EXISTS compras_nivel (
   id VARCHAR(36) PRIMARY KEY,
   usuario_id VARCHAR(36) NOT NULL,
+  nivel_id VARCHAR(36) NOT NULL,
   monto DECIMAL(20, 2) NOT NULL,
   comprobante_url TEXT,
-  metodo_pago VARCHAR(50),
-  estado ENUM('pendiente', 'aprobada', 'rechazada') DEFAULT 'pendiente',
+  estado ENUM('pendiente', 'completada', 'rechazada') DEFAULT 'pendiente',
+  reembolsado TINYINT(1) DEFAULT 0, -- refunded
   admin_notas TEXT,
   procesado_por VARCHAR(36),
   procesado_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  FOREIGN KEY (nivel_id) REFERENCES niveles(id) ON DELETE CASCADE,
   FOREIGN KEY (procesado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
-  INDEX idx_recargas_estado (estado)
+  INDEX idx_compras_nivel_estado (estado),
+  INDEX idx_compras_usuario_nivel (usuario_id, nivel_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 7. RETIROS
+-- 7. RETIROS (Blindaje: Máximo 1 por día)
 CREATE TABLE IF NOT EXISTS retiros (
   id VARCHAR(36) PRIMARY KEY,
   usuario_id VARCHAR(36) NOT NULL,
@@ -119,13 +123,15 @@ CREATE TABLE IF NOT EXISTS retiros (
   tipo_billetera ENUM('principal', 'comisiones') NOT NULL,
   estado ENUM('pendiente', 'aprobado', 'rechazado', 'pagado') DEFAULT 'pendiente',
   datos_bancarios JSON, -- Copia de la tarjeta al momento del retiro
+  fecha_dia DATE NOT NULL, -- Para validación de 1 retiro por día (Bolivia Time)
   admin_notas TEXT,
   procesado_por VARCHAR(36),
   procesado_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
   FOREIGN KEY (procesado_por) REFERENCES usuarios(id) ON DELETE SET NULL,
-  INDEX idx_retiros_estado (estado)
+  INDEX idx_retiros_estado (estado),
+  INDEX idx_retiros_usuario_dia (usuario_id, fecha_dia)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 8. TARJETAS BANCARIAS

@@ -525,57 +525,199 @@ export async function completeTask(userId, taskId, idempotencyKey = null) {
 }
 
 // ========================
-// 4. RECARGAS & RETIROS (Transaccionales)
+// 4. COMPRAS DE NIVEL & RETIROS (Transaccionales ACID)
 // ========================
 
-export async function approveRecarga(recargaId, adminId) {
+/**
+ * Crea una orden de compra de nivel (LEVEL_PURCHASE)
+ */
+export async function createLevelPurchase(userId, nivelId, monto, comprobanteUrl) {
+  const id = uuidv4();
+  await query(
+    `INSERT INTO compras_nivel (id, usuario_id, nivel_id, monto, comprobante_url, estado) 
+     VALUES (?, ?, ?, ?, ?, 'pendiente')`,
+    [id, userId, nivelId, monto, comprobanteUrl]
+  );
+  return { id, status: 'pendiente' };
+}
+
+/**
+ * Aprueba una compra de nivel (LEVEL_PURCHASE)
+ * REGLA: No devuelve dinero, solo cambia el nivel.
+ */
+export async function approveLevelPurchase(compraId, adminId) {
   const traceId = uuidv4();
   return await transaction(async (conn) => {
-    // 1. Bloqueo de Recarga y Validación de Estado
-    const [recargaRows] = await conn.query(`SELECT * FROM recargas WHERE id = ? AND estado = 'pendiente' FOR UPDATE`, [recargaId]);
-    const recarga = recargaRows[0];
-    if (!recarga) throw new Error('Recarga no encontrada o ya procesada');
-
-    const { usuario_id, monto } = recarga;
+    // 1. Bloqueo de Compra
+    const [compraRows] = await conn.query(
+      `SELECT * FROM compras_nivel WHERE id = ? AND estado = 'pendiente' FOR UPDATE`, 
+      [compraId]
+    );
+    const compra = compraRows[0];
+    if (!compra) throw new Error('Compra no encontrada o ya procesada');
 
     // 2. Bloqueo de Usuario
-    const [userRows] = await conn.query(`SELECT * FROM usuarios WHERE id = ? FOR UPDATE`, [usuario_id]);
+    const [userRows] = await conn.query(`SELECT * FROM usuarios WHERE id = ? FOR UPDATE`, [compra.usuario_id]);
     const user = userRows[0];
     if (!user) throw new Error('Usuario no encontrado');
-    if (user.bloqueado) throw new Error('Usuario bloqueado.');
 
-    const oldBalance = Number(user.saldo_principal);
-    const [levels] = await conn.query(`SELECT * FROM niveles ORDER BY deposito DESC`);
-    const targetLevel = levels.find(l => Number(l.deposito) === Number(monto));
+    // 3. Actualizar Nivel y Tickets
+    const [levels] = await conn.query(`SELECT * FROM niveles WHERE id = ?`, [compra.nivel_id]);
+    const targetLevel = levels[0];
+    if (!targetLevel) throw new Error('Nivel destino no existe');
 
-    if (targetLevel) {
-      // Ascenso de Nivel
-      const ticketsToAdd = Number(targetLevel.orden);
-      await conn.query(`UPDATE usuarios SET nivel_id = ?, tickets_ruleta = tickets_ruleta + ? WHERE id = ?`, 
-        [targetLevel.id, ticketsToAdd, usuario_id]);
-      
-      await conn.query(`INSERT INTO notificaciones (id, usuario_id, titulo, mensaje) VALUES (?, ?, ?, ?)`,
-        [uuidv4(), usuario_id, '¡Felicidades!', `Has ascendido a ${targetLevel.nombre}. Recibiste ${ticketsToAdd} tickets de ruleta.`]);
-    } else {
-      // Recarga de Saldo
-      const newBalance = oldBalance + Number(monto);
-      await conn.query(`UPDATE usuarios SET saldo_principal = ? WHERE id = ?`, [newBalance, usuario_id]);
-      
-      await conn.query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
-        VALUES (?, ?, 'principal', 'recarga', ?, ?, ?, ?, ?)`, 
-        [uuidv4(), usuario_id, monto, oldBalance, newBalance, recargaId, 'Recarga de saldo aprobada']);
+    const ticketsToAdd = Number(targetLevel.orden);
+    await conn.query(
+      `UPDATE usuarios SET nivel_id = ?, tickets_ruleta = tickets_ruleta + ? WHERE id = ?`, 
+      [targetLevel.id, ticketsToAdd, compra.usuario_id]
+    );
 
-      // Auditoría Financiera
-      await conn.query(
-        `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
-         VALUES (?, ?, 'RECHARGE_APPROVE', 'principal', ?, ?, ?, ?)`,
-        [traceId, usuario_id, monto, oldBalance, newBalance, recargaId]
-      );
+    // 4. Cerrar Compra
+    await conn.query(
+      `UPDATE compras_nivel SET estado = 'completada', procesado_por = ?, procesado_at = NOW() WHERE id = ?`, 
+      [adminId, compraId]
+    );
+
+    // 5. Auditoría
+    await conn.query(
+      `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id, metadata) 
+       VALUES (?, ?, 'LEVEL_UPGRADE', 'principal', ?, ?, ?, ?, ?)`,
+      [traceId, compra.usuario_id, compra.monto, Number(user.saldo_principal), Number(user.saldo_principal), compraId, JSON.stringify({ old_level: user.nivel_id, new_level: targetLevel.id })]
+    );
+
+    return { success: true, traceId };
+  });
+}
+
+/**
+ * Procesa la DEVOLUCIÓN (Upgrade) de un nivel anterior
+ * REGLA: Solo si el nuevo_nivel > nivel_actual. Devuelve a wallet_comisiones.
+ */
+export async function refundPreviousLevel(userId, idempotencyKey) {
+  const traceId = uuidv4();
+  return await transaction(async (conn) => {
+    // 0. Idempotencia
+    if (idempotencyKey) {
+      const [existing] = await conn.query('SELECT response_body FROM idempotencia WHERE idempotency_key = ?', [idempotencyKey]);
+      if (existing.length > 0) return JSON.parse(existing[0].response_body);
     }
 
-    await conn.query(`UPDATE recargas SET estado = 'aprobada', procesado_por = ?, procesado_at = NOW() WHERE id = ?`, [adminId, recargaId]);
+    // 1. Bloqueo de Usuario
+    const [userRows] = await conn.query(`SELECT * FROM usuarios WHERE id = ? FOR UPDATE`, [userId]);
+    const user = userRows[0];
+    if (!user) throw new Error('Usuario no encontrado');
 
-    return { success: true, levelUp: !!targetLevel, traceId };
+    // 2. Obtener Nivel Actual
+    const [levels] = await conn.query(`SELECT * FROM niveles ORDER BY orden ASC`);
+    const currentLevel = levels.find(l => String(l.id) === String(user.nivel_id));
+    if (!currentLevel || currentLevel.codigo === 'internar') throw new Error('Nivel actual no elegible para devolución');
+
+    // 3. Buscar la compra completada más reciente de este nivel que no haya sido reembolsada
+    const [purchaseRows] = await conn.query(
+      `SELECT * FROM compras_nivel 
+       WHERE usuario_id = ? AND nivel_id = ? AND estado = 'completada' AND reembolsado = 0 
+       ORDER BY created_at DESC LIMIT 1 FOR UPDATE`,
+      [userId, user.nivel_id]
+    );
+    const purchase = purchaseRows[0];
+    if (!purchase) throw new Error('No se encontró una compra válida para devolver');
+
+    // 4. Acreditar a wallet_comisiones
+    const amount = Number(purchase.monto);
+    const oldBalance = Number(user.saldo_comisiones);
+    const newBalance = oldBalance + amount;
+
+    await conn.query(`UPDATE usuarios SET saldo_comisiones = ? WHERE id = ?`, [newBalance, userId]);
+    await conn.query(`UPDATE compras_nivel SET reembolsado = 1 WHERE id = ?`, [purchase.id]);
+
+    // 5. Movimiento y Auditoría
+    const movimientoId = uuidv4();
+    await conn.query(
+      `INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion) 
+       VALUES (?, ?, 'comisiones', 'devolucion_nivel', ?, ?, ?, ?, ?)`,
+      [movimientoId, userId, amount, oldBalance, newBalance, purchase.id, `Devolución por ascenso desde ${currentLevel.nombre}`]
+    );
+
+    await conn.query(
+      `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
+       VALUES (?, ?, 'LEVEL_REFUND', 'comisiones', ?, ?, ?, ?)`,
+      [traceId, userId, amount, oldBalance, newBalance, purchase.id]
+    );
+
+    const res = { success: true, amount, traceId };
+    if (idempotencyKey) {
+      await conn.query('INSERT INTO idempotencia (idempotency_key, response_body) VALUES (?, ?)', [idempotencyKey, JSON.stringify(res)]);
+    }
+
+    return res;
+  });
+}
+
+/**
+ * Solicitar Retiro con Blindaje: Máximo 1 por día y validación estricta de billetera.
+ */
+export async function requestWithdrawal(userId, { monto, tipo_billetera, tarjeta_id, idempotencyKey }) {
+  const traceId = uuidv4();
+  const today = boliviaTime.todayStr();
+
+  return await transaction(async (conn) => {
+    // 0. Idempotencia
+    if (idempotencyKey) {
+      const [existing] = await conn.query('SELECT response_body FROM idempotencia WHERE idempotency_key = ?', [idempotencyKey]);
+      if (existing.length > 0) return JSON.parse(existing[0].response_body);
+    }
+
+    // 1. Bloqueo de Usuario y Validación de Saldo
+    const balanceField = tipo_billetera === 'comisiones' ? 'saldo_comisiones' : 'saldo_principal';
+    const [userRows] = await conn.query(`SELECT id, ${balanceField} as balance, nivel_id FROM usuarios WHERE id = ? FOR UPDATE`, [userId]);
+    const user = userRows[0];
+    if (!user) throw new Error('Usuario no encontrado');
+
+    const m = Number(monto);
+    const oldBalance = Number(user.balance);
+    if (oldBalance < m) throw new Error('Saldo insuficiente en la billetera seleccionada');
+
+    // 2. Blindaje: Máximo 1 retiro por día (Global)
+    const [withdrawCount] = await conn.query(
+      `SELECT COUNT(*) as total FROM retiros 
+       WHERE usuario_id = ? AND fecha_dia = ? AND estado IN ('pendiente', 'aprobado', 'pagado') FOR UPDATE`,
+      [userId, today]
+    );
+    if (withdrawCount[0].total > 0) throw new Error('Ya has realizado un retiro hoy. Límite: 1 por día.');
+
+    // 3. Descontar Saldo
+    const newBalance = oldBalance - m;
+    await conn.query(`UPDATE usuarios SET ${balanceField} = ? WHERE id = ?`, [newBalance, userId]);
+
+    // 4. Crear Registro de Retiro
+    const retiroId = uuidv4();
+    const config = await getPublicContent();
+    const comisionPercent = Number(config.comision_retiro || 12);
+    const comisionMonto = Number((m * (comisionPercent / 100)).toFixed(2));
+    const montoNeto = m - comisionMonto;
+
+    const [tarjetas] = await conn.query(`SELECT * FROM tarjetas_bancarias WHERE id = ? AND usuario_id = ?`, [tarjeta_id, userId]);
+    if (tarjetas.length === 0) throw new Error('Tarjeta bancaria no válida');
+
+    await conn.query(
+      `INSERT INTO retiros (id, usuario_id, monto, monto_neto, comision_aplicada, tipo_billetera, estado, datos_bancarios, fecha_dia) 
+       VALUES (?, ?, ?, ?, ?, ?, 'pendiente', ?, ?)`,
+      [retiroId, userId, m, montoNeto, comisionMonto, tipo_billetera, JSON.stringify(tarjetas[0]), today]
+    );
+
+    // 5. Auditoría
+    await conn.query(
+      `INSERT INTO auditoria_financiera (trace_id, usuario_id, operacion, billetera, monto, saldo_anterior, saldo_nuevo, referencia_id) 
+       VALUES (?, ?, 'WITHDRAW_REQUEST', ?, ?, ?, ?, ?)`,
+      [traceId, userId, tipo_billetera, m, oldBalance, newBalance, retiroId]
+    );
+
+    const res = { success: true, retiroId, traceId };
+    if (idempotencyKey) {
+      await conn.query('INSERT INTO idempotencia (idempotency_key, response_body) VALUES (?, ?)', [idempotencyKey, JSON.stringify(res)]);
+    }
+
+    return res;
   });
 }
 
