@@ -23,11 +23,11 @@ CREATE TABLE IF NOT EXISTS tenants (
 ALTER TABLE usuarios ADD COLUMN tenant_id VARCHAR(36) AFTER id;
 ALTER TABLE niveles ADD COLUMN tenant_id VARCHAR(36) AFTER id;
 ALTER TABLE tareas ADD COLUMN tenant_id VARCHAR(36) AFTER id;
-ALTER TABLE recargas ADD COLUMN tenant_id VARCHAR(36) AFTER id;
+ALTER TABLE compras_nivel ADD COLUMN tenant_id VARCHAR(36) AFTER id;
 ALTER TABLE retiros ADD COLUMN tenant_id VARCHAR(36) AFTER id;
 ALTER TABLE movimientos_saldo ADD COLUMN tenant_id VARCHAR(36) AFTER id;
 ALTER TABLE configuraciones ADD COLUMN tenant_id VARCHAR(36) AFTER clave;
-ALTER TABLE feature_flags ADD COLUMN tenant_id VARCHAR(36) AFTER flag_key;
+ALTER TABLE feature_flags ADD COLUMN tenant_id VARCHAR(36) AFTER feature_name;
 ALTER TABLE sla_metrics ADD COLUMN tenant_id VARCHAR(36) AFTER id;
 ALTER TABLE fraud_alerts ADD COLUMN tenant_id VARCHAR(36) AFTER id;
 ALTER TABLE tarjetas_bancarias ADD COLUMN tenant_id VARCHAR(36) AFTER id;
@@ -36,8 +36,8 @@ ALTER TABLE notificaciones ADD COLUMN tenant_id VARCHAR(36) AFTER id;
 -- 3. ACTUALIZACIÓN DE INDEXES (Aislamiento por Tenant)
 ALTER TABLE usuarios ADD INDEX idx_tenant_telefono (tenant_id, telefono);
 ALTER TABLE retiros ADD INDEX idx_tenant_estado (tenant_id, estado);
-ALTER TABLE recargas ADD INDEX idx_tenant_estado (tenant_id, estado);
-ALTER TABLE feature_flags ADD INDEX idx_tenant_flag (tenant_id, flag_key);
+ALTER TABLE compras_nivel ADD INDEX idx_tenant_estado (tenant_id, estado);
+ALTER TABLE feature_flags ADD INDEX idx_tenant_flag (tenant_id, feature_name);
 
 -- 4. INSERTAR TENANT DEFAULT (Para migración sin downtime)
 INSERT IGNORE INTO tenants (id, name, slug, status, config) VALUES 
@@ -68,7 +68,7 @@ SELECT * FROM movimientos_saldo WHERE tenant_id = current_tenant();
 UPDATE usuarios SET tenant_id = 'default-tenant-uuid' WHERE tenant_id IS NULL;
 UPDATE niveles SET tenant_id = 'default-tenant-uuid' WHERE tenant_id IS NULL;
 UPDATE tareas SET tenant_id = 'default-tenant-uuid' WHERE tenant_id IS NULL;
-UPDATE recargas SET tenant_id = 'default-tenant-uuid' WHERE tenant_id IS NULL;
+UPDATE compras_nivel SET tenant_id = 'default-tenant-uuid' WHERE tenant_id IS NULL;
 UPDATE retiros SET tenant_id = 'default-tenant-uuid' WHERE tenant_id IS NULL;
 UPDATE movimientos_saldo SET tenant_id = 'default-tenant-uuid' WHERE tenant_id IS NULL;
 UPDATE configuraciones SET tenant_id = 'default-tenant-uuid' WHERE tenant_id IS NULL;
