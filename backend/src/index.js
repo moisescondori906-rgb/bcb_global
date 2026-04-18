@@ -41,7 +41,7 @@ app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) }
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Configuración de CORS estricta
+// Configuración de CORS estricta y optimizada
 const whitelist = [
   'https://sav-lat.vercel.app',
   'https://bcb-global.com',
@@ -59,6 +59,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  maxAge: 86400, // Cache de preflight por 24 horas para reducir carga
 };
 app.use(cors(corsOptions));
 

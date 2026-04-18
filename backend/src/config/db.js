@@ -12,14 +12,12 @@ const poolConfig = {
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
   waitForConnections: true,
-  connectionLimit: 50, // Ajustar según capacidad del servidor Contabo
-  maxIdle: 10, // Conexiones inactivas máximas
-  idleTimeout: 60000, // 60 segundos
+  connectionLimit: 100, // Aumentado para alta concurrencia
+  maxIdle: 20, // Conexiones inactivas máximas aumentadas
+  idleTimeout: 30000, // Reducido para liberar conexiones más rápido
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0,
-  // Tipos de datos: Asegurar que DECIMAL se trate como string para precisión total en JS si es necesario, 
-  // o usar un parser específico. mysql2 por defecto devuelve DECIMAL como string.
+  keepAliveInitialDelay: 10000,
 };
 
 const pool = mysql.createPool(poolConfig);
