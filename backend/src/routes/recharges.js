@@ -16,6 +16,7 @@ import {
 } from '../services/telegramBot.js';
 import { uploadImageBuffer } from '../config/cloudinary.js';
 import logger from '../lib/logger.js';
+import { asyncHandler } from '../middleware/asyncHandler.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = Router();
@@ -23,36 +24,27 @@ const router = Router();
 router.use(authenticate);
 router.use(attachRequestUser);
 
-router.get('/metodos', async (req, res) => {
-  try {
-    const metodos = await query(`SELECT id, nombre_titular, imagen_qr_url FROM metodos_qr WHERE activo = 1 ORDER BY orden ASC`);
-    res.json(metodos);
-  } catch (err) {
-    res.status(500).json({ error: 'Error al obtener métodos de pago' });
+router.get('/metodos', asyncHandler(async (req, res) => {
+  const metodos = await query(`SELECT id, nombre_titular, imagen_qr_url FROM metodos_qr WHERE activo = 1 ORDER BY orden ASC`);
+  res.json(metodos);
+}));
+
+router.get('/', asyncHandler(async (req, res) => {
+  const list = await query(`SELECT * FROM compras_nivel WHERE usuario_id = ? ORDER BY created_at DESC`, [req.user.id]);
+  res.json(list);
+}));
+
+router.post('/', asyncHandler(async (req, res) => {
+  const { monto, metodo_qr_id, comprobante_url } = req.body;
+  if (!monto || isNaN(parseFloat(monto))) {
+    return res.status(400).json({ error: 'Monto inválido' });
   }
-});
 
-router.get('/', async (req, res) => {
-  try {
-    const list = await query(`SELECT * FROM compras_nivel WHERE usuario_id = ? ORDER BY created_at DESC`, [req.user.id]);
-    res.json(list);
-  } catch (err) {
-    res.status(500).json({ error: 'Error al obtener tus recargas' });
+  // 1. VALIDACIÓN CENTRALIZADA (CALENDARIO) 
+  const opStatus = await canRecharge(req.user.id);
+  if (!opStatus.ok) {
+    return res.status(403).json({ error: opStatus.message });
   }
-});
-
-router.post('/', async (req, res) => {
-  try {
-    const { monto, metodo_qr_id, comprobante_url } = req.body;
-    if (!monto || isNaN(parseFloat(monto))) {
-      return res.status(400).json({ error: 'Monto inválido' });
-    }
-
-    // 1. VALIDACIÓN CENTRALIZADA (CALENDARIO)
-    const opStatus = await canRecharge(req.user.id);
-    if (!opStatus.ok) {
-      return res.status(403).json({ error: opStatus.message });
-    }
 
     const todayStr = boliviaTime.todayStr();
     const countResult = await queryOne(`SELECT COUNT(*) as total FROM compras_nivel WHERE usuario_id = ? AND DATE(created_at) = ?`, [req.user.id, todayStr]);
@@ -92,49 +84,33 @@ router.post('/', async (req, res) => {
       }
     }
 
-    // 3. Encontrar nivel_id correspondiente al monto
-    const levels = await getLevels();
-    const matchingLevel = levels.find(l => Math.abs(Number(l.deposito) - Number(monto)) < 0.01);
-    
-    if (!matchingLevel) {
-      return res.status(400).json({ error: 'El monto no coincide con ningún nivel VIP disponible.' });
-    }
-
-    const id = uuidv4();
-    logger.info(`[RECHARGE] Insertando compra_nivel: ${id} para usuario ${req.user.id}, monto ${monto}, nivel ${matchingLevel.id}`);
-    
-    await query(`INSERT INTO compras_nivel (id, usuario_id, nivel_id, monto, comprobante_url, estado) VALUES (?, ?, ?, ?, ?, 'pendiente')`,
-      [id, req.user.id, matchingLevel.id, parseFloat(monto), final_comprobante_url]);
-
-    // 4. Alerta de Telegram
-    if (!req.requestUser) {
-      logger.error(`[RECHARGE] req.requestUser es null para el usuario ${req.user.id}`);
-      return res.json({ id: id, ok: true, warn: 'Solicitud guardada pero alerta de telegram falló' });
-    }
-    
-    const userLevel = levels.find(l => String(l.id) === String(req.requestUser.nivel_id));
-    
-    const telegramData = {
-      telefono: req.requestUser.nombre_usuario,
-      nivel: userLevel?.nombre || 'Pasante',
-      monto: parseFloat(monto),
-      nuevo_nivel: matchingLevel.nombre,
-      comprobante_url: final_comprobante_url
-    };
-
-    const message = formatRecargaMessage(telegramData);
-
-    // Enviar a Admin y Secretaria
-    Promise.all([
-      sendToAdmin(message),
-      sendToSecretaria(message)
-    ]).catch(e => logger.error(`[Telegram Alert Error]: ${e.message}`));
-
-    res.json({ id: id, ok: true });
-  } catch (err) {
-    logger.error(`[Recharge Error]: ${err.message}`);
-    res.status(500).json({ error: 'Error al procesar la recarga' });
+  // 3. Encontrar nivel_id correspondiente al monto
+  const levels = await getLevels();
+  const matchingLevel = levels.find(l => Math.abs(Number(l.deposito) - Number(monto)) < 0.01);
+  
+  if (!matchingLevel) {
+    return res.status(400).json({ error: 'El monto no coincide con ningún nivel VIP disponible.' });
   }
-});
+
+  const id = uuidv4();
+  await query(`
+    INSERT INTO compras_nivel (id, usuario_id, nivel_id, monto, metodo_qr_id, comprobante_url, estado) 
+    VALUES (?, ?, ?, ?, ?, ?, 'pendiente')`,
+    [id, req.user.id, matchingLevel.id, monto, metodo_qr_id, final_comprobante_url]
+  );
+
+  // 4. Notificar vía Telegram (Resiliente)
+  const user = req.requestUser;
+  const msg = formatRecargaMessage({
+    telefono: user?.telefono || user?.nombre_usuario || 'Desconocido',
+    nivel: matchingLevel.nombre,
+    monto: monto
+  });
+  
+  sendToAdmin(msg).catch(() => {});
+  sendToSecretaria(msg).catch(() => {});
+
+  res.json({ success: true, message: 'Solicitud enviada correctamente. En espera de aprobación.' });
+}));
 
 export default router;

@@ -61,33 +61,38 @@ export const botAdmin = createBot(tokens.admin, 'ADMIN');
 export const botRetiros = createBot(tokens.retiros, 'RETIROS');
 export const botSecretaria = createBot(tokens.secretaria, 'SECRETARIA');
 
+// Cache local de bots para evitar importaciones circulares en servicios de bajo nivel
+const botRegistry = {
+  admin: botAdmin,
+  retiros: botRetiros,
+  secretaria: botSecretaria
+};
+
 /**
  * Helper para enviar mensajes con retry y log de errores
  */
-async function safeSendMessage(bot, chatId, text, options = {}) {
+async function safeSendMessage(botType, chatId, text, options = {}) {
+  const bot = botRegistry[botType];
   if (!bot) {
-    logger.error(`[TELEGRAM] Error: Bot no inicializado.`);
+    logger.error(`[TELEGRAM] Error: Bot ${botType} no inicializado.`);
     return null;
   }
   if (!chatId) {
-    logger.error(`[TELEGRAM] Error: Chat ID no configurado.`);
+    logger.error(`[TELEGRAM] Error: Chat ID para ${botType} no configurado.`);
     return null;
   }
   try {
-    logger.info(`[TELEGRAM] Enviando mensaje a ${chatId}...`);
-    const res = await bot.sendMessage(chatId, text, { parse_mode: 'HTML', ...options });
-    logger.info(`[TELEGRAM] Mensaje enviado con éxito a ${chatId}.`);
-    return res;
+    return await bot.sendMessage(chatId, text, { parse_mode: 'HTML', ...options });
   }
   catch (err) {
-    logger.error(`[TELEGRAM] Error enviando mensaje a ${chatId}: ${err.message}`);
+    logger.error(`[TELEGRAM] Error enviando mensaje via ${botType} a ${chatId}: ${err.message}`);
     return null;
   }
 }
 
-export const sendToAdmin = async (text, options) => await safeSendMessage(botAdmin, process.env.TELEGRAM_CHAT_ADMIN, text, options);
-export const sendToRetiros = async (text, options) => await safeSendMessage(botRetiros, process.env.TELEGRAM_CHAT_RETIROS, text, options);
-export const sendToSecretaria = async (text, options) => await safeSendMessage(botSecretaria, process.env.TELEGRAM_CHAT_SECRETARIA, text, options);
+export const sendToAdmin = async (text, options) => await safeSendMessage('admin', process.env.TELEGRAM_CHAT_ADMIN, text, options);
+export const sendToRetiros = async (text, options) => await safeSendMessage('retiros', process.env.TELEGRAM_CHAT_RETIROS, text, options);
+export const sendToSecretaria = async (text, options) => await safeSendMessage('secretaria', process.env.TELEGRAM_CHAT_SECRETARIA, text, options);
 
 /**
  * Formateador de alertas de retiro institucional
