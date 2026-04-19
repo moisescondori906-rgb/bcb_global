@@ -85,6 +85,40 @@ export const boliviaTime = {
 // ========================
 
 /**
+ * Pre-carga de niveles para evitar queries repetitivas
+ */
+export async function preloadLevels() {
+  try {
+    const rows = await query('SELECT * FROM niveles WHERE activo = 1 ORDER BY orden ASC');
+    if (rows.length > 0) {
+      levelsCache.data = rows;
+      levelsCache.lastFetch = Date.now();
+      logger.info(`[CACHE] ${rows.length} niveles cargados.`);
+    }
+  } catch (err) {
+    logger.error('[CACHE-ERROR] Fallo al pre-cargar niveles:', err.message);
+    levelsCache.data = DEFAULT_LEVELS; // Fallback
+  }
+}
+
+/**
+ * Pre-carga de configuración global
+ */
+export async function preloadConfig() {
+  try {
+    const row = await queryOne('SELECT * FROM configuracion_global LIMIT 1');
+    if (row) {
+      configCache.data = row;
+      configCache.lastFetch = Date.now();
+      logger.info('[CACHE] Configuración global cargada.');
+    }
+  } catch (err) {
+    logger.error('[CACHE-ERROR] Fallo al pre-cargar configuración:', err.message);
+    configCache.data = DEFAULT_CONFIG; // Fallback
+  }
+}
+
+/**
  * Obtiene el estado operativo para una fecha específica
  */
 export async function getDayStatus(dateStr = boliviaTime.todayStr()) {

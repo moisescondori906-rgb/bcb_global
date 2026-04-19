@@ -53,12 +53,20 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Validación de dependencias críticas al iniciar
-const criticalEnv = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'REDIS_URL', 'JWT_SECRET'];
-criticalEnv.forEach(key => {
-  if (!process.env[key]) {
-    logger.warn(`[VALIDATION] Variable de entorno crítica faltante: ${key}`);
+const criticalEnv = [
+  'DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 
+  'REDIS_HOST', 'REDIS_PORT', 'JWT_SECRET',
+  'BACKEND_URL', 'TELEGRAM_BOT_TOKEN_ADMIN'
+];
+
+const missingEnv = criticalEnv.filter(key => !process.env[key]);
+if (missingEnv.length > 0) {
+  logger.error('[CRITICAL] Faltan variables de entorno obligatorias:', missingEnv);
+  if (process.env.NODE_ENV === 'production') {
+    logger.error('[SHUTDOWN] No se puede iniciar en producción sin variables críticas.');
+    process.exit(1);
   }
-});
+}
 
 // 1. Seguridad & Middleware de Producción
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -89,19 +97,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // 2. Webhooks de Telegram (Endpoint dedicado antes de las rutas generales)
-initTelegramHandlers();
-setupWebhooks().then(() => {
-  logger.info('[SERVER] Webhooks de Telegram configurados.');
-}).catch(err => {
-  logger.error('[SERVER] Error configurando webhooks:', err.message);
-});
-
-// Inicializar Tareas Programadas (Jobs)
-try {
-  setupJobs();
-} catch (err) {
-  logger.error('[SERVER] Error inicializando Jobs:', err.message);
-}
+// initTelegramHandlers(); // Movido a startServer()
+// setupWebhooks(); // Movido a startServer()
 
 // 3. Health Check Avanzado (Métricas de Resiliencia)
 app.get('/api/health', async (req, res) => {
@@ -157,33 +154,47 @@ app.use('/', express.static(publicPath));
 
 const startServer = async () => {
   try {
-    await query('SELECT 1');
-    logger.info('[DATABASE] MySQL conectado.');
+    // 0. Validación de Conexión a Base de Datos
+    try {
+      await query('SELECT 1');
+      logger.info('[DATABASE] MySQL conectado correctamente.');
+    } catch (dbErr) {
+      logger.error('[CRITICAL] Fallo de conexión a Base de Datos:', dbErr.message);
+      if (process.env.NODE_ENV === 'production') {
+        process.exit(1);
+      }
+    }
 
-    await preloadConfig().catch(() => {});
-    await preloadLevels().catch(() => {});
+    // 1. Pre-carga de Cachés Críticas
+    await preloadConfig().catch(() => logger.warn('[STARTUP] No se pudo cargar config inicial.'));
+    await preloadLevels().catch(() => logger.warn('[STARTUP] No se pudo cargar niveles iniciales.'));
     
     const server = app.listen(PORT, () => {
-      logger.info(`[SUCCESS] Servidor Enterprise en puerto ${PORT}`);
+      logger.info(`[SUCCESS] Servidor BCB Global v7.0.0 estable en puerto ${PORT}`);
     });
 
-    // 5. Graceful Shutdown (Nivel Enterprise)
-    const shutdown = async (signal) => {
-      logger.info(`[SHUTDOWN] Recibida señal ${signal}. Cerrando sistema de forma segura...`);
-      
-      // Detener recepción de nuevas peticiones
-      server.close(() => logger.info('[HTTP] Servidor detenido.'));
+    // 2. Manejo de Webhooks tras iniciar el servidor
+    initTelegramHandlers();
+    setupWebhooks().catch(err => logger.error('[TELEGRAM] Error configurando webhooks:', err.message));
 
+    // 2.1 Inicializar Tareas Programadas (Jobs)
+    try {
+      setupJobs();
+    } catch (err) {
+      logger.error('[JOBS] Error inicializando Jobs:', err.message);
+    }
+
+    // 3. Graceful Shutdown
+    const shutdown = async (signal) => {
+      logger.info(`[SHUTDOWN] Recibida señal ${signal}. Cerrando de forma segura...`);
+      server.close(() => logger.info('[HTTP] Servidor detenido.'));
+      
       try {
-        const { closeBullMQ } = await import('./services/BullMQService.js');
         const { closeRedis } = await import('./services/redisService.js');
         const { pool } = await import('./config/db.js');
-
-        await closeBullMQ();
         await closeRedis();
         if (pool) await pool.end();
-        
-        logger.info('[SUCCESS] Sistema cerrado correctamente.');
+        logger.info('[SUCCESS] Conexiones cerradas. Bye!');
         process.exit(0);
       } catch (err) {
         logger.error('[ERROR] Durante shutdown:', err.message);
@@ -195,7 +206,8 @@ const startServer = async () => {
     process.on('SIGINT', () => shutdown('SIGINT'));
 
   } catch (err) {
-    logger.error('[SERVER] Fallo al iniciar:', err);
+    logger.error('[FATAL-STARTUP] El servidor no pudo iniciar:', err);
+    process.exit(1);
   }
 };
 

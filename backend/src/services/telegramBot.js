@@ -27,13 +27,32 @@ const createBot = (token, name) => {
     logger.warn(`[TELEGRAM] Bot ${name} no se inicializará (Token ausente).`);
     return null;
   }
+  
+  // Validar formato de token (numérico:alfanumérico)
+  if (!/^\d+:[\w-]+$/.test(token)) {
+    logger.error(`[TELEGRAM] Formato de token inválido para bot ${name}.`);
+    return null;
+  }
+
   try {
     const bot = new TelegramBot(token, { polling: false }); // Usar Webhooks en producción
-    logger.info(`[TELEGRAM] Bot ${name} inicializado correctamente.`);
+    
+    // Sobrescribir sendMessage para que sea resiliente automáticamente
+    const originalSendMessage = bot.sendMessage.bind(bot);
+    bot.sendMessage = async (chatId, text, options = {}) => {
+      try {
+        return await originalSendMessage(chatId, text, { parse_mode: 'HTML', ...options });
+      } catch (err) {
+        logger.error(`[TELEGRAM-API] Error en bot ${name} enviando a ${chatId}: ${err.message}`);
+        throw err;
+      }
+    };
+
+    logger.info(`[TELEGRAM] Bot ${name} instanciado.`);
     return bot;
   }
   catch (err) {
-    logger.error(`[TELEGRAM] Error fatal al crear bot ${name}: ${err.message}`);
+    logger.error(`[TELEGRAM] Error fatal al instanciar bot ${name}: ${err.message}`);
     return null;
   }
 };

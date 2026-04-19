@@ -10,6 +10,7 @@ import { useAndroidBackHandler } from './hooks/useAndroidBackHandler.js';
  * hasta estar en la pantalla de inicio.
  */
 import GlobalLoader from './components/ui/GlobalLoader';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 
 function NavigationGuard({ children }) {
   useAndroidBackHandler();
@@ -160,12 +161,14 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <NavigationGuard>
-          <AppRoutes />
-        </NavigationGuard>
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <NavigationGuard>
+            <AppRoutes />
+          </NavigationGuard>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

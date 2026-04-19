@@ -9,6 +9,7 @@ import { authenticate } from '../middleware/auth.js';
 import { attachRequestUser, DEMO_USER_ID } from '../middleware/requestContext.js';
 import { query, queryOne } from '../config/db.js';
 import logger from '../lib/logger.js';
+import { asyncHandler } from '../middleware/asyncHandler.js';
 
 const router = Router();
 
@@ -35,61 +36,53 @@ function sanitizeUser(u, levels) {
   };
 }
 
-router.get('/me', async (req, res) => {
-  try {
-    const user = req.requestUser;
-    const levels = await getLevels().catch(() => [
-      { id: 'l1', codigo: 'internar', nombre: 'Internar' },
-      { id: 'l2', codigo: 'global1', nombre: 'GLOBAL 1' }
-    ]);
-    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
-    res.json(sanitizeUser(user, levels));
-  } catch (err) {
-    res.status(500).json({ error: 'Error al recuperar perfil' });
-  }
-});
+router.get('/me', asyncHandler(async (req, res) => {
+  const user = req.requestUser;
+  const levels = await getLevels().catch(() => [
+    { id: 'l1', codigo: 'internar', nombre: 'Internar' },
+    { id: 'l2', codigo: 'global1', nombre: 'GLOBAL 1' }
+  ]);
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  res.json(sanitizeUser(user, levels));
+}));
 
-router.get('/stats', async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const user = req.requestUser;
+router.get('/stats', asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const user = req.requestUser;
 
-    // MODO DEMO: Bypass si el ID es el de demo
-    if (userId === DEMO_USER_ID) {
-      return res.json({
-        ingresos_hoy: 50.40,
-        ingresos_ayer: 45.20,
-        total_completadas: 8,
-        saldo_principal: user.saldo_principal,
-        saldo_comisiones: user.saldo_comisiones,
-      });
-    }
-
-    const today = boliviaTime.todayStr();
-    const yesterday = boliviaTime.yesterdayStr();
-
-    const stats = await queryOne(`
-      SELECT 
-        COALESCE(SUM(CASE WHEN fecha_dia = ? THEN monto_ganado ELSE 0 END), 0) as hoy,
-        COALESCE(SUM(CASE WHEN fecha_dia = ? THEN monto_ganado ELSE 0 END), 0) as ayer,
-        COALESCE(SUM(monto_ganado), 0) as total_acumulado,
-        COUNT(CASE WHEN fecha_dia = ? THEN 1 END) as tareas_hoy
-      FROM actividad_tareas 
-      WHERE usuario_id = ?
-    `, [today, yesterday, today, userId]);
-
-    res.json({
-      ingresos_hoy: stats.hoy,
-      ingresos_ayer: stats.ayer,
-      total_acumulado: stats.total_acumulado,
-      total_completadas: stats.tareas_hoy,
+  // MODO DEMO: Bypass si el ID es el de demo
+  if (userId === DEMO_USER_ID) {
+    return res.json({
+      ingresos_hoy: 50.40,
+      ingresos_ayer: 45.20,
+      total_completadas: 8,
       saldo_principal: user.saldo_principal,
       saldo_comisiones: user.saldo_comisiones,
     });
-  } catch (err) {
-    res.status(500).json({ error: 'Error al obtener estadísticas' });
   }
-});
+
+  const today = boliviaTime.todayStr();
+  const yesterday = boliviaTime.yesterdayStr();
+
+  const stats = await queryOne(`
+    SELECT 
+      COALESCE(SUM(CASE WHEN fecha_dia = ? THEN monto_ganado ELSE 0 END), 0) as hoy,
+      COALESCE(SUM(CASE WHEN fecha_dia = ? THEN monto_ganado ELSE 0 END), 0) as ayer,
+      COALESCE(SUM(monto_ganado), 0) as total_acumulado,
+      COUNT(CASE WHEN fecha_dia = ? THEN 1 END) as tareas_hoy
+    FROM actividad_tareas 
+    WHERE usuario_id = ?
+  `, [today, yesterday, today, userId]);
+
+  res.json({
+    ingresos_hoy: stats.hoy,
+    ingresos_ayer: stats.ayer,
+    total_acumulado: stats.total_acumulado,
+    total_completadas: stats.tareas_hoy,
+    saldo_principal: user.saldo_principal,
+    saldo_comisiones: user.saldo_comisiones,
+  });
+}));
 
 router.get('/earnings', async (req, res) => {
   try {
