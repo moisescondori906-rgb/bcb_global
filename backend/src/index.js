@@ -198,4 +198,5 @@ const startServer = async () => {
 };
 
 app.use(errorHandler);
+
 startServer();
