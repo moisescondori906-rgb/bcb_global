@@ -462,14 +462,6 @@ export async function syncLevels() {
   }
 }
 
-export async function preloadLevels() {
-  const levels = await getLevels();
-  // Guardamos los niveles calculados en el caché
-  levelsCache.data = levels;
-  levelsCache.lastFetch = Date.now();
-  return levels;
-}
-
 export async function invalidateLevelsCache() {
   levelsCache.data = null;
   levelsCache.lastFetch = 0;
@@ -1095,13 +1087,6 @@ export async function getPublicContent() {
     logger.warn('[DB] Usando configuración por defecto (DB Offline)');
     return DEFAULT_CONFIG;
   }
-}
-
-export async function preloadConfig() {
-  const config = await getPublicContent();
-  configCache.data = config;
-  configCache.lastFetch = Date.now();
-  return config;
 }
 
 export async function refreshPublicContent() {
