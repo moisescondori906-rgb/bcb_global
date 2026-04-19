@@ -36,10 +36,17 @@ export default function Ganancias() {
     try {
       if (!data) setLoading(true);
       const res = await api.users.earnings().catch(err => {
-        console.error('Error earnings:', err);
-        return { history: [], summary: { total: 0, hoy: 0 } };
+        console.error('Error earnings API:', err);
+        return { 
+          history: [], 
+          summary: { total: 0, hoy: 0 } 
+        };
       });
-      setData(res);
+      // Asegurar estructura mínima para evitar errores de renderizado
+      setData({
+        history: res?.history || [],
+        summary: res?.summary || { total: 0, hoy: 0 }
+      });
     } catch (err) {
       console.error('Error general fetchData Ganancias:', err);
       setError('No se pudo sincronizar el historial.');

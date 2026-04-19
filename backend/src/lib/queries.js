@@ -145,7 +145,17 @@ export async function getDayStatus(dateStr = boliviaTime.todayStr()) {
     return status;
   } catch (e) {
     logger.error(`[Calendar] Error getting status for ${dateStr}: ${e.message}`);
-    return null;
+    // Fallback seguro v7.0.6
+    return {
+      fecha: dateStr,
+      tipo_dia: 'laboral',
+      es_feriado: 0,
+      tareas_habilitadas: 1,
+      retiros_habilitados: 1,
+      recargas_habilitadas: 1,
+      motivo: null,
+      reglas_niveles: {}
+    };
   }
 }
 
@@ -153,9 +163,9 @@ export async function getUserTeamReport(userId) {
   try {
     // 1. Obtener niveles para mapeo
     const levels = await getLevels();
-    const internarId = levels.find(l => l.codigo === 'internar')?.id || '';
+    const internarId = levels.find(l => String(l.codigo).toLowerCase() === 'internar')?.id || '';
 
-    // 2. Reporte de 3 niveles con conteo real (sin nivel Internar para ingresos)
+    // 2. Reporte de 3 niveles con conteo real
     const level1 = await query(`
       SELECT u.id, u.nombre_usuario, u.telefono, u.created_at, n.nombre as nivel_nombre, u.nivel_id
       FROM usuarios u 
@@ -174,7 +184,7 @@ export async function getUserTeamReport(userId) {
       LEFT JOIN niveles n ON u.nivel_id = n.id
       WHERE u.invitado_por IN (?)`, [level2.map(u => u.id)]) : [];
 
-    // 3. Cálculo de Comisiones (Solo Inversión Activa)
+    // 3. Cálculo de Comisiones
     const commissions = await query(`
       SELECT 
         CASE 
@@ -215,7 +225,11 @@ export async function getUserTeamReport(userId) {
     };
   } catch (err) {
     logger.error(`[Team Report Error]: ${err.message}`);
-    return { resumen: { total_miembros: 0, ingresos_totales: 0 }, niveles: [] };
+    return { 
+      resumen: { total_miembros: 0, ingresos_totales: 0, comisiones_hoy: 0 }, 
+      niveles: [], 
+      detalles: { level1: [], level2: [], level3: [] } 
+    };
   }
 }
 
@@ -463,13 +477,13 @@ export async function getUsers() {
 
 export async function getLevels() {
   const now = Date.now();
-  if (levelsCache.data && now - levelsCache.lastFetch < 60000) {
+  if (levelsCache.data && now - levelsCache.lastFetch < 600000) { // 10 min cache
     return levelsCache.data;
   }
 
   try {
     const levels = await query(`SELECT * FROM niveles ORDER BY orden ASC`);
-    if (levels.length === 0) {
+    if (!levels || levels.length === 0) {
       await syncLevels();
       return getLevels();
     }
@@ -501,8 +515,8 @@ export async function getLevels() {
     levelsCache.lastFetch = now;
     return processed;
   } catch (e) {
-    logger.warn('[DB] Usando niveles por defecto (DB Offline)');
-    return DEFAULT_LEVELS.map(l => {
+    logger.warn('[DB] Error al obtener niveles, usando fallback.');
+    return levelsCache.data || DEFAULT_LEVELS.map(l => {
       const ingreso_diario = Number((Number(l.num_tareas_diarias) * Number(l.ganancia_tarea)).toFixed(2));
       const isInternar = String(l.codigo).toLowerCase() === 'internar';
       return {
@@ -1042,41 +1056,8 @@ export async function rejectRetiro(retiroId, adminId, motivo, idempotencyKey = n
   });
 }
 
-export async function getRecargaById(id) {
-  return await queryOne(`SELECT * FROM recargas WHERE id = ?`, [id]);
-}
-
-export async function updateRecarga(id, updates) {
-  const keys = Object.keys(updates);
-  if (keys.length === 0) return;
-  const setClause = keys.map(k => `${k} = ?`).join(', ');
-  const params = [...Object.values(updates), id];
-  await query(`UPDATE recargas SET ${setClause} WHERE id = ?`, params);
-}
-
-export async function getRetiroById(id) {
-  return await queryOne(`SELECT * FROM retiros WHERE id = ?`, [id]);
-}
-
-export async function updateRetiro(id, updates) {
-  const keys = Object.keys(updates);
-  if (keys.length === 0) return;
-  const setClause = keys.map(k => `${k} = ?`).join(', ');
-  const params = [...Object.values(updates), id];
-  await query(`UPDATE retiros SET ${setClause} WHERE id = ?`, params);
-}
-
-export async function handleLevelUpRewards() {
-  // Opcional, por ahora solo exportamos para evitar errores de importación
-  return true;
-}
-
-// ========================
-// 5. COMISIONES (Regla de Jerarquía)
-// ========================
-
 /**
- * distributeInvestmentCommissions v7.0.5: Distribución de 3 niveles con regla de jerarquía
+ * distributeInvestmentCommissions v7.0.6: Distribución de 3 niveles con regla de jerarquía
  */
 export async function distributeInvestmentCommissions(userId, amount) {
   try {
@@ -1110,7 +1091,7 @@ export async function distributeInvestmentCommissions(userId, amount) {
         const uplineData = uplineRows[0];
         if (!uplineData) return;
 
-        // Avanzar al siguiente upline para la próxima iteración
+        // Avanzar al siguiente upline para la próxima iteración ANTES de las reglas de jerarquía
         currentUplineId = uplineData.invitado_por;
 
         // REGLA DE JERARQUÍA: El upline debe ser >= nivel que el invitado para cobrar
@@ -1137,6 +1118,8 @@ export async function distributeInvestmentCommissions(userId, amount) {
              VALUES (?, ?, 'COMMISSION_CREDIT', 'comisiones', ?, ?, ?, ?)`,
             [traceId, uplineId, commission, oldBalance, newBalance, movimientoId]
           );
+          
+          userCache.delete(uplineId);
         }
       });
     }
@@ -1144,6 +1127,41 @@ export async function distributeInvestmentCommissions(userId, amount) {
     logger.error(`[Commissions Error]: ${err.message}`);
   }
 }
+
+export async function getRecargaById(id) {
+  return await queryOne(`SELECT * FROM compras_nivel WHERE id = ?`, [id]);
+}
+
+export async function updateRecarga(id, updates) {
+  const keys = Object.keys(updates);
+  if (keys.length === 0) return;
+  const setClause = keys.map(k => `${k} = ?`).join(', ');
+  const params = [...Object.values(updates), id];
+  await query(`UPDATE compras_nivel SET ${setClause} WHERE id = ?`, params);
+}
+
+export async function getRetiroById(id) {
+  return await queryOne(`SELECT * FROM retiros WHERE id = ?`, [id]);
+}
+
+export async function updateRetiro(id, updates) {
+  const keys = Object.keys(updates);
+  if (keys.length === 0) return;
+  const setClause = keys.map(k => `${k} = ?`).join(', ');
+  const params = [...Object.values(updates), id];
+  await query(`UPDATE retiros SET ${setClause} WHERE id = ?`, params);
+}
+
+export async function handleLevelUpRewards() {
+  // Opcional, por ahora solo exportamos para evitar errores de importación
+  return true;
+}
+
+// ========================
+// 5. COMISIONES (Regla de Jerarquía)
+// ========================
+
+// distributeInvestmentCommissions v7.0.6 ya definido arriba
 
 // ========================
 // 6. CONFIGURACIÓN & MENSAJES
@@ -1206,7 +1224,7 @@ export async function getDailyWithdrawalSummary() {
 export async function getDashboardStats() {
   const [userCount, rechargeTotal, withdrawalTotal, activeTasks] = await Promise.all([
     queryOne(`SELECT COUNT(*) as total FROM usuarios WHERE rol = 'usuario'`),
-    queryOne(`SELECT SUM(monto) as total FROM recargas WHERE estado = 'aprobada'`),
+    queryOne(`SELECT SUM(monto) as total FROM compras_nivel WHERE estado = 'completada'`),
     queryOne(`SELECT SUM(monto) as total FROM retiros WHERE estado = 'completado'`),
     queryOne(`SELECT COUNT(*) as total FROM actividad_tareas WHERE fecha_dia = ?`, [boliviaTime.todayStr()])
   ]);
@@ -1318,8 +1336,26 @@ export async function getPremiosRuleta() {
 export async function createSorteoGanador(data) {
   const id = uuidv4();
   await query(`INSERT INTO sorteos_ganadores (id, usuario_id, premio_id, monto_ganado) VALUES (?, ?, ?, ?)`,
-    [id, data.usuario_id, data.premio_id, data.monto_ganado || 0]);
+    [id, data.usuario_id, data.premio_id, data.monto || data.monto_ganado || 0]);
   return { id, ...data };
+}
+
+export async function addUserEarnings(userId, amount) {
+  // Esta función registra el movimiento de ganancia para la ruleta
+  // El saldo ya fue actualizado en el router, aquí solo documentamos el movimiento
+  try {
+    const user = await findUserById(userId);
+    if (!user) return;
+    
+    // Obtenemos el saldo anterior (antes de la actualización que ya ocurrió en el router)
+    // o simplemente registramos el movimiento con el saldo actual.
+    // Para ser precisos, el router debería pasar los saldos, pero si no, los recuperamos.
+    await query(`INSERT INTO movimientos_saldo (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, descripcion) 
+      VALUES (?, ?, 'comisiones', 'premio_ruleta', ?, ?, ?, ?)`,
+      [uuidv4(), userId, amount, user.saldo_comisiones - amount, user.saldo_comisiones, 'Premio ganado en la Ruleta']);
+  } catch (err) {
+    logger.error(`[addUserEarnings Error]: ${err.message}`);
+  }
 }
 
 export async function createMovimiento(data) {

@@ -14,7 +14,7 @@ dotenv.config();
 
 const requiredEnv = [
   'PORT', 'JWT_SECRET', 'MYSQL_HOST', 'MYSQL_USER', 'MYSQL_PASSWORD', 'MYSQL_DATABASE',
-  'TELEGRAM_BOT_TOKEN_ADMIN'
+  'TELEGRAM_BOT_TOKEN_ADMIN', 'TELEGRAM_CHAT_ADMIN'
 ];
 const missingEnv = requiredEnv.filter(k => !process.env[k]);
 
@@ -67,6 +67,8 @@ import adminRoutes from './routes/admin.js';
 import telegramAdminRoutes from './routes/telegram_admin.js';
 import telegramWebhookRoutes from './routes/telegram_webhook.js';
 import sorteoRoutes from './routes/sorteo.js';
+import saasRoutes from './routes/saas.js';
+import levelRoutes from './routes/levels.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -77,6 +79,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin/telegram', telegramAdminRoutes);
 app.use('/api/telegram-webhook', telegramWebhookRoutes);
 app.use('/api/sorteo', sorteoRoutes);
+app.use('/api/saas', saasRoutes);
+app.use('/api/levels', levelRoutes);
 
 // Health Check avanzado para monitoreo
 app.get('/health', async (req, res) => {

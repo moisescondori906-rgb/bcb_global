@@ -25,6 +25,15 @@ export async function initTelegramHandlers() {
       }
     }));
 
+    // Cargar lógica de eventos y callbacks
+    try {
+      const { setupTelegramLogic } = await import('../lib/telegram.js');
+      await setupTelegramLogic();
+      logger.info('[TELEGRAM] Lógica de eventos cargada.');
+    } catch (err) {
+      logger.error('[TELEGRAM] Error al cargar lógica de eventos:', err.message);
+    }
+
     logger.info('[TELEGRAM] Secuencia de inicialización completada.');
   } catch (err) {
     logger.error('[TELEGRAM] Error fatal en el inicializador:', err.message);

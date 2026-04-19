@@ -1,13 +1,14 @@
-import { botAdmin as bot } from '../services/telegramBot.js';
+import { setupAdminBot } from '../services/telegramBot.js';
 import { query, queryOne, transaction } from '../config/db.js';
 import { boliviaTime } from '../lib/queries.js';
 import logger from '../lib/logger.js';
-import { CronJob } from 'cron';
 
 /**
- * Lógica Central de Telegram: UN CASO = UN RESPONSABLE. BLOQUEO TOTAL.
+ * Lógica Central de Telegram v7.0.6: UN CASO = UN RESPONSABLE. BLOQUEO TOTAL.
  */
-if (bot) {
+export async function setupTelegramLogic() {
+  const bot = await setupAdminBot();
+  if (!bot) return;
   // --- MIDDLEWARE DE VALIDACIÓN DE INTEGRANTE ---
   const validateMember = async (msg) => {
     const userId = String(msg.from.id);
@@ -305,44 +306,4 @@ export async function sendTelegramAlert(tipo, data) {
   }
 }
 
-/**
- * Reporte Diario Automático (23:30)
- */
-if (bot) {
-  new CronJob('30 23 * * *', async () => {
-    logger.info('[Telegram] Generando reporte diario...');
-    try {
-      const today = boliviaTime.todayStr();
-      const stats = await query(`
-        SELECT i.nombre_visible, 
-               COUNT(CASE WHEN l.accion = 'tomar' THEN 1 END) as tomados,
-               COUNT(CASE WHEN l.accion = 'aceptar' THEN 1 END) as aceptados,
-               COUNT(CASE WHEN l.accion = 'rechazar' THEN 1 END) as rechazados
-        FROM telegram_integrantes i
-        LEFT JOIN telegram_operaciones_log l ON i.telegram_user_id = l.telegram_user_id
-        WHERE DATE(l.fecha) = ?
-        GROUP BY i.id
-      `, [today]);
-
-      let report = `📊 REPORTE DIARIO OPERATIVO (${today})\n\n`;
-      if (stats.length === 0) {
-        report += "Sin actividad registrada hoy.";
-      } else {
-        stats.forEach(s => {
-          report += `👤 ${s.nombre_visible}:\n` +
-                    `  📥 Tomados: ${s.tomados}\n` +
-                    `  ✅ Aceptados: ${s.aceptados}\n` +
-                    `  ❌ Rechazados: ${s.rechazados}\n\n`;
-        });
-      }
-
-      const admGroup = await queryOne("SELECT chat_id FROM telegram_equipos WHERE tipo = 'administradores' AND activo = 1");
-      if (admGroup) await bot.sendMessage(admGroup.chat_id, report);
-
-    } catch (e) {
-      logger.error(`[Telegram Report Error]: ${e.message}`);
-    }
-  }, null, true, 'America/La_Paz');
-}
-
-export default bot;
+export default setupTelegramLogic;

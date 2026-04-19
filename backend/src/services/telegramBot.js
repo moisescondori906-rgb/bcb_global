@@ -14,7 +14,10 @@ let botSecretaria = null;
 export async function setupAdminBot() {
   if (botAdmin) return botAdmin;
   const token = process.env.TELEGRAM_BOT_TOKEN_ADMIN;
-  if (!token) return null;
+  if (!token || token === 'tu_token_aqui') {
+    logger.warn('[TELEGRAM] Admin Bot saltado: Token no configurado.');
+    return null;
+  }
 
   try {
     botAdmin = new TelegramBot(token, { polling: true });
@@ -37,7 +40,7 @@ export async function setupAdminBot() {
 export async function setupRetirosBot() {
   if (botRetiros) return botRetiros;
   const token = process.env.TELEGRAM_BOT_TOKEN_RETIROS;
-  if (!token) return null;
+  if (!token || token === 'tu_token_aqui') return null;
 
   try {
     botRetiros = new TelegramBot(token, { polling: true });
@@ -53,7 +56,7 @@ export async function setupRetirosBot() {
 export async function setupSecretariaBot() {
   if (botSecretaria) return botSecretaria;
   const token = process.env.TELEGRAM_BOT_TOKEN_SECRETARIA;
-  if (!token) return null;
+  if (!token || token === 'tu_token_aqui') return null;
 
   try {
     botSecretaria = new TelegramBot(token, { polling: true });

@@ -1,55 +1,54 @@
 #!/bin/bash
 
-# ==========================================
-# BCB GLOBAL - SCRIPT DE DESPLIEGUE v7.0.5
-# ==========================================
+# BCB Global - Production Deployment Script v7.0.5
+# Senior Fullstack Architect Standard
 
-set -e # Salir si ocurre un error
+set -e
 
-echo "🚀 Iniciando despliegue de BCB Global v7.0.5..."
+echo "🚀 Iniciando despliegue de BCB Global..."
 
-# 1. ACTUALIZAR CÓDIGO
-echo "📥 Descargando cambios de Git..."
+# 1. Sincronización de código
+echo "📥 Trayendo cambios de GitHub..."
 git pull origin main
 
-# 2. BACKEND
-echo "⚙️ Configurando Backend..."
+# 2. Backend - Dependencias y Reinicio
+echo "📦 Instalando dependencias del Backend..."
 cd backend
-npm install
-# Limpiar logs antiguos
-mkdir -p logs
-rm -f logs/*.log
+npm install --production
+cd ..
 
-# Validación de sintaxis antes de reiniciar
-node -c src/index.js
-echo "✅ Backend validado."
-
-# 3. FRONTEND
-echo "🏗️ Construyendo Frontend..."
-cd ../frontend
+# 3. Frontend - Build
+echo "🏗️ Construyendo el Frontend..."
+cd frontend
 npm install
 npm run build
-echo "✅ Frontend construido exitosamente."
-
-# 4. REINICIO DE SERVICIOS
-echo "🔄 Reiniciando procesos con PM2..."
+echo "🧹 Limpiando directorio public del backend..."
+rm -rf ../backend/public/*
+echo "🚚 Moviendo build al servidor estático del backend..."
+cp -r dist/* ../backend/public/
 cd ..
-pm2 restart bcb-global-backend || pm2 start backend/src/index.js --name bcb-global-backend
-pm2 save
 
-# 5. VERIFICACIÓN FINAL
-echo "🩺 Verificando salud del sistema..."
+# 4. Base de Datos - Migraciones (Si existen)
+# echo "🗄️ Ejecutando migraciones..."
+# node backend/src/data/migrate.js
+
+# 5. Reinicio de Procesos con PM2
+echo "🔄 Reiniciando procesos PM2..."
+pm2 restart ecosystem.config.cjs || pm2 start ecosystem.config.cjs --env production
+
+# 6. Verificación Automática
+echo "🔍 Verificando estado del sistema..."
 sleep 5
-HEALTH=$(curl -s http://localhost:4000/health | grep -o "ok" || echo "failed")
+HEALTH_CHECK=$(curl -s http://localhost:4000/health)
 
-if [ "$HEALTH" == "ok" ]; then
-    echo "✅ SISTEMA ONLINE (v7.0.5)"
-    echo "📋 Últimos logs:"
-    pm2 logs bcb-global-backend --lines 20 --no-daemon & sleep 3 ; kill $!
+if [[ $HEALTH_CHECK == *"\"status\":\"ok\""* ]]; then
+  echo "✅ Despliegue COMPLETADO con éxito."
+  echo "📊 Salud del sistema: $HEALTH_CHECK"
 else
-    echo "❌ ERROR: El backend no respondió correctamente tras el reinicio."
-    pm2 logs bcb-global-backend --lines 50 --no-daemon & sleep 5 ; kill $!
-    exit 1
+  echo "❌ ERROR: El sistema no responde correctamente tras el despliegue."
+  echo "Logs de error de PM2:"
+  pm2 logs --lines 20 --no-colors
+  exit 1
 fi
 
-echo "🚀 DESPLIEGUE COMPLETADO EXITOSAMENTE."
+echo "🚀 BCB Global está en línea."
