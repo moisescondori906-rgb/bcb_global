@@ -50,13 +50,13 @@ else
   pm2 start ecosystem.config.cjs --env production
 fi
 
-# 6. Verificación de Salud Post-Vuelo
+# 6. Verificación de Salud Post-Vuelo v9.1.0
 echo "🔍 Verificando salud del sistema..."
 sleep 5
 HEALTH_CHECK=$(curl -s http://localhost:4000/health)
 
-if [[ $HEALTH_CHECK == *"\"status\":\"ok\""* ]]; then
-  echo "✅ DESPLIEGUE COMPLETADO EXITOSAMENTE."
+if [[ $HEALTH_CHECK == *"\"status\":\"ok\""* && $HEALTH_CHECK == *"\"db\":\"connected\""* && $HEALTH_CHECK == *"\"redis\":\"connected\""* ]]; then
+  echo "✅ DESPLIEGUE COMPLETADO EXITOSAMENTE (SISTEMA RESILIENTE)."
   echo "📊 Reporte de Salud: $HEALTH_CHECK"
   
   # Smoke Test de Endpoints Críticos

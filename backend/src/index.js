@@ -8,10 +8,10 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { initTelegramHandlers } from './services/telegramInitializer.js';
 import { query } from './config/db.js';
 import { syncLevels } from './lib/queries.js';
+import { safeAsync } from './lib/safeWrappers.js';
 
 import validateEnv from './config/validateEnv.js';
 import redis from './services/redisService.js';
-import { query } from './config/db.js';
 
 // 1. BLINDAJE GLOBAL Y VALIDACIÓN DE ENTORNO v9.0.0
 validateEnv();
@@ -77,6 +77,18 @@ const checkSystemHealth = async () => {
 };
 
 await checkSystemHealth();
+
+// 1.5 SISTEMA DE MONITOREO CONTINUO (HEARTBEAT 10s) v9.1.0
+setInterval(() => {
+  safeAsync(async () => {
+    try {
+      await query('SELECT 1');
+      await redis.ping();
+    } catch (err) {
+      logger.error(`[HEARTBEAT-FAILURE]: ${err.message}`);
+    }
+  }, 'HeartbeatMonitor');
+}, 10000);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -164,7 +176,7 @@ async function startServer() {
     await syncLevels().catch(e => logger.warn(`[SYNC] Falló sincronización inicial de niveles: ${e.message}`));
 
     const server = app.listen(PORT, () => {
-      logger.info(`[SERVER] BCB Global Backend v8.1.0 estable en puerto ${PORT}`);
+      logger.info(`[SERVER] BCB Global Backend v9.1.0 estable en puerto ${PORT}`);
       logger.info(`[ENV] Modo: ${process.env.NODE_ENV}`);
     });
 

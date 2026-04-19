@@ -1,5 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import logger from '../lib/logger.js';
+import { safeAsync } from '../lib/safeWrappers.js';
 import { query, queryOne } from '../config/db.js';
 
 // Instancias de bots (Singleton pattern con inicialización perezosa)
@@ -100,28 +101,13 @@ export async function safeTelegram(call, context = 'General') {
     }
   }
 
-  try {
+  // Usamos safeAsync para garantizar aislamiento total
+  return await safeAsync(async () => {
     const result = await call();
     // Éxito: Reset parcial
     if (TELEGRAM_CIRCUIT_STATE.failures > 0) TELEGRAM_CIRCUIT_STATE.failures--;
     return result;
-  } catch (err) {
-    TELEGRAM_CIRCUIT_STATE.failures++;
-    TELEGRAM_CIRCUIT_STATE.lastFailureTime = Date.now();
-    
-    logger.error(`[TELEGRAM-SAFE-ISOLATION] Error en ${context}: ${err.message}`, { 
-      failures: TELEGRAM_CIRCUIT_STATE.failures,
-      context,
-      time: new Date().toISOString()
-    });
-
-    if (TELEGRAM_CIRCUIT_STATE.failures >= TELEGRAM_CIRCUIT_STATE.MAX_FAILURES) {
-      logger.error(`[TELEGRAM-BREAKER] ABRIENDO CIRCUITO por exceso de fallos en ${context}`);
-      TELEGRAM_CIRCUIT_STATE.isOpen = true;
-    }
-    
-    return null;
-  }
+  }, `TELEGRAM-${context}`);
 }
 
 /**
