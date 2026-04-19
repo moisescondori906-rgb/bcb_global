@@ -11,27 +11,72 @@ import { syncLevels } from './lib/queries.js';
 
 import validateEnv from './config/validateEnv.js';
 import redis from './services/redisService.js';
+import { query } from './config/db.js';
 
-// 1. BLINDAJE GLOBAL Y VALIDACIÓN DE ENTORNO v8.0.0
+// 1. BLINDAJE GLOBAL Y VALIDACIÓN DE ENTORNO v9.0.0
 validateEnv();
 
 // Blindaje total contra caídas por errores no capturados
 process.on('uncaughtException', (err) => {
-  logger.error('[CRITICAL] Uncaught Exception:', { 
+  logger.error('[CRITICAL-FATAL] Uncaught Exception:', { 
     message: err.message, 
     stack: err.stack,
     time: new Date().toISOString()
   });
-  // En producción, no cerramos el proceso a menos que sea estrictamente necesario
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error('[CRITICAL] Unhandled Rejection:', { 
+  logger.error('[CRITICAL-FATAL] Unhandled Rejection:', { 
     reason: reason instanceof Error ? reason.message : reason,
     stack: reason instanceof Error ? reason.stack : null,
     time: new Date().toISOString()
   });
 });
+
+// Endpoint de Healthcheck Profesional v9.0.0
+app.get('/health', async (req, res) => {
+  const health = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    db: 'unknown',
+    redis: 'unknown'
+  };
+
+  try {
+    await query('SELECT 1');
+    health.db = 'connected';
+  } catch (err) {
+    health.db = 'error';
+    health.status = 'degraded';
+  }
+
+  try {
+    await redis.ping();
+    health.redis = 'connected';
+  } catch (err) {
+    health.redis = 'error';
+    health.status = 'degraded';
+  }
+
+  res.status(health.status === 'ok' ? 200 : 503).json(health);
+});
+
+// Registro de salud de servicios críticos al arranque
+const checkSystemHealth = async () => {
+  try {
+    await query('SELECT 1');
+    logger.info('[HEALTH] MySQL: OK');
+    await redis.ping();
+    logger.info('[HEALTH] Redis: OK');
+    return true;
+  } catch (err) {
+    logger.error('[FATAL] Fallo de salud en servicios críticos:', err.message);
+    process.exit(1);
+  }
+};
+
+await checkSystemHealth();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -115,19 +160,11 @@ const PORT = process.env.PORT || 4000;
 
 async function startServer() {
   try {
-    // 1. Verificar conexión MySQL al inicio
-    await query('SELECT 1');
-    logger.info('[DB] Conexión MySQL establecida correctamente.');
-
-    // 2. Verificar conexión Redis
-    await redis.ping();
-    logger.info('[REDIS] Conexión Redis verificada.');
-
     // Sincronizar niveles institucionales
     await syncLevels().catch(e => logger.warn(`[SYNC] Falló sincronización inicial de niveles: ${e.message}`));
 
     const server = app.listen(PORT, () => {
-      logger.info(`[SERVER] BCB Global Backend v8.0.0 estable en puerto ${PORT}`);
+      logger.info(`[SERVER] BCB Global Backend v8.1.0 estable en puerto ${PORT}`);
       logger.info(`[ENV] Modo: ${process.env.NODE_ENV}`);
     });
 

@@ -8,14 +8,14 @@ import {
   distributeInvestmentCommissions
 } from './queries.js';
 import logger from './logger.js';
-import { safeTelegramCall } from '../services/telegramBot.js';
+import { safeTelegram } from '../services/telegramBot.js';
 
 export async function processTelegramUpdate(update) {
   const { callback_query, message: incomingMessage } = update;
   
-  // 1. Manejo de comandos (Resumen Diario)
+  // 1. Manejo de comandos (Resumen Diario) - BLINDADO v8.1.0
   if (incomingMessage && incomingMessage.text?.startsWith('/resumen')) {
-    return handleDailySummary(incomingMessage);
+    return safeTelegram(() => handleDailySummary(incomingMessage), 'handleDailySummary-Command');
   }
 
   if (!callback_query) return;
@@ -24,7 +24,7 @@ export async function processTelegramUpdate(update) {
   const chatId = message.chat.id;
   const messageId = message.message_id;
 
-  logger.info(`[Telegram Logic] Procesando click: ${data} de usuario ${telegramUser.id} (${telegramUser.username || 'sin user'})`);
+  logger.info(`[TELEGRAM-LOGIC] Procesando click: ${data} de usuario ${telegramUser.id}`);
 
   try {
     const parts = data.split('_');
@@ -32,15 +32,12 @@ export async function processTelegramUpdate(update) {
     const action = parts[1];
     const id = parts.slice(2).join('_');
 
-    logger.debug(`[Telegram Logic] Datos parseados - Tipo: ${type}, Acción: ${action}, ID: ${id}`);
-
     // 2. VALIDACIÓN DE ADMINISTRADOR
-    logger.debug(`[Telegram Logic] Validando admin con Telegram ID: ${telegramUser.id}`);
     const admin = await findAdminByTelegramId(telegramUser.id);
     
     if (!admin) {
-      logger.warn(`[Telegram Logic] ACCESO DENEGADO: El usuario ${telegramUser.id} no es un admin registrado.`);
-      return answerCallback(callbackQueryId, '❌ No tienes permisos para realizar esta acción.');
+      logger.warn(`[TELEGRAM-LOGIC] ACCESO DENEGADO: ${telegramUser.id}`);
+      return safeTelegram(() => answerCallback(callbackQueryId, '❌ No tienes permisos para realizar esta acción.'), 'answerCallback-Denied');
     }
 
     const adminName = admin.nombre || admin.nombre_usuario || admin.nombre_real;
@@ -59,7 +56,7 @@ export async function processTelegramUpdate(update) {
       if (action === 'tomar') {
         if (retiro.estado !== 'pendiente') {
           const taker = retiro.taken_by_admin_name || 'otro administrador';
-          return answerCallback(callbackQueryId, `⚠️ Este retiro ya está siendo ejecutado por ${taker}.`);
+          return safeTelegram(() => answerCallback(callbackQueryId, `⚠️ Este retiro ya está siendo ejecutado por ${taker}.`), 'answerCallback-Taken');
         }
 
         await updateRetiro(id, { 
@@ -89,15 +86,15 @@ export async function processTelegramUpdate(update) {
           await editTelegramMessage(chatId, messageId, message.text || message.caption, statusMsg, buttons);
         }
         
-        logger.info(`[Telegram Logic] Retiro ${id} tomado por ${adminName}`);
-        return answerCallback(callbackQueryId, '✅ Retiro asignado. Procede con el pago.');
+        logger.info(`[TELEGRAM-LOGIC] Retiro ${id} tomado por ${adminName}`);
+        return safeTelegram(() => answerCallback(callbackQueryId, '✅ Retiro asignado. Procede con el pago.'), 'answerCallback-Success');
       }
 
       // ACCIÓN: PAGAR O RECHAZAR
       if (action === 'pagar' || action === 'rechazar') {
         // VALIDACIÓN: Solo el admin que tomó el retiro
         if (retiro.taken_by_admin_id && retiro.taken_by_admin_id !== admin.id) {
-          return answerCallback(callbackQueryId, `⚠️ Solo ${retiro.taken_by_admin_name} puede finalizar este retiro.`);
+          return safeTelegram(() => answerCallback(callbackQueryId, `⚠️ Solo ${retiro.taken_by_admin_name} puede finalizar este retiro.`), 'answerCallback-WrongAdmin');
         }
 
         if (action === 'pagar') {
@@ -163,19 +160,19 @@ export async function processTelegramUpdate(update) {
             await editTelegramMessage(chatId, messageId, message.text || message.caption, statusMsg);
           }
           
-          logger.info(`[Telegram Logic] Retiro ${id} rechazado por ${adminName}`);
+          logger.info(`[TELEGRAM-LOGIC] Retiro ${id} rechazado por ${adminName}`);
         }
-        return answerCallback(callbackQueryId, 'Operación finalizada.');
+        return safeTelegram(() => answerCallback(callbackQueryId, 'Operación finalizada.'), 'answerCallback-Done');
       }
     }
 
     // --- MÓDULO DE RECARGAS ---
     if (type === 'recarga') {
-      logger.info(`[Telegram Logic] Acción de Recarga: ${action} para ID: ${id}`);
+      logger.info(`[TELEGRAM-LOGIC] Acción de Recarga: ${action} para ID: ${id}`);
       const recarga = await getRecargaById(id);
       if (!recarga || (recarga.estado !== 'pendiente' && recarga.estado !== 'pendiente_ascenso')) {
-        logger.error(`[Telegram Logic] Recarga no encontrada o no pendiente: ${id}`);
-        return answerCallback(callbackQueryId, 'Esta solicitud ya no está pendiente.');
+        logger.error(`[TELEGRAM-LOGIC] Recarga no encontrada o no pendiente: ${id}`);
+        return safeTelegram(() => answerCallback(callbackQueryId, 'Esta solicitud ya no está pendiente.'), 'answerCallback-RecargaDone');
       }
 
       if (action === 'aprobar') {
@@ -231,7 +228,7 @@ export async function processTelegramUpdate(update) {
           // Distribuir comisiones por recarga de saldo (Inversión)
           await distributeInvestmentCommissions(user.id, recarga.monto);
           statusMsg = `✅ Recarga Aprobada por ${adminName}`;
-          logger.info(`[Telegram Logic] Recarga (Saldo) ${id} aprobada por ${adminName}`);
+          logger.info(`[TELEGRAM-LOGIC] Recarga (Saldo) ${id} aprobada por ${adminName}`);
         }
 
         const metadata = recarga.telegram_metadata || [];
@@ -242,15 +239,19 @@ export async function processTelegramUpdate(update) {
         } else {
           await editTelegramMessage(chatId, messageId, message.text || message.caption, statusMsg);
         }
+        return safeTelegram(() => answerCallback(callbackQueryId, '✅ Operación exitosa.'), 'answerCallback-AprobarSuccess');
       } else {
-        await updateRecarga(id, { 
-          estado: 'rechazada', 
-          procesado_por_admin_id: admin.id, 
+        const { motivo } = parts[3] ? { motivo: parts.slice(3).join('_') } : { motivo: 'Comprobante inválido o no legible.' };
+
+        await updateRecarga(id, {
+          estado: 'rechazada',
+          procesado_por_admin_id: admin.id,
           procesado_por_admin_name: adminName,
-          procesado_at: new Date().toISOString() 
+          admin_notas: motivo,
+          procesado_at: new Date().toISOString()
         });
-        
-        const statusMsg = `❌ Rechazada por ${adminName}`;
+
+        const statusMsg = `❌ RECHAZADA por ${adminName}\n📝 Motivo: ${motivo}`;
         const metadata = recarga.telegram_metadata || [];
         if (metadata.length > 0) {
           for (const item of metadata) {
@@ -259,14 +260,14 @@ export async function processTelegramUpdate(update) {
         } else {
           await editTelegramMessage(chatId, messageId, message.text || message.caption, statusMsg);
         }
-        
-        console.log(`[Telegram Logic] Recarga ${id} rechazada por ${adminName}`);
+
+        logger.info(`[TELEGRAM-LOGIC] Recarga ${id} rechazada por ${adminName}`);
+        return safeTelegram(() => answerCallback(callbackQueryId, 'Recarga rechazada.'), 'answerCallback-RechazarSuccess');
       }
-      await answerCallback(callbackQueryId, 'Operación procesada.');
     }
   } catch (err) {
-    console.error('[Telegram Logic Error]:', err);
-    return answerCallback(callbackQueryId, '❌ Error interno al procesar.');
+    logger.error(`[TELEGRAM-LOGIC] Error crítico: ${err.message}`, { stack: err.stack });
+    return safeTelegram(() => answerCallback(callbackQueryId, '❌ Error interno al procesar.'), 'answerCallback-CriticalError');
   }
 }
 
@@ -282,20 +283,15 @@ async function handleDailySummary(message) {
 
   let text = `<b>📊 RESUMEN DIARIO DE RETIROS (${today})</b>\n\n`;
 
-  if (summary.length === 0) {
+  if (!summary || summary.total === 0) {
     text += "No se procesaron retiros el día de hoy.";
   } else {
-    let grandTotal = 0;
-    summary.forEach(s => {
-      text += `👤 <b>${s.name}</b>\n`;
-      text += `   - Cantidad: ${s.count} retiros\n`;
-      text += `   - Total: ${s.total.toFixed(2)} BOB\n\n`;
-      grandTotal += s.total;
-    });
-    text += `💰 <b>TOTAL GENERAL: ${grandTotal.toFixed(2)} BOB</b>`;
+    text += `   - Cantidad: ${summary.total} retiros\n`;
+    text += `   - Total: ${Number(summary.monto || 0).toFixed(2)} BOB\n\n`;
+    text += `💰 <b>TOTAL GENERAL: ${Number(summary.monto || 0).toFixed(2)} BOB</b>`;
   }
 
-  await safeTelegramCall(async () => {
+  await safeTelegram(async () => {
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -314,7 +310,7 @@ async function editTelegramMessage(chatId, messageId, oldText, statusText, reply
 
   for (const token of tokens) {
     if (!token) continue;
-    await safeTelegramCall(async () => {
+    await safeTelegram(async () => {
       const urlText = `https://api.telegram.org/bot${token}/editMessageText`;
       const res = await fetch(urlText, {
         method: 'POST',
@@ -350,7 +346,7 @@ async function answerCallback(callbackQueryId, text) {
   const tokens = [process.env.TELEGRAM_RECARGAS_TOKEN, process.env.TELEGRAM_RETIROS_TOKEN];
   for (const token of tokens) {
     if (!token) continue;
-    const success = await safeTelegramCall(async () => {
+    const success = await safeTelegram(async () => {
       const res = await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

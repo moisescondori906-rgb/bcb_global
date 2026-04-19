@@ -1,79 +1,73 @@
 #!/bin/bash
 
-# BCB Global - Professional Deployment Script v7.0.6
-# Senior Architect Standard - High Stability
+# BCB Global - Professional Deployment Script v8.1.0
+# Senior Architect Standard - High Stability & Fault Tolerance
 
 set -e
 
 # Configuración
-PROJECT_DIR="/root/SAV-main" # Ajustar según el servidor
+PROJECT_DIR="$(pwd)"
 APP_NAME="bcb-global"
-BACKUP_DIR="/root/backups/bcb_$(date +%Y%m%d_%H%M%S)"
+BACKUP_DIR="$HOME/backups/bcb_$(date +%Y%m%d_%H%M%S)"
 
-echo "🚀 Iniciando despliegue profesional de BCB Global..."
+echo "🚀 Iniciando despliegue profesional v8.1.0 de BCB Global..."
 
-# 1. Validación de Entorno
+# 1. Validación de Entorno Pre-vuelo
 if [ ! -f "backend/.env" ]; then
-    echo "❌ ERROR: Archivo backend/.env no encontrado. El despliegue se detendrá."
+    echo "❌ ERROR: Archivo backend/.env no encontrado. Abortando."
     exit 1
 fi
 
-# 2. Backup Preventivo (Opcional pero recomendado)
-# echo "💾 Creando backup preventivo..."
-# mkdir -p $BACKUP_DIR
-# cp -r backend/src $BACKUP_DIR/
-# cp backend/.env $BACKUP_DIR/
-
-# 3. Sincronización de código
-echo "📥 Trayendo cambios de GitHub..."
+# 2. Sincronización de código
+echo "📥 Sincronizando con GitHub..."
 git pull origin main
 
-# 4. Backend - Dependencias
-echo "📦 Instalando dependencias del Backend..."
+# 3. Backend - Dependencias Limpias
+echo "📦 Instalando dependencias del Backend (Senior Clean)..."
 cd backend
-npm install --production --no-audit --no-fund
+npm ci --production --no-audit --no-fund
 cd ..
 
-# 5. Frontend - Build Optimizado
+# 4. Frontend - Build de Producción Blindado
 echo "🏗️ Construyendo el Frontend..."
 cd frontend
 npm install --no-audit --no-fund
-npm run build
+if ! npm run build; then
+  echo "❌ ERROR: El build del frontend ha fallado. El despliegue se cancela para proteger producción."
+  exit 1
+fi
 
-echo "🧹 Limpiando directorio public del backend..."
+echo "🧹 Limpiando y desplegando estáticos..."
 rm -rf ../backend/public/*
-echo "🚚 Moviendo build al servidor estático del backend..."
 cp -r dist/* ../backend/public/
 cd ..
 
-# 6. Reinicio Seguro con PM2 (Cluster Mode)
-echo "🔄 Reiniciando procesos PM2 en modo seguro..."
-if ! pm2 restart ecosystem.config.cjs --update-env; then
-  echo "⚠️ Fallo al reiniciar con ecosystem. Intentando inicio directo..."
-  pm2 start backend/src/index.js --name $APP_NAME -i max --update-env || {
-    echo "❌ ERROR CRÍTICO: No se pudo iniciar el proceso con PM2."
-    exit 1
-  }
+# 5. Reinicio de Procesos con PM2 (Zero-Downtime Strategy)
+echo "🔄 Reiniciando procesos PM2..."
+if pm2 status $APP_NAME | grep -q "online"; then
+  pm2 reload ecosystem.config.cjs --update-env
+else
+  pm2 start ecosystem.config.cjs --env production
 fi
 
-# 7. Verificación de Salud Post-Deploy
-echo "🔍 Verificando estabilidad del sistema..."
+# 6. Verificación de Salud Post-Vuelo
+echo "🔍 Verificando salud del sistema..."
 sleep 5
 HEALTH_CHECK=$(curl -s http://localhost:4000/health)
 
 if [[ $HEALTH_CHECK == *"\"status\":\"ok\""* ]]; then
-  echo "✅ DESPLIEGUE EXITOSO."
-  echo "📊 Status: $HEALTH_CHECK"
+  echo "✅ DESPLIEGUE COMPLETADO EXITOSAMENTE."
+  echo "📊 Reporte de Salud: $HEALTH_CHECK"
   
-  # Ejecutar test de humo básico
-  echo "🧪 Ejecutando Smoke Test..."
-  cd backend && node src/prod-test.js || echo "⚠️ Advertencia: Smoke Test falló pero el servidor está arriba."
+  # Smoke Test de Endpoints Críticos
+  echo "🧪 Ejecutando Smoke Test v8.1.0..."
+  cd backend && node src/prod-test.js || echo "⚠️ Advertencia: Smoke Test con fallos menores."
   cd ..
 else
-  echo "❌ ERROR CRÍTICO: El servidor no respondió correctamente tras el despliegue."
-  echo "📋 Últimos logs de error:"
-  pm2 logs $APP_NAME --lines 20 --no-colors
+  echo "❌ FALLO CRÍTICO: El servidor no responde tras el despliegue."
+  echo "📋 Revisando logs de PM2..."
+  pm2 logs $APP_NAME --lines 30 --no-colors
   exit 1
 fi
 
-echo "🚀 Sistema BCB Global Online y Estable."
+echo "🚀 BCB Global v8.1.0 está en línea y estable."

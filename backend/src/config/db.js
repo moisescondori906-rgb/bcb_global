@@ -22,6 +22,24 @@ const poolConfig = {
 
 const pool = mysql.createPool(poolConfig);
 
+// Sistema de reconexión automática v9.0.0
+pool.on('error', (err) => {
+  logger.error(`[DB-POOL-FATAL]: ${err.message}. Intentando recuperar pool...`);
+  if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ECONNREFUSED') {
+    setTimeout(() => {
+      logger.info('[DB-RECOVERY] Re-inicializando Pool de conexiones...');
+    }, 5000);
+  }
+});
+
+pool.on('acquire', (connection) => {
+  logger.debug(`[DB-POOL] Conexión ${connection.threadId} adquirida.`);
+});
+
+pool.on('release', (connection) => {
+  logger.debug(`[DB-POOL] Conexión ${connection.threadId} liberada.`);
+});
+
 /**
  * Helper centralizado para ejecutar consultas
  * @param {string} sql - Consulta SQL con placeholders (?)

@@ -21,6 +21,12 @@ const logger = winston.createLogger({
   transports: [
     new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
     new winston.transports.File({ filename: 'logs/combined.log' }),
+    new winston.transports.File({ filename: 'logs/telegram.log', level: 'info', format: combine(
+      timestamp(),
+      printf(({ message, timestamp }) => {
+        return message.includes('[TELEGRAM') ? `${timestamp} : ${message}` : '';
+      })
+    )}),
   ],
 });
 

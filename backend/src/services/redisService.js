@@ -19,7 +19,21 @@ const redisConfig = {
 };
 
 // 1. Cliente para Cache y Estado (Instancia principal)
-const redis = new Redis(redisConfig);
+const redis = new Redis({
+  ...redisConfig,
+  reconnectOnError: (err) => {
+    const targetError = 'READONLY';
+    if (err.message.slice(0, targetError.length) === targetError) {
+      return true; // Reconnect on READONLY error (cluster failover)
+    }
+    return false;
+  }
+});
+
+// Eventos de Resiliencia v9.0.0
+redis.on('reconnecting', (delay) => logger.warn(`[REDIS-RECONNECT] Reintentando en ${delay}ms...`));
+redis.on('error', (err) => logger.error(`[REDIS-FATAL]: ${err.message}`));
+redis.on('ready', () => logger.info('[REDIS] Sistema listo y operativo.'));
 
 // 2. Cliente para Colas (Dedicado para evitar bloqueos)
 const queueRedis = new Redis(redisConfig);
