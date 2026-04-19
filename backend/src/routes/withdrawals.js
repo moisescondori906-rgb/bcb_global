@@ -17,6 +17,7 @@ import {
 } from '../services/telegramBot.js';
 import logger from '../lib/logger.js';
 import redis from '../services/redisService.js';
+import { asyncHandler } from '../middleware/asyncHandler.js';
 
 const router = Router();
 
@@ -47,85 +48,61 @@ router.get('/montos', (req, res) => {
   res.json(MONTOS_PERMITIDOS);
 });
 
-router.get('/', async (req, res) => {
-  try {
-    const list = await query(`SELECT * FROM retiros WHERE usuario_id = ? ORDER BY created_at DESC`, [req.user.id]);
-    res.json(list);
-  } catch (err) {
-    res.status(500).json({ error: 'Error al obtener tus retiros' });
-  }
-});
+router.get('/', asyncHandler(async (req, res) => {
+  const list = await query(`SELECT * FROM retiros WHERE usuario_id = ? ORDER BY created_at DESC`, [req.user.id]);
+  res.json(list);
+}));
 
-router.post('/', withdrawRateLimit, dynamicControlMiddleware('withdrawal'), async (req, res) => {
-  try {
-    const { monto, tipo_billetera, password_fondo, tarjeta_id, idempotency_key } = req.body;
-    const user = req.requestUser;
-    const traceId = req.traceId; // Inyectado por dynamicControlMiddleware
+router.post('/', withdrawRateLimit, dynamicControlMiddleware('withdrawal'), asyncHandler(async (req, res) => {
+  const { monto, tipo_billetera, password_fondo, tarjeta_id, idempotency_key } = req.body;
+  const user = req.requestUser;
 
-    const iKey = idempotency_key || req.headers['x-idempotency-key'];
-    if (!iKey) return res.status(400).json({ error: 'Falta clave de idempotencia' });
+  const iKey = idempotency_key || req.headers['x-idempotency-key'];
+  if (!iKey) return res.status(400).json({ error: 'Falta clave de idempotencia' });
 
-    const m = parseFloat(monto);
-    if (!MONTOS_PERMITIDOS.includes(m)) return res.status(400).json({ error: 'Monto no permitido' });
+  const m = parseFloat(monto);
+  if (!MONTOS_PERMITIDOS.includes(m)) return res.status(400).json({ error: 'Monto no permitido' });
 
-    // 1. Verificar contraseña de fondo
-    const userAuth = await findUserWithAuthSecrets(user.id);
-    if (!userAuth.password_fondo_hash) return res.status(400).json({ error: 'Configura tu contraseña de fondo primero.' });
-    const passOk = await bcrypt.compare(password_fondo, userAuth.password_fondo_hash);
-    if (!passOk) return res.status(401).json({ error: 'Contraseña de fondo incorrecta.' });
+  // 1. Verificar contraseña de fondo
+  const userAuth = await findUserWithAuthSecrets(user.id);
+  if (!userAuth.password_fondo_hash) return res.status(400).json({ error: 'Configura tu contraseña de fondo primero.' });
+  const passOk = await bcrypt.compare(password_fondo, userAuth.password_fondo_hash);
+  if (!passOk) return res.status(401).json({ error: 'Contraseña de fondo incorrecta.' });
 
-    // 2. VALIDACIÓN CENTRALIZADA (CALENDARIO, DÍAS POR NIVEL)
-    const opStatus = await canWithdraw(user.id);
-    if (!opStatus.ok) return res.status(403).json({ error: opStatus.message });
+  // 2. VALIDACIÓN CENTRALIZADA (CALENDARIO, DÍAS POR NIVEL)
+  const opStatus = await canWithdraw(user.id);
+  if (!opStatus.ok) return res.status(403).json({ error: opStatus.message });
 
-    // 3. Ejecución Blindada en Service (ACID + 1 Retiro/Día + SELECT FOR UPDATE)
-    const result = await requestWithdrawal(user.id, { 
-      monto: m, 
-      tipo_billetera, 
-      tarjeta_id, 
-      idempotencyKey: iKey 
-    });
+  // 3. Ejecución Blindada en Service (ACID + 1 Retiro/Día + SELECT FOR UPDATE)
+  const result = await requestWithdrawal(user.id, { 
+    monto: m, 
+    tipo_billetera, 
+    tarjeta_id, 
+    idempotencyKey: iKey 
+  });
 
-    // 4. Alerta de Telegram (Fuera de la transacción para no bloquear DB)
-    try {
-      const config = await getPublicContent();
-      const message = formatRetiroMessage({
-        telefono: user.nombre_usuario,
-        nivel: 'Usuario', // Simplificado para la alerta
-        monto: m,
-        hora: boliviaTime.getTimeString()
-      });
-      
-      const inline_keyboard = {
-        reply_markup: {
-          inline_keyboard: [[{ text: '🟢 Tomar Retiro', callback_data: `tomar_${result.retiroId}` }]]
-        }
-      };
-
-      const [sentRetiros, sentAdmin, sentSecretaria] = await Promise.allSettled([
-        sendToRetiros(message),
-        sendToAdmin(message, inline_keyboard),
-        sendToSecretaria(message)
-      ]);
-
-      const msgIds = {
-        retiros: sentRetiros.status === 'fulfilled' ? sentRetiros.value?.message_id : null,
-        admin: sentAdmin.status === 'fulfilled' ? sentAdmin.value?.message_id : null,
-        secretaria: sentSecretaria.status === 'fulfilled' ? sentSecretaria.value?.message_id : null
-      };
-
-      await query(
-        `UPDATE retiros SET msg_id_admin=?, msg_id_retiros=?, msg_id_secretaria=? WHERE id=?`,
-        [msgIds.admin, msgIds.retiros, msgIds.secretaria, result.retiroId]
-      );
-    } catch (e) {
-      logger.error(`[Telegram Alert Error]: ${e.message}`);
+  // 4. Alerta de Telegram (Resiliente y desacoplada)
+  const message = formatRetiroMessage({
+    telefono: user.nombre_usuario,
+    nivel: 'Usuario', 
+    monto: m,
+    hora: boliviaTime.getTimeString()
+  });
+  
+  const inline_keyboard = {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "✅ APROBAR", callback_data: `APROBAR_${result.retiroId}` },
+         { text: "❌ RECHAZAR", callback_data: `RECHAZAR_${result.retiroId}` }]
+      ]
     }
+  };
 
-    res.json({ id: result.retiroId, ok: true, trace_id: result.traceId });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+  // Notificar de forma asíncrona y resiliente
+  sendToRetiros(message, inline_keyboard).catch(() => {});
+  sendToAdmin(message).catch(() => {});
+
+  res.json({ success: true, message: 'Solicitud enviada correctamente.' });
+}));
 
 export default router;

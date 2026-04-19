@@ -13,6 +13,7 @@ import { query, queryOne } from '../config/db.js';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { uploadToCloudinary, uploadVideoBuffer, uploadImageBuffer } from '../config/cloudinary.js';
 import logger from '../lib/logger.js';
+import { asyncHandler } from '../middleware/asyncHandler.js';
 
 const router = Router();
 router.use(authenticate);
@@ -38,64 +39,48 @@ function sanitizeUser(u, levels) {
   };
 }
 
-router.get('/dashboard', async (req, res) => {
-  try {
-    const stats = await query(`
-      SELECT 
-        (SELECT COUNT(*) FROM usuarios WHERE rol = 'usuario') as total_usuarios,
-        (SELECT COALESCE(SUM(monto), 0) FROM compras_nivel WHERE estado = 'completada') as total_ventas_nivel,
-        (SELECT COALESCE(SUM(monto), 0) FROM retiros WHERE estado = 'pagado') as total_retiros,
-        (SELECT COUNT(*) FROM retiros WHERE estado = 'pendiente') as pendientes_retiro,
-        (SELECT COUNT(*) FROM compras_nivel WHERE estado = 'pendiente') as pendientes_compra_nivel
-    `);
-    res.json(stats[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+router.get('/dashboard', asyncHandler(async (req, res) => {
+  const stats = await query(`
+    SELECT 
+      (SELECT COUNT(*) FROM usuarios WHERE rol = 'usuario') as total_usuarios,
+      (SELECT COALESCE(SUM(monto), 0) FROM compras_nivel WHERE estado = 'completada') as total_ventas_nivel,
+      (SELECT COALESCE(SUM(monto), 0) FROM retiros WHERE estado = 'pagado') as total_retiros,
+      (SELECT COUNT(*) FROM retiros WHERE estado = 'pendiente') as pendientes_retiro,
+      (SELECT COUNT(*) FROM compras_nivel WHERE estado = 'pendiente') as pendientes_compra_nivel
+  `);
+  res.json(stats[0]);
+}));
 
-router.get('/compras-nivel', async (req, res) => {
-  try {
-    const rows = await query(`
-      SELECT c.*, u.nombre_usuario, u.telefono, n.nombre as nivel_nombre 
-      FROM compras_nivel c
-      JOIN usuarios u ON c.usuario_id = u.id
-      JOIN niveles n ON c.nivel_id = n.id
-      ORDER BY c.created_at DESC
-    `);
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+router.get('/compras-nivel', asyncHandler(async (req, res) => {
+  const rows = await query(`
+    SELECT c.*, u.nombre_usuario, u.telefono, n.nombre as nivel_nombre 
+    FROM compras_nivel c
+    JOIN usuarios u ON c.usuario_id = u.id
+    JOIN niveles n ON c.nivel_id = n.id
+    ORDER BY c.created_at DESC
+  `);
+  res.json(rows);
+}));
 
-router.get('/usuarios', async (req, res) => {
-  try {
-    const users = await query(`SELECT * FROM usuarios`);
-    const levels = await getLevels();
-    const filtered = users.map(u => {
-      const sanitized = sanitizeUser(u, levels);
-      return {
-        ...sanitized,
-        saldo_principal: Number(u.saldo_principal || 0),
-        saldo_comisiones: Number(u.saldo_comisiones || 0),
-        tipo_lider: u.tipo_lider
-      };
-    });
-    res.json(filtered);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+router.get('/usuarios', asyncHandler(async (req, res) => {
+  const users = await query(`SELECT * FROM usuarios`);
+  const levels = await getLevels();
+  const filtered = users.map(u => {
+    const sanitized = sanitizeUser(u, levels);
+    return {
+      ...sanitized,
+      saldo_principal: Number(u.saldo_principal || 0),
+      saldo_comisiones: Number(u.saldo_comisiones || 0),
+      tipo_lider: u.tipo_lider
+    };
+  });
+  res.json(filtered);
+}));
 
-router.get('/admins', async (req, res) => {
-  try {
-    const admins = await query(`SELECT id, nombre_usuario, telefono, rol, created_at FROM usuarios WHERE rol = 'admin'`);
-    res.json(admins);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+router.get('/admins', asyncHandler(async (req, res) => {
+  const admins = await query(`SELECT id, nombre_usuario, telefono, rol, created_at FROM usuarios WHERE rol = 'admin'`);
+  res.json(admins);
+}));
 
 router.get('/recargas', async (req, res) => {
   try {

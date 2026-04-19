@@ -15,7 +15,7 @@ const missingTokens = Object.entries(tokens).filter(([key, token]) => !token);
 if (missingTokens.length > 0) {
   const msg = `[TELEGRAM] Faltan tokens para bots: ${missingTokens.map(([k]) => k).join(', ')}`;
   if (process.env.NODE_ENV === 'production') {
-    logger.error(msg);
+    logger.warn(`${msg}. El sistema continuará operando sin notificaciones de Telegram.`);
   } else {
     logger.warn(msg);
   }
@@ -24,7 +24,7 @@ if (missingTokens.length > 0) {
 // Inicialización resiliente de bots
 const createBot = (token, name) => {
   if (!token) {
-    logger.warn(`[TELEGRAM] Bot ${name} no se inicializará (Token ausente).`);
+    logger.warn(`[TELEGRAM] Bot ${name} NO se inicializará (Token ausente).`);
     return null;
   }
   
@@ -35,24 +35,25 @@ const createBot = (token, name) => {
   }
 
   try {
-    const bot = new TelegramBot(token, { polling: false }); // Usar Webhooks en producción
+    const bot = new TelegramBot(token, { polling: false }); 
     
     // Sobrescribir sendMessage para que sea resiliente automáticamente
     const originalSendMessage = bot.sendMessage.bind(bot);
     bot.sendMessage = async (chatId, text, options = {}) => {
+      if (!bot) return null;
       try {
         return await originalSendMessage(chatId, text, { parse_mode: 'HTML', ...options });
       } catch (err) {
         logger.error(`[TELEGRAM-API] Error en bot ${name} enviando a ${chatId}: ${err.message}`);
-        throw err;
+        return null; // No lanzar error para no romper el flujo del backend
       }
     };
 
-    logger.info(`[TELEGRAM] Bot ${name} instanciado.`);
+    logger.info(`[TELEGRAM] Bot ${name} instanciado correctamente.`);
     return bot;
   }
   catch (err) {
-    logger.error(`[TELEGRAM] Error fatal al instanciar bot ${name}: ${err.message}`);
+    logger.error(`[TELEGRAM] Error fatal al instanciar bot ${name}: ${err.message}. El backend seguirá funcionando.`);
     return null;
   }
 };
