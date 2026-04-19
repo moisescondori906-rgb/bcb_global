@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import logger from '../lib/logger.js';
-import { setupAdminBot } from '../services/telegramBot.js';
+import { setupAdminBot, safeTelegram } from '../services/telegramBot.js';
+import { asyncHandler } from '../middleware/asyncHandler.js';
 
 const router = Router();
 
@@ -19,23 +20,18 @@ const validateWebhookSecret = (req, res, next) => {
 /**
  * Endpoint unificado para recibir actualizaciones de los bots
  */
-router.post('/:botType', validateWebhookSecret, async (req, res) => {
+router.post('/:botType', validateWebhookSecret, asyncHandler(async (req, res) => {
   const { botType } = req.params;
   const update = req.body;
 
-  try {
-    if (botType === 'admin') {
-      const bot = await setupAdminBot();
-      if (bot) {
-        bot.processUpdate(update);
-      }
+  if (botType === 'admin') {
+    const bot = await setupAdminBot();
+    if (bot) {
+      await safeTelegram(() => bot.processUpdate(update), 'webhook-processUpdate');
     }
-    
-    res.status(200).send('OK');
-  } catch (err) {
-    logger.error(`[TELEGRAM] Error procesando webhook para ${botType}: ${err.message}`);
-    res.status(200).send('OK'); // Responder siempre 200 a Telegram
   }
-});
+  
+  res.status(200).send('OK');
+}));
 
 export default router;

@@ -98,9 +98,9 @@ router.post('/', withdrawRateLimit, dynamicControlMiddleware('withdrawal'), asyn
     }
   };
 
-  // Notificar de forma asíncrona y resiliente
-  sendToAdmin(message).catch(() => {});
-  sendToSecretaria(message).catch(() => {});
+  // Notificar de forma asíncrona y resiliente con safeTelegram
+  sendToAdmin(message);
+  sendToSecretaria(message);
 
   res.json({ success: true, message: 'Solicitud enviada correctamente.' });
 }));

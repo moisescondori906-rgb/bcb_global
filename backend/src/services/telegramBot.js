@@ -70,20 +70,30 @@ export async function setupSecretariaBot() {
 }
 
 /**
- * safeTelegramCall - Wrapper universal para evitar caídas por fallos en la API de Telegram.
+ * safeTelegram - Wrapper universal de grado arquitecto para aislamiento total de Telegram.
  * @param {Function} call - Función asíncrona que realiza la llamada al bot.
- * @param {string} context - Contexto para el log de error.
+ * @param {string} context - Contexto descriptivo para el log de error.
  * @returns {Promise<any|null>} - Resultado de la llamada o null si falla.
  */
-export async function safeTelegramCall(call, context = 'General') {
+export async function safeTelegram(call, context = 'General') {
   try {
-    return await call();
+    const result = await call();
+    return result;
   } catch (err) {
-    logger.error(`[TELEGRAM-SAFE] Fallo en ${context}: ${err.message}`);
-    // Si es un error de token o conexión, no relanzamos para no tumbar el backend
+    logger.error(`[TELEGRAM-SAFE-ISOLATION] Error en ${context}: ${err.message}`, { 
+      stack: err.stack,
+      context,
+      time: new Date().toISOString()
+    });
+    // Garantizamos que el flujo del backend NUNCA se rompa
     return null;
   }
 }
+
+/**
+ * safeTelegramCall - Alias para compatibilidad legacy con v7
+ */
+export const safeTelegramCall = safeTelegram;
 
 /**
  * @section FUNCIONES DE ENVÍO SEGURO (Aislamiento de fallos)

@@ -16,9 +16,13 @@ export const response = {
       message,
     };
 
-    if (error && process.env.NODE_ENV === 'development') {
+    // En producción, solo enviamos detalles si es un error controlado (no 500)
+    // o si el mensaje es explícito para el usuario.
+    if (error && (process.env.NODE_ENV === 'development' || status < 500)) {
       responseBody.error = error.message || error;
-      responseBody.stack = error.stack;
+      if (process.env.NODE_ENV === 'development') {
+        responseBody.stack = error.stack;
+      }
     }
 
     return res.status(status).json(responseBody);

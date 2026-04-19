@@ -1213,12 +1213,12 @@ export async function deleteMensajeGlobal(id) {
 }
 
 export async function findAdminByTelegramId(id) {
-  return await queryOne(`SELECT * FROM usuarios WHERE rol = 'admin' AND last_device_id = ?`, [id]);
+  // En v8.0.0, usamos la tabla usuarios_telegram para validación de operadores
+  return await queryOne(`SELECT * FROM usuarios_telegram WHERE telegram_id = ? AND activo = 1`, [id]);
 }
 
-export async function getDailyWithdrawalSummary() {
-  const today = boliviaTime.todayStr();
-  return await queryOne(`SELECT COUNT(*) as total, SUM(monto) as monto FROM retiros WHERE DATE(created_at) = ?`, [today]);
+export async function getDailyWithdrawalSummary(dateStr = boliviaTime.todayStr()) {
+  return await queryOne(`SELECT COUNT(*) as total, SUM(monto) as monto FROM retiros WHERE DATE(created_at) = ? AND estado = 'pagado'`, [dateStr]);
 }
 
 export async function getDashboardStats() {

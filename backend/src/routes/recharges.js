@@ -99,7 +99,7 @@ router.post('/', asyncHandler(async (req, res) => {
     [id, req.user.id, matchingLevel.id, monto, metodo_qr_id, final_comprobante_url]
   );
 
-  // 4. Notificar vía Telegram (Resiliente)
+  // 4. Notificar vía Telegram (Resiliente con safeTelegram)
   const user = req.requestUser;
   const msg = formatRecargaMessage({
     telefono: user?.telefono || user?.nombre_usuario || 'Desconocido',
@@ -107,8 +107,9 @@ router.post('/', asyncHandler(async (req, res) => {
     monto: monto
   });
   
-  sendToAdmin(msg).catch(() => {});
-  sendToSecretaria(msg).catch(() => {});
+  // No usamos await para no bloquear la respuesta HTTP
+  sendToAdmin(msg);
+  sendToSecretaria(msg);
 
   res.json({ success: true, message: 'Solicitud enviada correctamente. En espera de aprobación.' });
 }));

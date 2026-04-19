@@ -9,25 +9,29 @@ import { initTelegramHandlers } from './services/telegramInitializer.js';
 import { query } from './config/db.js';
 import { syncLevels } from './lib/queries.js';
 
-// 1. VALIDACIÓN DE ENTORNO CRÍTICA v7.0.5
-dotenv.config();
+import validateEnv from './config/validateEnv.js';
+import redis from './services/redisService.js';
 
-const requiredEnv = [
-  'PORT', 'JWT_SECRET', 'MYSQL_HOST', 'MYSQL_USER', 'MYSQL_PASSWORD', 'MYSQL_DATABASE',
-  'TELEGRAM_BOT_TOKEN_ADMIN', 'TELEGRAM_CHAT_ADMIN',
-  'REDIS_HOST', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'
-];
-const missingEnv = requiredEnv.filter(k => !process.env[k]);
+// 1. BLINDAJE GLOBAL Y VALIDACIÓN DE ENTORNO v8.0.0
+validateEnv();
 
-if (missingEnv.length > 0) {
-  logger.error(`[FATAL] Faltan variables de entorno críticas: ${missingEnv.join(', ')}`);
-  process.exit(1);
-}
+// Blindaje total contra caídas por errores no capturados
+process.on('uncaughtException', (err) => {
+  logger.error('[CRITICAL] Uncaught Exception:', { 
+    message: err.message, 
+    stack: err.stack,
+    time: new Date().toISOString()
+  });
+  // En producción, no cerramos el proceso a menos que sea estrictamente necesario
+});
 
-// Forzar NODE_ENV=production si no está definido para seguridad
-if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = 'production';
-}
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('[CRITICAL] Unhandled Rejection:', { 
+    reason: reason instanceof Error ? reason.message : reason,
+    stack: reason instanceof Error ? reason.stack : null,
+    time: new Date().toISOString()
+  });
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -111,16 +115,20 @@ const PORT = process.env.PORT || 4000;
 
 async function startServer() {
   try {
-    // Verificar conexión DB al inicio
+    // 1. Verificar conexión MySQL al inicio
     await query('SELECT 1');
     logger.info('[DB] Conexión MySQL establecida correctamente.');
+
+    // 2. Verificar conexión Redis
+    await redis.ping();
+    logger.info('[REDIS] Conexión Redis verificada.');
 
     // Sincronizar niveles institucionales
     await syncLevels().catch(e => logger.warn(`[SYNC] Falló sincronización inicial de niveles: ${e.message}`));
 
     const server = app.listen(PORT, () => {
-      logger.info(`[SERVER] BCB Global Backend v7.0.5 estable en puerto ${PORT}`);
-      logger.info(`[ENV] Modo: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`[SERVER] BCB Global Backend v8.0.0 estable en puerto ${PORT}`);
+      logger.info(`[ENV] Modo: ${process.env.NODE_ENV}`);
     });
 
     // 4. INICIALIZACIÓN DE TELEGRAM (AISLAMIENTO TOTAL)
@@ -150,12 +158,8 @@ async function startServer() {
 }
 
 // Blindaje contra caídas por errores no capturados
-process.on('uncaughtException', (err) => {
-  logger.error('[CRITICAL] Uncaught Exception:', { message: err.message, stack: err.stack });
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('[CRITICAL] Unhandled Rejection:', { reason });
-});
+// Se mantienen al final como red de seguridad adicional pero ya se declararon arriba
+// process.on('uncaughtException', ...);
+// process.on('unhandledRejection', ...);
 
 startServer();
