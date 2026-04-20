@@ -627,7 +627,7 @@ router.post('/usuarios/:id/reset-password', asyncHandler(async (req, res) => {
   if (!password) return res.status(400).json({ error: 'Password requerido' });
   
   const hashedPassword = await bcrypt.hash(password, 10);
-  await updateUser(req.params.id, { contrasena: hashedPassword });
+  await updateUser(req.params.id, { password_hash: hashedPassword });
   res.json({ ok: true });
 }));
 
