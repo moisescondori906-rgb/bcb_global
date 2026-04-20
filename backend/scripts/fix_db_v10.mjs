@@ -47,7 +47,26 @@ async function runFix() {
 
     logger.info('✅ Tablas verificadas.');
 
-    // 3. Crear carpeta uploads si no existe
+    // 4. Asegurar tabla usuarios_telegram (Manejo de Operadores)
+    logger.info('⏳ Verificando tabla usuarios_telegram...');
+    await query(`
+      CREATE TABLE IF NOT EXISTS usuarios_telegram (
+        telegram_id VARCHAR(50) PRIMARY KEY,
+        nombre VARCHAR(100),
+        telegram_username VARCHAR(100),
+        activo TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    
+    // Auto-registrar al administrador principal si no existe (Basado en .env o fallback)
+    await query(`
+      INSERT IGNORE INTO usuarios_telegram (telegram_id, nombre, telegram_username, activo)
+      VALUES ('59174344916', 'Administrador Principal', 'admin', 1)
+    `);
+    logger.info('✅ Tabla usuarios_telegram verificada.');
+
+    // 5. Crear carpeta uploads si no existe
     const uploadDir = path.join(process.cwd(), 'public/uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });

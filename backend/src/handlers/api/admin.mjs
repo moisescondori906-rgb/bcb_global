@@ -785,19 +785,17 @@ router.delete('/telegram/equipos/:id', asyncHandler(async (req, res) => {
 
 router.get('/telegram/integrantes', asyncHandler(async (req, res) => {
   const list = await query(`
-    SELECT i.*, e.nombre_equipo, e.tipo_equipo 
-    FROM telegram_integrantes i
-    JOIN telegram_equipos e ON i.equipo_id = e.id
-    ORDER BY i.created_at DESC
+    SELECT * FROM usuarios_telegram 
+    ORDER BY created_at DESC
   `);
   res.json(list);
 }));
 
 router.post('/telegram/integrantes', asyncHandler(async (req, res) => {
-  const { equipo_id, telegram_user_id, nombre_visible, activo } = req.body;
+  const { telegram_id, nombre, telegram_username, activo } = req.body;
   await query(
-    'INSERT INTO telegram_integrantes (equipo_id, telegram_user_id, nombre_visible, activo) VALUES (?, ?, ?, ?)',
-    [equipo_id, telegram_user_id, nombre_visible, activo ? 1 : 0]
+    'INSERT INTO usuarios_telegram (telegram_id, nombre, telegram_username, activo) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE nombre = ?, telegram_username = ?, activo = ?',
+    [telegram_id, nombre, telegram_username, activo ? 1 : 0, nombre, telegram_username, activo ? 1 : 0]
   );
   res.json({ ok: true });
 }));

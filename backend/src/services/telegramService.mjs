@@ -31,22 +31,20 @@ export async function setupTelegramLogic() {
     }
 
     try {
-      // 2. VALIDACIÓN DE INTEGRANTE (Solo operadores activos)
+      // 2. VALIDACIÓN DE OPERADOR (Basado en usuarios_telegram v10.4.0)
       const member = await queryOne(`
-        SELECT i.*, e.tipo as equipo_tipo 
-        FROM telegram_integrantes i 
-        JOIN telegram_equipos e ON i.equipo_id = e.id 
-        WHERE i.telegram_user_id = ? AND i.activo = 1 AND e.activo = 1
+        SELECT * FROM usuarios_telegram 
+        WHERE telegram_id = ? AND activo = 1
       `, [telegramUserId]);
 
       if (!member) {
         return safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { 
-          text: '❌ No tienes permisos o tu equipo está desactivado.', 
+          text: '❌ No tienes permisos de administrador vinculados.', 
           show_alert: true 
         }), 'answerCallbackQuery-noMember');
       }
 
-      // 3. LOCK DISTRIBUIDO (Redlock) para evitar colisiones entre instancias del cluster
+      // 3. LOCK DISTRIBUIDO (Redlock)
       const lock = await acquireLock(`telegram:${refId}`, 15000);
       if (!lock) {
         return safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { text: '⏳ Procesando en otra instancia, espera...' }), 'answerCallback-Lock');
@@ -94,10 +92,10 @@ export async function setupTelegramLogic() {
                   taken_by_admin_name = ?, 
                   taken_at = ?
               WHERE id = ?
-            `, [member.nombre_visible, boliviaTime.now(), refId]);
+            `, [member.nombre || member.telegram_username || 'Admin', boliviaTime.now(), refId]);
 
             await safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { text: '✅ Caso tomado. Eres el único responsable.' }), 'answerCallbackQuery-tomar');
-            await updateTelegramMessage(bot, message, 'tomado', member.nombre_visible, refId, caso.tipo_operacion);
+            await updateTelegramMessage(bot, message, 'tomado', member.nombre || member.telegram_username || 'Admin', refId, caso.tipo_operacion);
           }
 
           else if (action === 'aceptar' || action === 'rechazar') {
@@ -130,7 +128,7 @@ export async function setupTelegramLogic() {
             );
 
             await safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { text: `✅ Caso ${action}do correctamente.` }), 'answerCallbackQuery-resolver');
-            await updateTelegramMessage(bot, message, 'resuelto', member.nombre_visible, refId, caso.tipo_operacion, action);
+            await updateTelegramMessage(bot, message, 'resuelto', member.nombre || member.telegram_username || 'Admin', refId, caso.tipo_operacion, action);
           }
         });
       } finally {
