@@ -19,7 +19,6 @@ import {
   Info
 } from 'lucide-react';
 import { api } from '../../lib/api';
-import { boliviaTime } from '../../../backend/src/services/dbService.js'; // Solo para referencia de lógica si fuera posible, pero mejor re-implementamos
 
 export default function AdminCalendarioV2() {
   const [list, setList] = useState([]);
