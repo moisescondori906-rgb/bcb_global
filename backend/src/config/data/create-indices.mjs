@@ -17,6 +17,16 @@ async function createIndices() {
     { name: 'idx_usuarios_nivel', table: 'usuarios', columns: '(nivel_id)' },
     { name: 'idx_tareas_activa', table: 'tareas', columns: '(activa)' },
     { name: 'idx_transacciones_usuario', table: 'transacciones', columns: '(usuario_id, fecha)' },
+    // Optimización para Red de Referidos (Escalabilidad v10.0.0)
+    { name: 'idx_usuarios_invitado_por', table: 'usuarios', columns: '(invitado_por)' },
+    { name: 'idx_usuarios_rol', table: 'usuarios', columns: '(rol)' },
+    // Optimización para Actividad de Tareas (Alta Concurrencia)
+    { name: 'idx_actividad_usuario_fecha', table: 'actividad_tareas', columns: '(usuario_id, fecha_dia)' },
+    { name: 'idx_actividad_fecha', table: 'actividad_tareas', columns: '(fecha_dia)' },
+    // Optimización para Finanzas
+    { name: 'idx_compras_usuario_estado', table: 'compras_nivel', columns: '(usuario_id, estado)' },
+    { name: 'idx_retiros_usuario_estado', table: 'retiros', columns: '(usuario_id, estado)' },
+    { name: 'idx_movimientos_usuario_tipo', table: 'movimientos_saldo', columns: '(usuario_id, tipo_movimiento)' },
   ];
 
   for (const idx of indices) {

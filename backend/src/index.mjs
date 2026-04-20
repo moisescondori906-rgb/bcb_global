@@ -18,20 +18,38 @@ validateEnv();
 
 const app = express();
 
-// Blindaje total contra caídas por errores no capturados (ANTI-CRASH)
+// Blindaje contra caídas por errores no capturados
 process.on('uncaughtException', (err) => {
   console.error('🔥 Uncaught Exception:', err.stack);
-  // No salimos para que PM2 mantenga el cluster activo
 });
 
 process.on('unhandledRejection', (err) => {
   console.error('🔥 Unhandled Rejection:', err);
 });
 
-// Endpoint de Healthcheck Profesional v9.0.0
+// 1.0 SISTEMA DE MONITOREO DE RENDIMIENTO (ADAPTATIVO v10.0.0)
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    if (duration > 500) { // Loguear peticiones que tarden más de 500ms
+      logger.warn(`[SLOW-REQUEST] ${req.method} ${req.originalUrl} - ${duration}ms`, {
+        ip: req.ip,
+        user: req.user?.id
+      });
+    }
+  });
+  next();
+});
+
+// Versión del API para forzar recargas en el frontend si es necesario
+const API_VERSION = '10.0.0';
+
+// Endpoint de Healthcheck Profesional v10.0.0
 app.get('/health', async (req, res) => {
   const health = {
     status: 'ok',
+    version: API_VERSION,
     db: 'ok',
     redis: 'ok',
     uptime: Math.floor(process.uptime()),

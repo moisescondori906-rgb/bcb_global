@@ -12,9 +12,9 @@ const poolConfig = {
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
   waitForConnections: true,
-  connectionLimit: 100, // Aumentado para alta concurrencia
-  maxIdle: 20, // Conexiones inactivas máximas aumentadas
-  idleTimeout: 30000, // Reducido para liberar conexiones más rápido
+  connectionLimit: 150, // Optimizado para escalabilidad v10.0.0
+  maxIdle: 50, // Mantener más conexiones listas para picos de tráfico
+  idleTimeout: 60000, // Un minuto antes de cerrar conexiones inactivas
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 10000,

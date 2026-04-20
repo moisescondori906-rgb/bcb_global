@@ -98,6 +98,17 @@ export default function Dashboard() {
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.05)_0%,transparent_70%)] -z-10" />
       
       <main className="px-5 space-y-7 pb-12 pt-4">
+        {/* Sync Indicator v10.0.0 */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[8px] font-black text-emerald-500/80 uppercase tracking-[0.2em]">Sincronizado v10.0</span>
+          </div>
+          <div className="text-[8px] font-black text-sav-muted uppercase tracking-[0.2em] italic">
+            BCB Global Institutional
+          </div>
+        </div>
+
         {/* Header Section */}
         <header className="flex items-center justify-between py-4 px-1">
           <div className="space-y-1">

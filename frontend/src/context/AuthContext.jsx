@@ -6,13 +6,28 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [apiVersion, setApiVersion] = useState(localStorage.getItem('apiVersion') || '1.0.0');
   const isUpdatingRef = useRef(false);
+
+  const checkVersion = useCallback(async () => {
+    try {
+      const health = await api.get('/health');
+      if (health && health.version && health.version !== apiVersion) {
+        console.log(`[VERSION] New version detected: ${health.version}. Reloading...`);
+        localStorage.setItem('apiVersion', health.version);
+        window.location.reload();
+      }
+    } catch (err) {
+      console.warn('[VersionCheck] Error checking backend version:', err.message);
+    }
+  }, [apiVersion]);
 
   const logout = useCallback(() => {
     console.log('[Auth] Cerrando sesión...');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('lastUserUpdate');
+    localStorage.removeItem('apiVersion');
     // Limpiar estado del popup para que se vuelva a mostrar al iniciar sesión
     sessionStorage.removeItem('sav_popup_seen');
     sessionStorage.removeItem('cv_global_popup_seen');
@@ -38,8 +53,8 @@ export function AuthProvider({ children }) {
     const lastUpdate = localStorage.getItem('lastUserUpdate');
     const now = Date.now();
     
-    // Evitar recargas si la última fue hace menos de 10 segundos para /me, a menos que sea forzado
-    if (!force && lastUpdate && now - parseInt(lastUpdate) < 10000) {
+    // Evitar recargas si la última fue hace menos de 5 segundos para /me, a menos que sea forzado
+    if (!force && lastUpdate && now - parseInt(lastUpdate) < 5000) {
       return;
     }
 
@@ -47,11 +62,17 @@ export function AuthProvider({ children }) {
     isUpdatingRef.current = true;
 
     try {
+      // 1. Cargar usuario
       const data = await api.get('/users/me');
       if (data && data.id) {
         setUser(data);
         localStorage.setItem('user', JSON.stringify(data));
         localStorage.setItem('lastUserUpdate', Date.now().toString());
+      }
+      
+      // 2. Verificar versión en segundo plano cada 5 cargas de usuario
+      if (Math.random() < 0.2) {
+        checkVersion();
       }
     } catch (err) {
       if (err.name === 'AbortError' || err.message?.includes('aborted')) {
@@ -63,30 +84,32 @@ export function AuthProvider({ children }) {
       isUpdatingRef.current = false;
       setLoading(false);
     }
-  }, [logout]);
+  }, [logout, checkVersion]);
 
   useEffect(() => {
     // Carga inicial al montar el componente
     const init = async () => {
       const token = localStorage.getItem('token');
       if (token) {
-        await loadUser();
+        await loadUser(true);
+        await checkVersion();
       } else {
         setLoading(false);
       }
     };
     init();
     
-    // Polling ligero: cada 30 segundos para sincronizar saldo/estado
+    // Polling adaptativo: cada 15 segundos para sincronizar saldo/estado
     const pollInterval = setInterval(async () => {
       if (localStorage.getItem('token') && document.visibilityState === 'visible') {
         await loadUser(true);
       }
-    }, 30000);
+    }, 15000);
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible' && localStorage.getItem('token')) {
         loadUser(true);
+        checkVersion();
       }
     };
 
@@ -95,7 +118,7 @@ export function AuthProvider({ children }) {
       clearInterval(pollInterval);
       window.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [loadUser]);
+  }, [loadUser, checkVersion]);
 
   const login = useCallback(async (telefono, password) => {
     const deviceId = getDeviceId();
