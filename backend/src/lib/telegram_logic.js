@@ -8,7 +8,7 @@ import {
   distributeInvestmentCommissions
 } from './queries.js';
 import logger, { createModuleLogger } from './logger.js';
-import { safeTelegram, safeAsync } from './safeWrappers.js';
+import { safeTelegram, safeAsync } from '../utils/safe.js';
 
 const telegramLogicLogger = createModuleLogger('TELEGRAM-LOGIC');
 

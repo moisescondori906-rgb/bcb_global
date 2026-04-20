@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import logger from '../lib/logger.js';
-import { safeAsync, safeTelegram } from '../lib/safeWrappers.js';
+import { safeTelegram } from '../utils/safe.js';
 import { query, queryOne } from '../config/db.js';
 
 // Instancias de bots (Singleton pattern con inicialización perezosa)

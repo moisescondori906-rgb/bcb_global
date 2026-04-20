@@ -8,7 +8,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { initTelegramHandlers } from './services/telegramInitializer.js';
 import { query } from './config/db.js';
 import { syncLevels } from './lib/queries.js';
-import { safeAsync } from './lib/safeWrappers.js';
+import { safeAsync } from './utils/safe.js';
 
 import validateEnv from './config/validateEnv.js';
 import redis from './services/redisService.js';
@@ -25,6 +25,7 @@ process.on('uncaughtException', (err) => {
     stack: err.stack,
     time: new Date().toISOString()
   });
+  // No salimos del proceso para mantener el servicio activo en PM2 Cluster
 });
 
 process.on('unhandledRejection', (reason, promise) => {
@@ -90,23 +91,22 @@ setInterval(async () => {
     };
 
     try {
+      // Intento de reconexión real mediante ping
       await query('SELECT 1');
       health.db = true;
     } catch (err) {
-      monitorLogger.error(`[CRÍTICO] Fallo de Base de Datos: ${err.message}`);
+      monitorLogger.error(`[CRÍTICO] Fallo de Base de Datos detectado: ${err.message}. Intentando recuperar...`);
     }
 
     try {
       await redis.ping();
       health.redis = true;
     } catch (err) {
-      monitorLogger.error(`[CRÍTICO] Fallo de Redis: ${err.message}`);
+      monitorLogger.error(`[CRÍTICO] Fallo de Redis detectado: ${err.message}. Intentando recuperar...`);
     }
 
     if (!health.db || !health.redis) {
-      // Si algo falla, intentamos loggear el estado degradado pero no matamos el proceso
-      // para permitir que la lógica de reconexión automática de los drivers actúe.
-      monitorLogger.warn(`[HEALTH-DEGRADED] DB: ${health.db ? 'OK' : 'FAIL'}, Redis: ${health.redis ? 'OK' : 'FAIL'}`);
+      monitorLogger.warn(`[HEALTH-DEGRADED] Estado actual -> DB: ${health.db ? 'OK' : 'FAIL'}, Redis: ${health.redis ? 'OK' : 'FAIL'}`);
     }
   }, 'SystemHeartbeat');
 }, 10000);

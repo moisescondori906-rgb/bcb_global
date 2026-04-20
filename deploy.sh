@@ -49,11 +49,7 @@ cd ..
 
 # 5. Reinicio de Procesos con PM2 (Zero-Downtime Strategy)
 echo "🔄 Reiniciando procesos PM2..."
-if pm2 status $APP_NAME | grep -q "online"; then
-  pm2 reload ecosystem.config.cjs --update-env
-else
-  pm2 start ecosystem.config.cjs --env production
-fi
+pm2 reload ecosystem.config.cjs --update-env || pm2 start ecosystem.config.cjs --env production
 
 # 6. Verificación de Salud Post-Vuelo v9.2.0 (Blindada)
 echo "🔍 Verificando salud del sistema..."

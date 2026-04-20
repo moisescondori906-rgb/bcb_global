@@ -5,23 +5,7 @@ import logger from './logger.js';
 /**
  * @section AUDITORÍA SENIOR v8.1.0 - GESTIÓN DE ERRORES GLOBALES
  */
-if (typeof process !== 'undefined') {
-  process.on('uncaughtException', (err) => {
-    logger.error('[FATAL] Uncaught Exception:', { 
-      message: err.message, 
-      stack: err.stack,
-      time: new Date().toISOString()
-    });
-  });
-
-  process.on('unhandledRejection', (reason, promise) => {
-    logger.error('[FATAL] Unhandled Rejection:', { 
-      reason: reason instanceof Error ? reason.message : reason,
-      stack: reason instanceof Error ? reason.stack : null,
-      time: new Date().toISOString()
-    });
-  });
-}
+// Los errores globales ahora se gestionan centralizadamente en index.js
 
 // Cachés simples para optimización de lectura
 const userCache = new Map();

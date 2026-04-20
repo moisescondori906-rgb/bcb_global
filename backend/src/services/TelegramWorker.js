@@ -1,4 +1,5 @@
 import logger from '../lib/logger.js';
+import { safeTelegram } from '../utils/safe.js';
 
 /**
  * TelegramWorker - Sistema de Cola de Mensajes con Retry Exponencial.
@@ -55,7 +56,9 @@ class TelegramWorker {
     const job = this.queue.shift();
 
     try {
-      await job.bot.sendMessage(job.chatId, job.message, job.options);
+      await safeTelegram(async () => {
+        await job.bot.sendMessage(job.chatId, job.message, job.options);
+      }, `Worker-Send-${job.chatId}`);
       this.activeBots.add(job.bot.token); // Marcar bot como activo
       logger.info(`[WORKER] OK: ${job.chatId}`);
     } catch (err) {

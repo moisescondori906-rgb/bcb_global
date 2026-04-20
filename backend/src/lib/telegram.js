@@ -1,4 +1,5 @@
-import { setupAdminBot, safeTelegramCall } from '../services/telegramBot.js';
+import { setupAdminBot } from '../services/telegramBot.js';
+import { safeTelegramCall } from '../utils/safe.js';
 import { query, queryOne, transaction } from '../config/db.js';
 import { boliviaTime } from '../lib/queries.js';
 import logger from '../lib/logger.js';
