@@ -33,6 +33,8 @@ export async function setupTelegramLogic() {
     // Formato esperado: accion:tipo:refId (ej: tomar:retiro:uuid)
     const [action, type, refId] = data.split(':');
     const telegramUserId = String(from.id);
+    const telegramUsername = from.username; // Capturar username para el registro v10.8.0
+    const telegramFirstName = from.first_name;
 
     // 1. IDEMPOTENCIA (Evitar doble procesamiento por clicks rápidos o reintentos de red)
     const isProcessed = await checkIdempotencyRedis(callbackId);
@@ -49,7 +51,7 @@ export async function setupTelegramLogic() {
       `, [telegramUserId]);
 
       if (!member) {
-        const nombreVisible = telegramUsername || `User_${telegramUserId.substring(0, 5)}`;
+        const nombreVisible = telegramUsername || telegramFirstName || `User_${telegramUserId.substring(0, 5)}`;
         await query(`
           INSERT INTO usuarios_telegram (telegram_id, nombre, telegram_username, activo)
           VALUES (?, ?, ?, 1)
