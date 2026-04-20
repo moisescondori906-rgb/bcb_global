@@ -17,10 +17,11 @@ conn.on('ready', () => {
   
    const commands = [
     'cd /var/www/bcb_global && git fetch origin && git reset --hard origin/main',
+    'fuser -k 4000/tcp || true',
     'pm2 kill',
     'cd /var/www/bcb_global/backend && npm install',
     'cd /var/www/bcb_global/frontend && npm install && npm run build',
-    'cd /var/www/bcb_global/backend && mkdir -p logs && pm2 start ecosystem.config.cjs',
+    'cd /var/www/bcb_global/backend && mkdir -p logs && pm2 flush && pm2 start ecosystem.config.cjs',
     'sleep 20',
     'pm2 status',
     'tail -n 100 /var/www/bcb_global/backend/logs/out.log || true',

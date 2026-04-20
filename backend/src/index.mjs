@@ -167,6 +167,7 @@ const PORT = process.env.PORT || 4000;
 
 async function startServer() {
   try {
+    console.log(`[STARTUP] Intentando iniciar servidor en puerto: ${PORT}`);
     // 1. ESCUCHAR PUERTO INMEDIATAMENTE (Evitar 502 Bad Gateway)
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`[SERVER] BCB Global Backend v9.1.0 estable en puerto ${PORT}`);
