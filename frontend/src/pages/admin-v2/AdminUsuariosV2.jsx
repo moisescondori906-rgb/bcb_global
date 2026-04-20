@@ -28,7 +28,7 @@ import {
 import { api } from '../../lib/api';
 import { formatCurrency, formatDate } from '../../utils/format';
 
-const UserRow = ({ user, onEdit, onDelete, onToggleStatus, onToggleBlock, onResetPassword, onAdjustBalance }) => (
+const UserRow = ({ user, onEdit, onDelete, onToggleStatus, onToggleBlock, onResetPassword, onAdjustBalance, onViewFinancial }) => (
   <motion.tr 
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -75,13 +75,16 @@ const UserRow = ({ user, onEdit, onDelete, onToggleStatus, onToggleBlock, onRese
     </td>
     <td className="px-6 py-5 text-right">
       <div className="flex items-center justify-end gap-2">
+        <button onClick={() => onViewFinancial(user)} className="p-2.5 rounded-xl bg-sav-primary/10 text-sav-primary hover:bg-sav-primary hover:text-white transition-all border border-sav-primary/20 shadow-lg" title="Ver Datos Financieros">
+          <TrendingUp size={16} />
+        </button>
         <button onClick={() => onAdjustBalance(user)} className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20 shadow-lg" title="Ajustar Saldo">
           <DollarSign size={16} />
         </button>
         <button onClick={() => onToggleBlock(user)} className={`p-2.5 rounded-xl transition-all border border-white/5 shadow-lg ${user.bloqueado ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white'}`} title={user.bloqueado ? "Desbloquear" : "Bloquear acceso"}>
           <Shield size={16} />
         </button>
-        <button onClick={() => onResetPassword(user)} className="p-2.5 rounded-xl bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-all border border-white/5 shadow-lg" title="Reset Password">
+        <button onClick={() => onResetPassword(user)} className="p-2.5 rounded-xl bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-all border border-white/5 shadow-lg" title="Cambiar Contraseñas">
           <RefreshCw size={16} />
         </button>
       </div>
@@ -98,9 +101,17 @@ export default function AdminUsuariosV2() {
   const itemsPerPage = 10;
 
   const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showFinancialModal, setShowFinancialModal] = useState(false);
+  
   const [selectedUser, setSelectedUser] = useState(null);
+  const [financialData, setFinancialData] = useState(null);
   const [adjustForm, setAdjustForm] = useState({ tipo: 'principal', monto: '', motivo: '' });
+  const [passwordForm, setPasswordForm] = useState({ password: '', type: 'inicio' });
+  
   const [isAdjusting, setIsAdjusting] = useState(false);
+  const [isUpdatingPass, setIsUpdatingPass] = useState(false);
+  const [loadingFinancial, setLoadingFinancial] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -151,14 +162,44 @@ export default function AdminUsuariosV2() {
     }
   };
 
-  const handleResetPassword = async (user) => {
-    const newPass = prompt(`Ingresa la nueva contraseña para ${user.nombre_usuario}:`);
-    if (!newPass) return;
+  const handleResetPassword = (user) => {
+    setSelectedUser(user);
+    setPasswordForm({ password: '', type: 'inicio' });
+    setShowPasswordModal(true);
+  };
+
+  const submitPasswordChange = async (e) => {
+    e.preventDefault();
+    if (!passwordForm.password) return alert('La contraseña no puede estar vacía');
+    
+    setIsUpdatingPass(true);
     try {
-      await api.post(`/admin/usuarios/${user.id}/reset-password`, { password: newPass });
-      alert('Contraseña actualizada');
+      const type = passwordForm.type === 'fondos' ? 'fondos' : 'inicio';
+      await api.post(`/admin/usuarios/${selectedUser.id}/password`, { 
+        password: passwordForm.password,
+        type: type
+      });
+      setShowPasswordModal(false);
+      alert(`Contraseña de ${passwordForm.type} actualizada con éxito`);
     } catch (err) {
-      alert(err.message);
+      alert('Error: ' + err.message);
+    } finally {
+      setIsUpdatingPass(false);
+    }
+  };
+
+  const handleViewFinancial = async (user) => {
+    setSelectedUser(user);
+    setShowFinancialModal(true);
+    setLoadingFinancial(true);
+    try {
+      const data = await api.get(`/admin/usuarios/${user.id}/financial`);
+      setFinancialData(data);
+    } catch (err) {
+      alert('Error al cargar datos financieros');
+      setShowFinancialModal(false);
+    } finally {
+      setLoadingFinancial(false);
     }
   };
 
@@ -249,6 +290,7 @@ export default function AdminUsuariosV2() {
                     onToggleBlock={handleToggleBlock}
                     onResetPassword={handleResetPassword}
                     onAdjustBalance={handleAdjustBalance}
+                    onViewFinancial={handleViewFinancial}
                   />
                 ))
               ) : (
@@ -376,6 +418,163 @@ export default function AdminUsuariosV2() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Password Change Modal */}
+      <AnimatePresence>
+        {showPasswordModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-2xl flex items-center justify-center p-6 z-[200]"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="bg-[#161926] border border-white/10 p-12 rounded-[50px] max-w-lg w-full shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg shadow-amber-500/50" />
+              
+              <div className="flex items-center gap-4 mb-8">
+                <div className="p-3.5 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                  <RefreshCw size={24} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic">Protocolo de Seguridad</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{selectedUser?.nombre_usuario}</p>
+                </div>
+              </div>
+
+              <form onSubmit={submitPasswordChange} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Tipo de Contraseña</label>
+                  <select 
+                    value={passwordForm.type}
+                    onChange={e => setPasswordForm({...passwordForm, type: e.target.value})}
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white uppercase outline-none focus:border-amber-500/30 shadow-inner"
+                  >
+                    <option value="inicio">Contraseña de Inicio</option>
+                    <option value="fondos">Contraseña de Fondos</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Nueva Contraseña</label>
+                  <input 
+                    type="text" 
+                    value={passwordForm.password} 
+                    onChange={e => setPasswordForm({...passwordForm, password: e.target.value})}
+                    placeholder="Ingrese la nueva clave..."
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-amber-500/30 shadow-inner"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    type="button"
+                    onClick={() => setShowPasswordModal(false)}
+                    className="flex-1 py-4 rounded-2xl bg-white/5 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={isUpdatingPass}
+                    className="flex-1 py-4 rounded-2xl bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-amber-600/20 flex items-center justify-center gap-2"
+                  >
+                    {isUpdatingPass ? <RefreshCw className="animate-spin" size={14} /> : <CheckCircle2 size={14} />}
+                    Actualizar
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Financial Stats Modal */}
+      <AnimatePresence>
+        {showFinancialModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-2xl flex items-center justify-center p-6 z-[200]"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="bg-[#161926] border border-white/10 p-12 rounded-[50px] max-w-2xl w-full shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sav-primary to-rose-600 shadow-lg shadow-sav-primary/50" />
+              
+              <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-4">
+                  <div className="p-3.5 rounded-2xl bg-sav-primary/10 text-sav-primary border border-sav-primary/20">
+                    <TrendingUp size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic">Auditoría Financiera</h3>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{selectedUser?.nombre_usuario}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowFinancialModal(false)} className="p-3 rounded-2xl bg-white/5 text-slate-500 hover:text-white transition-all">
+                  <XCircle size={24} />
+                </button>
+              </div>
+
+              {loadingFinancial ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                  <RefreshCw className="animate-spin text-sav-primary" size={40} />
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Compilando datos...</p>
+                </div>
+              ) : financialData && (
+                <div className="space-y-8">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="p-8 rounded-[35px] bg-[#0f111a] border border-white/5 space-y-2">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Saldo Principal</p>
+                      <p className="text-3xl font-black text-white tracking-tighter italic">{formatCurrency(financialData.saldo_principal)}</p>
+                    </div>
+                    <div className="p-8 rounded-[35px] bg-[#0f111a] border border-white/5 space-y-2">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Saldo Comisiones</p>
+                      <p className="text-3xl font-black text-sav-primary tracking-tighter italic">{formatCurrency(financialData.saldo_comisiones)}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 text-center space-y-1">
+                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Total Recargas</p>
+                      <p className="text-sm font-black text-emerald-500">{formatCurrency(financialData.financial_stats.total_recargado)}</p>
+                    </div>
+                    <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 text-center space-y-1">
+                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Total Retiros</p>
+                      <p className="text-sm font-black text-rose-500">{formatCurrency(financialData.financial_stats.total_retirado)}</p>
+                    </div>
+                    <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 text-center space-y-1">
+                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Ganancia Tareas</p>
+                      <p className="text-sm font-black text-amber-500">{formatCurrency(financialData.financial_stats.total_tareas)}</p>
+                    </div>
+                    <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 text-center space-y-1">
+                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Referidos</p>
+                      <p className="text-sm font-black text-white">{financialData.financial_stats.referidos_directos}</p>
+                    </div>
+                  </div>
+
+                  <div className="p-6 rounded-3xl bg-amber-500/5 border border-amber-500/10 flex items-center gap-4">
+                    <ShieldAlert className="text-amber-500" size={20} />
+                    <p className="text-[10px] font-bold text-amber-500/80 uppercase tracking-tight leading-relaxed">
+                      Esta información es de carácter confidencial. Los cambios en el capital deben ser auditados y registrados bajo el protocolo de ajuste administrativo.
+                    </p>
+                  </div>
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}

@@ -714,10 +714,42 @@ router.post('/usuarios/:id/bloquear', asyncHandler(async (req, res) => {
 
 router.post('/usuarios/:id/password', asyncHandler(async (req, res) => {
   const { password, type } = req.body;
+  if (!password) return res.status(400).json({ error: 'Contraseña requerida' });
+  
   const hashed = await bcrypt.hash(password, 10);
-  const field = type === 'operaciones' ? 'password_operaciones' : 'password';
+  const field = type === 'fondos' ? 'password_fondo_hash' : 'password_hash';
+  
   await query(`UPDATE usuarios SET ${field} = ? WHERE id = ?`, [hashed, req.params.id]);
-  res.json({ ok: true });
+  
+  logger.info(`[ADMIN-ACTION] Password ${type} actualizado para usuario ${req.params.id} por admin ${req.user.id}`);
+  res.json({ ok: true, message: `Contraseña de ${type} actualizada con éxito` });
+}));
+
+router.get('/usuarios/:id/financial', asyncHandler(async (req, res) => {
+  const user = await queryOne(`
+    SELECT id, nombre_usuario, saldo_principal, saldo_comisiones, nivel_id, bloqueado, created_at
+    FROM usuarios WHERE id = ?
+  `, [req.params.id]);
+  
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+  const stats = await queryOne(`
+    SELECT 
+      (SELECT SUM(monto) FROM compras_nivel WHERE usuario_id = ? AND estado = 'completada') as total_recargado,
+      (SELECT SUM(monto) FROM retiros WHERE usuario_id = ? AND estado = 'pagado') as total_retirado,
+      (SELECT SUM(monto_ganado) FROM actividad_tareas WHERE usuario_id = ?) as total_tareas,
+      (SELECT COUNT(*) FROM usuarios WHERE invitado_por = ?) as referidos_directos
+  `, [user.id, user.id, user.id, user.id]);
+
+  res.json({
+    ...user,
+    financial_stats: {
+      total_recargado: Number(stats.total_recargado || 0),
+      total_retirado: Number(stats.total_retirado || 0),
+      total_tareas: Number(stats.total_tareas || 0),
+      referidos_directos: Number(stats.referidos_directos || 0)
+    }
+  });
 }));
 
 router.post('/cuestionario/castigar', (req, res) => {
