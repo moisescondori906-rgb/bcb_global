@@ -83,8 +83,7 @@ router.get('/usuarios', asyncHandler(async (req, res) => {
     return {
       ...sanitized,
       saldo_principal: Number(u.saldo_principal || 0),
-      saldo_comisiones: Number(u.saldo_comisiones || 0),
-      tipo_lider: u.tipo_lider
+      saldo_comisiones: Number(u.saldo_comisiones || 0)
     };
   });
   res.json(filtered);
