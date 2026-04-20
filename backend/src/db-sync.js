@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mysql from 'mysql2/promise';
-import logger from './lib/logger.js';
+import logger from './utils/logger.js';
 import validateEnv from './config/validateEnv.js';
 
 const __filename = fileURLToPath(import.meta.url);

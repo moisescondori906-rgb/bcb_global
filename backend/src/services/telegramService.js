@@ -1,8 +1,8 @@
 import { setupAdminBot } from '../services/telegramBot.js';
 import { safeTelegramCall } from '../utils/safe.js';
 import { query, queryOne, transaction } from '../config/db.js';
-import { boliviaTime } from '../lib/queries.js';
-import logger from '../lib/logger.js';
+import { boliviaTime } from '../services/dbService.js';
+import logger from '../utils/logger.js';
 
 /**
  * Lógica Central de Telegram v7.0.6: UN CASO = UN RESPONSABLE. BLOQUEO TOTAL.
@@ -279,8 +279,8 @@ export async function sendTelegramAlert(tipo, data) {
     // 3. Enviar a Secretaría (Lectura)
     let secMsgId = null;
     if (secGroup) {
-      const sent = await bot.sendMessage(secGroup.chat_id, message);
-      secMsgId = sent.message_id;
+      const sent = await safeTelegramCall(() => bot.sendMessage(secGroup.chat_id, message), 'sendAlert-Secretaria');
+      secMsgId = sent?.message_id;
     }
 
     // 4. Enviar a Grupos Operativos (Con Botones)
@@ -291,9 +291,9 @@ export async function sendTelegramAlert(tipo, data) {
     if (admGroup) targetGroups.push(admGroup.chat_id);
 
     for (const chatId of targetGroups) {
-      await bot.sendMessage(chatId, message, {
+      await safeTelegramCall(() => bot.sendMessage(chatId, message, {
         reply_markup: { inline_keyboard: buttons }
-      });
+      }), `sendAlert-Target-${chatId}`);
     }
 
     // 5. Registrar en tabla de bloqueo

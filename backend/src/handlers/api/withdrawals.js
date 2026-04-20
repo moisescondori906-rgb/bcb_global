@@ -4,20 +4,20 @@ import bcrypt from 'bcryptjs';
 import { 
   getPublicContent, boliviaTime, findUserWithAuthSecrets,
   canWithdraw, requestWithdrawal
-} from '../lib/queries.js';
-import { query } from '../config/db.js';
-import { authenticate } from '../middleware/auth.js';
-import { attachRequestUser } from '../middleware/requestContext.js';
-import { dynamicControlMiddleware } from '../middleware/dynamicControl.js';
+} from '../../services/dbService.js';
+import { query } from '../../config/db.js';
+import { authenticate } from '../../utils/middleware/auth.js';
+import { attachRequestUser } from '../../utils/middleware/requestContext.js';
+import { dynamicControlMiddleware } from '../../utils/middleware/dynamicControl.js';
 import { 
   sendToRetiros, 
   sendToAdmin, 
   sendToSecretaria, 
   formatRetiroMessage 
-} from '../services/telegramBot.js';
-import logger from '../lib/logger.js';
-import redis from '../services/redisService.js';
-import { asyncHandler } from '../middleware/asyncHandler.js';
+} from '../../services/telegramBot.js';
+import logger from '../../utils/logger.js';
+import redis from '../../services/redisService.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
 
 const router = Router();
 

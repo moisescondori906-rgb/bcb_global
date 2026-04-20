@@ -1,5 +1,5 @@
 import { query, queryOne } from '../config/db.js';
-import logger from '../lib/logger.js';
+import logger from '../utils/logger.js';
 import crypto from 'crypto';
 
 /**

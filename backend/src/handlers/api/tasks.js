@@ -3,14 +3,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { 
   getLevels, getTasks, getTaskById, completeTask,
   boliviaTime, canPerformTasks 
-} from '../lib/queries.js';
-import { authenticate } from '../middleware/auth.js';
-import { attachRequestUser, DEMO_USER_ID } from '../middleware/requestContext.js';
-import { dynamicControlMiddleware } from '../middleware/dynamicControl.js';
-import { query } from '../config/db.js';
-import logger from '../lib/logger.js';
-import redis from '../services/redisService.js';
-import { asyncHandler } from '../middleware/asyncHandler.js';
+} from '../../services/dbService.js';
+import { authenticate } from '../../utils/middleware/auth.js';
+import { attachRequestUser, DEMO_USER_ID } from '../../utils/middleware/requestContext.js';
+import { dynamicControlMiddleware } from '../../utils/middleware/dynamicControl.js';
+import { query } from '../../config/db.js';
+import logger from '../../utils/logger.js';
+import redis from '../../services/redisService.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
 
 const router = Router();
 

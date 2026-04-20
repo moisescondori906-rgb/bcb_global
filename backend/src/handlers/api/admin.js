@@ -1,19 +1,19 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
-import redis from '../services/redisService.js';
+import redis from '../../services/redisService.js';
 import { 
   getUsers, getLevels, findUserById, updateUser, 
   getPublicContent, approveLevelPurchase, rejectRetiro,
   boliviaTime, distributeInvestmentCommissions, refreshPublicContent, 
   invalidateLevelsCache, preloadLevels, syncLevels,
   getMensajesGlobales, createMensajeGlobal, deleteMensajeGlobal
-} from '../lib/queries.js';
-import { query, queryOne } from '../config/db.js';
-import { authenticate, requireAdmin } from '../middleware/auth.js';
-import { uploadToCloudinary, uploadVideoBuffer, uploadImageBuffer } from '../config/cloudinary.js';
-import logger from '../lib/logger.js';
-import { asyncHandler } from '../middleware/asyncHandler.js';
+} from '../../services/dbService.js';
+import { query, queryOne } from '../../config/db.js';
+import { authenticate, requireAdmin } from '../../utils/middleware/auth.js';
+import { uploadToCloudinary, uploadVideoBuffer, uploadImageBuffer } from '../../config/cloudinary.js';
+import logger from '../../utils/logger.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
 
 const router = Router();
 router.use(authenticate);

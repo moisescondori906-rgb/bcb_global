@@ -1,6 +1,6 @@
 import Redis from 'ioredis';
 import Redlock from 'redlock';
-import logger from '../lib/logger.js';
+import logger from '../utils/logger.js';
 import 'dotenv/config';
 
 /**

@@ -1,7 +1,7 @@
-import { getPublicContent } from './queries.js';
-import { processTelegramUpdate } from './telegram_logic.js';
-import logger from './logger.js';
-import { safeTelegram } from '../services/telegramBot.js';
+import { getPublicContent } from '../services/dbService.js';
+import { processTelegramUpdate } from '../handlers/telegramLogic.js';
+import logger from '../utils/logger.js';
+import { safeTelegram } from '../utils/safe.js';
 
 let pollingActive = false;
 let lastUpdateIds = new Map(); // token -> lastUpdateId

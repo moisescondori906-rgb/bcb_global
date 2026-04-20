@@ -4,12 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { 
   getLevels, updateUser, findUserWithAuthSecrets,
   getMensajesGlobales, boliviaTime, getUserTeamReport
-} from '../lib/queries.js';
-import { authenticate } from '../middleware/auth.js';
-import { attachRequestUser, DEMO_USER_ID } from '../middleware/requestContext.js';
-import { query, queryOne } from '../config/db.js';
-import logger from '../lib/logger.js';
-import { asyncHandler } from '../middleware/asyncHandler.js';
+} from '../../services/dbService.js';
+import { authenticate } from '../../utils/middleware/auth.js';
+import { attachRequestUser, DEMO_USER_ID } from '../../utils/middleware/requestContext.js';
+import { query, queryOne } from '../../config/db.js';
+import logger from '../../utils/logger.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
 
 const router = Router();
 

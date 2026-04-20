@@ -1,7 +1,7 @@
 import redis from '../services/redisService.js';
 import { query } from '../config/db.js';
-import logger from './logger.js';
-import { boliviaTime } from './queries.js';
+import logger from '../utils/logger.js';
+import { boliviaTime } from './dbService.js';
 
 const CACHE_TTL = 60; // 60 segundos de caché dinámica
 

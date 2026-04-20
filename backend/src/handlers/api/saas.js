@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
-import { query, queryOne, transaction } from '../config/db.js';
-import { authenticate, requireGlobalAdmin, requireAdmin } from '../middleware/auth.js';
-import { AuditService } from '../services/auditService.js';
-import { SupportService } from '../services/supportService.js';
-import logger from '../lib/logger.js';
-import { asyncHandler } from '../middleware/asyncHandler.js';
+import { query, queryOne, transaction } from '../../config/db.js';
+import { authenticate, requireGlobalAdmin, requireAdmin } from '../../utils/middleware/auth.js';
+import { AuditService } from '../../services/auditService.js';
+import { SupportService } from '../../services/supportService.js';
+import logger from '../../utils/logger.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
 
 const router = Router();
 

@@ -1,5 +1,5 @@
-import logger from '../lib/logger.js';
-import { response } from '../lib/response.js';
+import logger from '../utils/logger.js';
+import { response } from '../utils/response.js';
 
 /**
  * Higher-Order Function para envolver controladores y capturar errores asíncronos.

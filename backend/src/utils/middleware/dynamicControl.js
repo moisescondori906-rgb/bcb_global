@@ -1,6 +1,6 @@
-import operationalControl from '../lib/operationalControl.js';
+import operationalControl from '../../services/operationalControl.js';
 import { v4 as uuidv4 } from 'uuid';
-import logger from '../lib/logger.js';
+import logger from '../../utils/logger.js';
 
 /**
  * dynamicControlMiddleware: El portero dinámico del sistema.

@@ -1,4 +1,4 @@
-import { findUserById } from '../lib/queries.js';
+import { findUserById } from '../../services/dbService.js';
 
 export const DEMO_USER_ID = 'DEMO-USER-ID';
 export const DEMO_USER_DATA = {

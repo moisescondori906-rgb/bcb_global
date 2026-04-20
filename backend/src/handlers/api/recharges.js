@@ -5,18 +5,18 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { 
   getPublicContent, getLevels, boliviaTime, canRecharge 
-} from '../lib/queries.js';
-import { query, queryOne } from '../config/db.js';
-import { authenticate } from '../middleware/auth.js';
-import { attachRequestUser } from '../middleware/requestContext.js';
+} from '../../services/dbService.js';
+import { query, queryOne } from '../../config/db.js';
+import { authenticate } from '../../utils/middleware/auth.js';
+import { attachRequestUser } from '../../utils/middleware/requestContext.js';
 import { 
   sendToAdmin, 
   sendToSecretaria, 
   formatRecargaMessage 
-} from '../services/telegramBot.js';
-import { uploadImageBuffer } from '../config/cloudinary.js';
-import logger from '../lib/logger.js';
-import { asyncHandler } from '../middleware/asyncHandler.js';
+} from '../../services/telegramBot.js';
+import { uploadImageBuffer } from '../../config/cloudinary.js';
+import logger from '../../utils/logger.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = Router();

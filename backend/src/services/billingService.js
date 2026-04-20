@@ -1,5 +1,5 @@
 import { query, queryOne, transaction } from '../config/db.js';
-import logger from '../lib/logger.js';
+import logger from '../utils/logger.js';
 import redis, { queueRedis } from './redisService.js';
 import { Queue, Worker } from 'bullmq';
 

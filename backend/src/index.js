@@ -3,11 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import logger, { createModuleLogger } from './lib/logger.js';
-import { errorHandler } from './middleware/errorHandler.js';
+import logger, { createModuleLogger } from './utils/logger.js';
+import { errorHandler } from './handlers/errorHandler.js';
 import { initTelegramHandlers } from './services/telegramInitializer.js';
 import { query } from './config/db.js';
-import { syncLevels } from './lib/queries.js';
+import { syncLevels } from './services/dbService.js';
 import { safeAsync } from './utils/safe.js';
 
 import validateEnv from './config/validateEnv.js';
@@ -144,17 +144,17 @@ app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // 2. IMPORTACIÓN DE RUTAS (CON ASYNC HANDLER INTEGRADO)
-import authRoutes from './routes/auth.js';
-import userRoutes from './routes/users.js';
-import taskRoutes from './routes/tasks.js';
-import rechargeRoutes from './routes/recharges.js';
-import withdrawalRoutes from './routes/withdrawals.js';
-import adminRoutes from './routes/admin.js';
-import telegramAdminRoutes from './routes/telegram_admin.js';
-import telegramWebhookRoutes from './routes/telegram_webhook.js';
-import sorteoRoutes from './routes/sorteo.js';
-import saasRoutes from './routes/saas.js';
-import levelRoutes from './routes/levels.js';
+import authRoutes from './handlers/api/auth.js';
+import userRoutes from './handlers/api/users.js';
+import taskRoutes from './handlers/api/tasks.js';
+import rechargeRoutes from './handlers/api/recharges.js';
+import withdrawalRoutes from './handlers/api/withdrawals.js';
+import adminRoutes from './handlers/api/admin.js';
+import telegramAdminRoutes from './handlers/api/telegram_admin.js';
+import telegramWebhookRoutes from './handlers/api/telegram_webhook.js';
+import sorteoRoutes from './handlers/api/sorteo.js';
+import saasRoutes from './handlers/api/saas.js';
+import levelRoutes from './handlers/api/levels.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

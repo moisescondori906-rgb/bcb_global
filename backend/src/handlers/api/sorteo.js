@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { authenticate } from '../middleware/auth.js';
-import { attachRequestUser } from '../middleware/requestContext.js';
+import { authenticate } from '../../utils/middleware/auth.js';
+import { attachRequestUser } from '../../utils/middleware/requestContext.js';
 import { 
   getPremiosRuleta, createSorteoGanador, updateUser, 
   getSorteosGanadores, getPublicContent, addUserEarnings 
-} from '../lib/queries.js';
-import { asyncHandler } from '../middleware/asyncHandler.js';
+} from '../../services/dbService.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
 
 const router = Router();
 

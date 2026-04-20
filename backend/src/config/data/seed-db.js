@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-import { query, transaction } from '../config/db.js';
+import { query, transaction } from '../../config/db.js';
 import { levels } from './seed.js';
-import logger from '../lib/logger.js';
+import logger from '../../utils/logger.js';
 
 /**
  * Script de Seed para Base de Datos v9.1.1

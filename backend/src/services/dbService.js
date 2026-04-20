@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { query, queryOne, transaction } from '../config/db.js';
-import logger from './logger.js';
+import logger from '../utils/logger.js';
 
 /**
  * @section AUDITORÍA SENIOR v8.1.0 - GESTIÓN DE ERRORES GLOBALES

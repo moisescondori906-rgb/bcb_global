@@ -1,4 +1,4 @@
-import logger from '../lib/logger.js';
+import logger from '../utils/logger.js';
 
 /**
  * Inicializador centralizado de manejadores de Telegram v7.0.5.

@@ -1,6 +1,6 @@
 import { query, queryOne, secureQuery } from '../config/db.js';
 import redis from './redisService.js';
-import logger from '../lib/logger.js';
+import logger from '../utils/logger.js';
 import { AuditService } from './auditService.js';
 
 /**

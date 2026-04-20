@@ -6,8 +6,8 @@ import {
   createMovimiento, boliviaTime,
   findAdminByTelegramId, getDailyWithdrawalSummary,
   distributeInvestmentCommissions
-} from './queries.js';
-import logger, { createModuleLogger } from './logger.js';
+} from '../services/dbService.js';
+import logger, { createModuleLogger } from '../utils/logger.js';
 import { safeTelegram, safeAsync } from '../utils/safe.js';
 
 const telegramLogicLogger = createModuleLogger('TELEGRAM-LOGIC');

@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import { botAdmin, botRetiros, botSecretaria } from '../services/telegramBot.js';
-import { WithdrawalRepository, TelegramUserRepository } from '../repositories/telegramRepository.js';
+import { WithdrawalRepository, TelegramUserRepository } from '../services/repositories/telegramRepository.js';
 import { WithdrawalService } from '../services/withdrawalService.js';
 import { checkGlobalRateLimit, acquireLock, releaseLock, checkIdempotencyRedis } from '../services/redisService.js';
 import { FeatureFlagService, FraudDetectionService } from '../services/globalControlService.js';
 import { query, queryOne } from '../config/db.js';
-import logger from '../lib/logger.js';
+import logger from '../utils/logger.js';
 
 /**
  * handleCallbackQuery - Blindado para Resiliencia Global.

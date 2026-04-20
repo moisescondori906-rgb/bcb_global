@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { sendToAdmin, sendToRetiros, sendToSecretaria } from '../services/telegramBot.js';
-import { asyncHandler } from '../middleware/asyncHandler.js';
-import logger from '../lib/logger.js';
+import { sendToAdmin, sendToRetiros, sendToSecretaria } from '../../services/telegramBot.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
+import logger from '../../utils/logger.js';
 
 const router = Router();
 

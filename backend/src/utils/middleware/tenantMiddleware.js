@@ -1,6 +1,6 @@
-import logger from '../lib/logger.js';
-import { queryOne } from '../config/db.js';
-import { BillingService } from '../services/billingService.js';
+import logger from '../../utils/logger.js';
+import { queryOne } from '../../config/db.js';
+import { BillingService } from '../../services/billingService.js';
 
 /**
  * Middleware para identificar el Tenant en cada petición.

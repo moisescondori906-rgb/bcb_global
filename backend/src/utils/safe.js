@@ -1,4 +1,4 @@
-import { createModuleLogger } from '../lib/logger.js';
+import { createModuleLogger } from '../utils/logger.js';
 
 const telegramLogger = createModuleLogger('TELEGRAM');
 const asyncLogger = createModuleLogger('ASYNC');

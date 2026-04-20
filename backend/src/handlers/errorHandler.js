@@ -1,5 +1,5 @@
-import { createModuleLogger } from '../lib/logger.js';
-import { response } from '../lib/response.js';
+import { createModuleLogger } from '../utils/logger.js';
+import { response } from '../utils/response.js';
 
 const errorLogger = createModuleLogger('ERROR-HANDLER');
 

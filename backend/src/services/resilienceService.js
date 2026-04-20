@@ -1,4 +1,4 @@
-import logger from '../lib/logger.js';
+import logger from '../utils/logger.js';
 import { query, queryOne } from '../config/db.js';
 import redis from './redisService.js';
 import { FeatureFlagService } from './globalControlService.js';

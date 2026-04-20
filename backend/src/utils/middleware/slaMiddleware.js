@@ -1,5 +1,5 @@
-import { recordSLADatum } from '../services/resilienceService.js';
-import logger from '../lib/logger.js';
+import { recordSLADatum } from '../../services/resilienceService.js';
+import logger from '../../utils/logger.js';
 
 /**
  * Middleware para capturar métricas de SLA en cada petición.

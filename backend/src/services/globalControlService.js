@@ -1,6 +1,6 @@
 import { query, queryOne } from '../config/db.js';
 import redis from './redisService.js';
-import logger from '../lib/logger.js';
+import logger from '../utils/logger.js';
 
 /**
  * FeatureFlagService - Control dinámico de funcionalidades en caliente.

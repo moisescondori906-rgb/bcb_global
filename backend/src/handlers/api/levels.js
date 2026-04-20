@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { getLevels } from '../lib/queries.js';
-import { authenticate } from '../middleware/auth.js';
-import { asyncHandler } from '../middleware/asyncHandler.js';
+import { getLevels } from '../../services/dbService.js';
+import { authenticate } from '../../utils/middleware/auth.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
 
 const router = Router();
 

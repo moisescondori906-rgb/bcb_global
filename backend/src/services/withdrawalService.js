@@ -1,9 +1,9 @@
 import { transaction, query } from '../config/db.js';
-import { WithdrawalRepository, TelegramUserRepository } from '../repositories/telegramRepository.js';
+import { WithdrawalRepository, TelegramUserRepository } from '../services/repositories/telegramRepository.js';
 import { OperatorService } from './operatorService.js';
 import { ResilienceService } from './resilienceService.js';
 import { BillingService } from './billingService.js';
-import logger from '../lib/logger.js';
+import logger from '../utils/logger.js';
 
 /**
  * WithdrawalService - Lógica de Negocio Financiera.

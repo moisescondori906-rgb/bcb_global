@@ -1,7 +1,8 @@
 import { Queue, Worker } from 'bullmq';
 import { queueRedis } from './redisService.js';
-import logger from '../lib/logger.js';
+import logger from '../utils/logger.js';
 import { query } from '../config/db.js';
+import { safeTelegram } from '../utils/safe.js';
 import 'dotenv/config';
 
 // 1. Configuración de Cola Principal con Dead Letter Queue (DLQ)
@@ -32,7 +33,12 @@ const telegramWorker = new Worker('telegram-notifications', async (job) => {
   try {
     const { default: TelegramBot } = await import('node-telegram-bot-api');
     const bot = new TelegramBot(botToken);
-    const res = await bot.sendMessage(chatId, message, options);
+    
+    const res = await safeTelegram(async () => {
+      return await bot.sendMessage(chatId, message, options);
+    }, `BullMQ-Job-${job.id}`);
+    
+    if (!res) throw new Error('SafeTelegram returned null - Job failed.');
     
     consecutiveFailures = Math.max(0, consecutiveFailures - 1);
     return res;

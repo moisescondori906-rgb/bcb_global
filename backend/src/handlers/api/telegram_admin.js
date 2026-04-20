@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { query, queryOne } from '../config/db.js';
-import { authenticate, requireAdmin } from '../middleware/auth.js';
-import { asyncHandler } from '../middleware/asyncHandler.js';
+import { query, queryOne } from '../../config/db.js';
+import { authenticate, requireAdmin } from '../../utils/middleware/auth.js';
+import { asyncHandler } from '../../utils/asyncHandler.js';
 
 const router = Router();
 

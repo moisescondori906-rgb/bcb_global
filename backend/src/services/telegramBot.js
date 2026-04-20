@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import logger from '../lib/logger.js';
+import logger from '../utils/logger.js';
 import { safeTelegram } from '../utils/safe.js';
 import { query, queryOne } from '../config/db.js';
 
