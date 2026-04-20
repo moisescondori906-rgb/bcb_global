@@ -27,7 +27,7 @@ export async function initTelegramHandlers() {
 
     // Cargar lógica de eventos y callbacks
     try {
-      const { setupTelegramLogic } = await import('../lib/telegram.js');
+      const { setupTelegramLogic } = await import('./telegramService.js');
       await setupTelegramLogic();
       logger.info('[TELEGRAM] Lógica de eventos cargada.');
     } catch (err) {

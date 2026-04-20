@@ -107,9 +107,17 @@ router.post('/', asyncHandler(async (req, res) => {
     monto: monto
   });
   
+  const options = {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "📝 Tomar Caso", callback_data: `tomar:recarga:${id}` }]
+      ]
+    }
+  };
+
   // No usamos await para no bloquear la respuesta HTTP
-  sendToAdmin(msg);
-  sendToSecretaria(msg);
+  sendToAdmin(msg, options);
+  sendToSecretaria(msg, options);
 
   res.json({ success: true, message: 'Solicitud enviada correctamente. En espera de aprobación.' });
 }));

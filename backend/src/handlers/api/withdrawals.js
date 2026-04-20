@@ -89,18 +89,17 @@ router.post('/', withdrawRateLimit, dynamicControlMiddleware('withdrawal'), asyn
     hora: boliviaTime.getTimeString()
   });
   
-  const inline_keyboard = {
+  const options = {
     reply_markup: {
       inline_keyboard: [
-        [{ text: "✅ APROBAR", callback_data: `APROBAR_${result.retiroId}` },
-         { text: "❌ RECHAZAR", callback_data: `RECHAZAR_${result.retiroId}` }]
+        [{ text: "📝 Tomar Caso", callback_data: `tomar:retiro:${result.retiroId}` }]
       ]
     }
   };
 
   // Notificar de forma asíncrona y resiliente con safeTelegram
-  sendToAdmin(message);
-  sendToSecretaria(message);
+  sendToAdmin(message, options);
+  sendToSecretaria(message, options);
 
   res.json({ success: true, message: 'Solicitud enviada correctamente.' });
 }));

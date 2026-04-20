@@ -958,7 +958,7 @@ export async function approveRetiro(retiroId, adminId, idempotencyKey = null) {
 
     // 2. ACTUALIZACIÓN ATÓMICA
     await conn.query(
-      `UPDATE retiros SET estado = 'completado', procesado_por = ?, procesado_at = NOW() WHERE id = ?`, 
+      `UPDATE retiros SET estado = 'pagado', procesado_por = ?, procesado_at = NOW() WHERE id = ?`, 
       [adminId, retiroId]
     );
 

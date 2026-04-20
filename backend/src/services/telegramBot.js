@@ -25,11 +25,6 @@ export async function setupAdminBot() {
     botAdmin.on('error', (err) => logger.error('[TELEGRAM ADMIN] Error:', err.message));
     botAdmin.on('polling_error', (err) => logger.debug('[TELEGRAM ADMIN] Polling error:', err.message));
 
-    const { handleCallbackQuery } = await import('../handlers/telegramHandler.js');
-    botAdmin.on('callback_query', (query) => {
-      handleCallbackQuery(botAdmin, query).catch(err => logger.error('[TELEGRAM ADMIN] Callback Error:', err.message));
-    });
-
     logger.info('[TELEGRAM] Admin Bot inicializado.');
     return botAdmin;
   } catch (err) {

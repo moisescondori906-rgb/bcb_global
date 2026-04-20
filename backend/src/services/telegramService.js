@@ -1,35 +1,37 @@
 import { setupAdminBot } from '../services/telegramBot.js';
-import { safeTelegramCall } from '../utils/safe.js';
+import { safeTelegramCall, safeAsync } from '../utils/safe.js';
 import { query, queryOne, transaction } from '../config/db.js';
 import { boliviaTime } from '../services/dbService.js';
+import { checkIdempotencyRedis, acquireLock, releaseLock } from './redisService.js';
 import logger from '../utils/logger.js';
 
 /**
- * Lógica Central de Telegram v7.0.6: UN CASO = UN RESPONSABLE. BLOQUEO TOTAL.
+ * Lógica Central de Telegram v9.5.0: RESILIENCIA TOTAL + UN CASO = UN RESPONSABLE.
+ * Combina validación de integrantes, bloqueo de filas (MySQL) e idempotencia (Redis).
  */
 export async function setupTelegramLogic() {
   const bot = await setupAdminBot();
   if (!bot) return;
-  // --- MIDDLEWARE DE VALIDACIÓN DE INTEGRANTE ---
-  const validateMember = async (msg) => {
-    const userId = String(msg.from.id);
-    const member = await queryOne(`
-      SELECT i.*, e.tipo as equipo_tipo, e.chat_id as equipo_chat_id 
-      FROM telegram_integrantes i 
-      JOIN telegram_equipos e ON i.equipo_id = e.id 
-      WHERE i.telegram_user_id = ? AND i.activo = 1 AND e.activo = 1
-    `, [userId]);
-    return member;
-  };
+
+  logger.info('[TELEGRAM] Cargando Lógica de Eventos Resiliente...');
 
   // --- ESCUCHADOR DE CALLBACK QUERIES (Botones) ---
   bot.on('callback_query', async (callbackQuery) => {
-    const { data, message, from } = callbackQuery;
-    const [action, refId] = data.split(':');
+    const { data, message, from, id: callbackId } = callbackQuery;
+    if (!data || !from) return;
+
+    // Formato esperado: accion:tipo:refId (ej: tomar:retiro:uuid)
+    const [action, type, refId] = data.split(':');
     const telegramUserId = String(from.id);
 
+    // 1. IDEMPOTENCIA (Evitar doble procesamiento por clicks rápidos o reintentos de red)
+    const isProcessed = await checkIdempotencyRedis(callbackId);
+    if (isProcessed) {
+      return safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { text: '⚠️ Acción ya procesada.' }), 'answerCallback-Idempotency');
+    }
+
     try {
-      // 1. Validar que el usuario sea un integrante activo
+      // 2. VALIDACIÓN DE INTEGRANTE (Solo operadores activos)
       const member = await queryOne(`
         SELECT i.*, e.tipo as equipo_tipo 
         FROM telegram_integrantes i 
@@ -38,143 +40,106 @@ export async function setupTelegramLogic() {
       `, [telegramUserId]);
 
       if (!member) {
-        return safeTelegramCall(() => bot.answerCallbackQuery(callbackQuery.id, { 
+        return safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { 
           text: '❌ No tienes permisos o tu equipo está desactivado.', 
           show_alert: true 
         }), 'answerCallbackQuery-noMember');
       }
 
-      // 2. Ejecutar Acción con Bloqueo de Fila (SELECT FOR UPDATE)
-      await transaction(async (conn) => {
-        // Validar Horario Operativo para QR/Recargas
-        const [configRows] = await conn.query('SELECT * FROM telegram_config_horarios WHERE id = 1');
-        const config = configRows[0];
+      // 3. LOCK DISTRIBUIDO (Redlock) para evitar colisiones entre instancias del cluster
+      const lock = await acquireLock(`telegram:${refId}`, 15000);
+      if (!lock) {
+        return safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { text: '⏳ Procesando en otra instancia, espera...' }), 'answerCallback-Lock');
+      }
 
-        // Bloqueo estricto del caso
-        const [casoRows] = await conn.query(
-          'SELECT * FROM telegram_casos_bloqueo WHERE referencia_id = ? FOR UPDATE', 
-          [refId]
-        );
-        let caso = casoRows[0];
-
-        // Si es Recarga, validar horario
-        if (config && config.activo === 0 && caso?.tipo_operacion === 'recarga') {
-           throw new Error('El sistema de recargas está desactivado temporalmente.');
-        }
-
-        if (config && caso?.tipo_operacion === 'recarga') {
-          const now = boliviaTime.now();
-          const currentDay = now.getDay() === 0 ? 7 : now.getDay();
-          const dias = JSON.parse(config.dias_operativos || '[1,2,3,4,5,6,7]');
-          
-          if (!dias.includes(currentDay)) {
-            throw new Error('Hoy no es un día operativo para recargas.');
-          }
-
-          const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-          const [startH, startM, startS] = config.hora_inicio.split(':').map(Number);
-          const [endH, endM, endS] = config.hora_fin.split(':').map(Number);
-          const startTime = startH * 3600 + startM * 60 + startS;
-          const endTime = endH * 3600 + endM * 60 + endS;
-
-          if (currentTime < startTime || currentTime > endTime) {
-            throw new Error(`Fuera de horario operativo (${config.hora_inicio} - ${config.hora_fin})`);
-          }
-        }
-
-        // Si no existe, lo creamos como pendiente (debería existir al enviar el mensaje, pero por seguridad)
-        if (!caso) {
-          const type = data.includes('retiro') ? 'retiro' : 'recarga';
-          await conn.query(
-            'INSERT INTO telegram_casos_bloqueo (referencia_id, tipo_operacion, estado_operativo) VALUES (?, ?, "pendiente")',
-            [refId, type]
+      try {
+        // 4. TRANSACCIÓN ATÓMICA CON BLOQUEO DE FILA (SELECT FOR UPDATE)
+        await transaction(async (conn) => {
+          // Bloqueo estricto del caso en la tabla de control operativo
+          const [casoRows] = await conn.query(
+            'SELECT * FROM telegram_casos_bloqueo WHERE referencia_id = ? FOR UPDATE', 
+            [refId]
           );
-          [caso] = await conn.query('SELECT * FROM telegram_casos_bloqueo WHERE referencia_id = ? FOR UPDATE', [refId]);
-        }
+          let caso = casoRows[0];
 
-        // --- LÓGICA DE ACCIONES ---
-
-        if (action === 'tomar') {
-          if (caso.estado_operativo !== 'pendiente') {
-            throw new Error(`Este caso ya fue ${caso.estado_operativo} por ${caso.tomado_por === telegramUserId ? 'ti' : 'otro operador'}.`);
+          // Si no existe, lo creamos (Fallback de seguridad)
+          if (!caso) {
+            const opType = type || (data.includes('retiro') ? 'retiro' : 'recarga');
+            await conn.query(
+              'INSERT INTO telegram_casos_bloqueo (referencia_id, tipo_operacion, estado_operativo) VALUES (?, ?, "pendiente")',
+              [refId, opType]
+            );
+            [caso] = await conn.query('SELECT * FROM telegram_casos_bloqueo WHERE referencia_id = ? FOR UPDATE', [refId]);
           }
 
-          await conn.query(`
-            UPDATE telegram_casos_bloqueo 
-            SET estado_operativo = 'tomado', tomado_por = ?, tomado_at = ?, telegram_message_id = ?
-            WHERE referencia_id = ?
-          `, [telegramUserId, boliviaTime.now(), String(message.message_id), refId]);
+          // --- LÓGICA DE ACCIONES ---
 
-          // ACTUALIZAR TABLA OPERATIVA REAL
-          const table = caso.tipo_operacion === 'retiro' ? 'retiros' : 'recargas';
-          await conn.query(`
-            UPDATE ${table} 
-            SET estado_operativo = 'tomado', 
-                tomado_por_telegram_user_id = ?, 
-                tomado_por_nombre = ?, 
-                tomado_en = ?
-            WHERE id = ?
-          `, [telegramUserId, member.nombre_visible, boliviaTime.now(), refId]);
+          if (action === 'tomar') {
+            if (caso.estado_operativo !== 'pendiente') {
+              throw new Error(`Este caso ya fue ${caso.estado_operativo} por ${caso.tomado_por === telegramUserId ? 'ti' : 'otro operador'}.`);
+            }
 
-          await safeTelegramCall(() => bot.answerCallbackQuery(callbackQuery.id, { text: '✅ Caso tomado. Eres el único responsable.' }), 'answerCallbackQuery-tomar');
-          await updateTelegramMessage(bot, message, 'tomado', member.nombre_visible, refId);
-        }
+            await conn.query(`
+              UPDATE telegram_casos_bloqueo 
+              SET estado_operativo = 'tomado', tomado_por = ?, tomado_at = ?, telegram_message_id = ?
+              WHERE referencia_id = ?
+            `, [telegramUserId, boliviaTime.now(), String(message.message_id), refId]);
 
-        else if (action === 'aceptar' || action === 'rechazar') {
-          // VALIDACIÓN CRÍTICA: Solo el que tomó puede resolver
-          if (caso.estado_operativo !== 'tomado') {
-            throw new Error('Debes tomar el caso antes de resolverlo.');
-          }
-          if (caso.tomado_por !== telegramUserId) {
-            throw new Error('Solo el operador que tomó el caso puede resolverlo. NO EXISTE OVERRIDE.');
+            // Sincronizar con la tabla real del sistema
+            const table = caso.tipo_operacion === 'retiro' ? 'retiros' : 'compras_nivel';
+            await conn.query(`
+              UPDATE ${table} 
+              SET estado_operativo = 'tomado', 
+                  taken_by_admin_id = (SELECT id FROM usuarios WHERE rol='admin' LIMIT 1), -- Fallback a un admin real
+                  taken_by_admin_name = ?, 
+                  taken_at = ?
+              WHERE id = ?
+            `, [member.nombre_visible, boliviaTime.now(), refId]);
+
+            await safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { text: '✅ Caso tomado. Eres el único responsable.' }), 'answerCallbackQuery-tomar');
+            await updateTelegramMessage(bot, message, 'tomado', member.nombre_visible, refId, caso.tipo_operacion);
           }
 
-          const nuevoEstado = action === 'aceptar' ? 'aprobada' : 'rechazada'; // Mapeo a DB real
-          const table = caso.tipo_operacion === 'retiro' ? 'retiros' : 'recargas';
-          
-          // Actualizar tabla real del sistema
-          await conn.query(
-            `UPDATE ${table} SET 
-              estado = ?, 
-              procesado_por_telegram = ?, 
-              procesado_at = ?,
-              estado_operativo = ?,
-              resuelto_por_telegram_user_id = ?,
-              resuelto_por_nombre = ?,
-              resuelto_en = ?
-             WHERE id = ?`,
-            [
-              action === 'aceptar' ? (table === 'retiros' ? 'pagado' : 'aprobada') : 'rechazada', 
-              telegramUserId, 
-              boliviaTime.now(),
-              action === 'aceptar' ? 'aceptado' : 'rechazado',
-              telegramUserId,
-              member.nombre_visible,
-              boliviaTime.now(),
-              refId
-            ]
-          );
+          else if (action === 'aceptar' || action === 'rechazar') {
+            if (caso.estado_operativo !== 'tomado') {
+              throw new Error('Debes tomar el caso antes de resolverlo.');
+            }
+            if (caso.tomado_por !== telegramUserId) {
+              throw new Error(`Solo ${caso.tomado_por_nombre || 'el operador original'} puede resolverlo.`);
+            }
 
-          // Marcar como resuelto en bloqueo
-          await conn.query(
-            `UPDATE telegram_casos_bloqueo SET estado_operativo = 'resuelto', resuelto_at = ? WHERE referencia_id = ?`,
-            [boliviaTime.now(), refId]
-          );
+            const isAceptar = action === 'aceptar';
+            const table = caso.tipo_operacion === 'retiro' ? 'retiros' : 'compras_nivel';
+            const nuevoEstado = isAceptar ? (table === 'retiros' ? 'pagado' : 'completada') : 'rechazada';
+            
+            // Actualizar tabla real
+            await conn.query(
+              `UPDATE ${table} SET 
+                estado = ?, 
+                procesado_por = (SELECT id FROM usuarios WHERE rol='admin' LIMIT 1),
+                procesado_at = ?,
+                estado_operativo = ?
+               WHERE id = ?`,
+              [nuevoEstado, boliviaTime.now(), isAceptar ? 'aceptado' : 'rechazado', refId]
+            );
 
-          // Log de operación
-          await conn.query(
-            `INSERT INTO telegram_operaciones_log (referencia_id, telegram_user_id, accion) VALUES (?, ?, ?)`,
-            [refId, telegramUserId, action]
-          );
+            // Marcar como resuelto en bloqueo
+            await conn.query(
+              `UPDATE telegram_casos_bloqueo SET estado_operativo = 'resuelto', resuelto_at = ? WHERE referencia_id = ?`,
+              [boliviaTime.now(), refId]
+            );
 
-          await safeTelegramCall(() => bot.answerCallbackQuery(callbackQuery.id, { text: `✅ Caso ${action}do correctamente.` }), 'answerCallbackQuery-resolver');
-          await updateTelegramMessage(bot, message, 'resuelto', member.nombre_visible, refId, action);
-        }
-      });
+            await safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { text: `✅ Caso ${action}do correctamente.` }), 'answerCallbackQuery-resolver');
+            await updateTelegramMessage(bot, message, 'resuelto', member.nombre_visible, refId, caso.tipo_operacion, action);
+          }
+        });
+      } finally {
+        await releaseLock(lock);
+      }
 
     } catch (err) {
       logger.error(`[Telegram Callback Error]: ${err.message}`);
-      safeTelegramCall(() => bot.answerCallbackQuery(callbackQuery.id, { 
+      safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { 
         text: `❌ ERROR: ${err.message}`, 
         show_alert: true 
       }), 'answerCallbackQuery-error');
@@ -185,10 +150,10 @@ export async function setupTelegramLogic() {
 /**
  * Helper para editar mensajes en Telegram según el estado
  */
-async function updateTelegramMessage(bot, message, estado, operador, refId, resolucion = '') {
+async function updateTelegramMessage(bot, message, estado, operador, refId, tipo, resolucion = '') {
   const chatId = message.chat.id;
   const messageId = message.message_id;
-  let text = message.text || '';
+  let text = message.text || message.caption || '';
 
   // Limpiar texto anterior de estado si existe
   text = text.split('\n\n---')[0];
@@ -200,111 +165,29 @@ async function updateTelegramMessage(bot, message, estado, operador, refId, reso
     newText += `\n\n--- ⏳ EN PROCESO ---\n👨‍💼 Operador: ${operador}\n🕒 Tomado a las: ${boliviaTime.getTimeString()}`;
     buttons = [
       [
-        { text: '✅ ACEPTAR', callback_data: `aceptar:${refId}` },
-        { text: '❌ RECHAZAR', callback_data: `rechazar:${refId}` }
+        { text: '✅ Aceptar/Pagar', callback_data: `aceptar:${tipo}:${refId}` },
+        { text: '❌ Rechazar', callback_data: `rechazar:${tipo}:${refId}` }
       ]
     ];
   } else if (estado === 'resuelto') {
-    const color = resolucion === 'aceptar' ? '✅' : '❌';
-    newText += `\n\n--- ${color} RESUELTO ---\n👨‍💼 Operador: ${operador}\n📌 Resultado: ${resolucion.toUpperCase()}\n🕒 Hora: ${boliviaTime.getTimeString()}`;
-    buttons = []; // Sin botones al finalizar
+    const emoji = resolucion === 'aceptar' ? '✅' : '❌';
+    newText += `\n\n--- ${emoji} ${resolucion.toUpperCase()} ---\n👨‍💼 Por: ${operador}\n🕒 A las: ${boliviaTime.getTimeString()}`;
+    buttons = []; // Sin botones tras resolver
   }
 
-  try {
-    await safeTelegramCall(() => bot.editMessageText(newText, {
-      chat_id: chatId,
-      message_id: messageId,
-      reply_markup: { inline_keyboard: buttons }
-    }), 'editMessageText-main');
-
-    // Actualizar también en Secretaría si tenemos el ID del mensaje
-    const caso = await queryOne('SELECT telegram_secretaria_message_id FROM telegram_casos_bloqueo WHERE referencia_id = ?', [refId]);
-    if (caso && caso.telegram_secretaria_message_id) {
-      const secGroup = await queryOne("SELECT chat_id FROM telegram_equipos WHERE tipo = 'secretaria' AND activo = 1");
-      if (secGroup) {
-        await safeTelegramCall(() => bot.editMessageText(newText, {
-          chat_id: secGroup.chat_id,
-          message_id: caso.telegram_secretaria_message_id
-        }), 'editMessageText-secretaria');
-      }
-    }
-  } catch (e) {
-    logger.error(`[Telegram Edit Error]: ${e.message}`);
-  }
-}
-
-/**
- * Función principal para enviar alertas a los grupos
- */
-export async function sendTelegramAlert(tipo, data) {
-  if (!bot) return;
-
-  try {
-    const { refId, usuario, monto, nivel, extraInfo = '' } = data;
-    const time = boliviaTime.getTimeString();
-    
-    // 1. Obtener Configuración de Visibilidad
-    const config = await queryOne('SELECT visibilidad_numero FROM telegram_config_horarios WHERE id = 1');
-    const visibilidad = config?.visibilidad_numero || 'parcial';
-
-    // 2. Formatear Usuario según Configuración
-    let usuarioDisplay = usuario;
-    if (visibilidad === 'parcial' && usuario.includes(' ')) {
-       // Si es nombre completo, no hacemos nada o truncamos. 
-       // Si es número (ej: +59170001234), lo ocultamos
-    } else if (visibilidad === 'parcial') {
-       // Suponiendo que el usuario es un número de teléfono o ID
-       if (usuario.length > 7) {
-         usuarioDisplay = usuario.substring(0, usuario.length - 4) + '****';
-       }
-    }
-
-    // 3. Construir Mensaje Base
-    const message = `📌 NUEVA OPERACIÓN\n\n` +
-                    `👤 Usuario: ${usuarioDisplay}\n` +
-                    `🏅 VIP: ${nivel}\n` +
-                    `💵 Monto: ${monto} BOB\n` +
-                    `🧾 Tipo: ${tipo.toUpperCase()}\n` +
-                    `📍 Estado: PENDIENTE\n` +
-                    `🕒 Hora: ${time}\n` +
-                    `${extraInfo}\n` +
-                    `🆔 Ref: ${refId}`;
-
-    // 4. Obtener Grupos
-    const equipos = await query("SELECT * FROM telegram_equipos WHERE activo = 1");
-    const secGroup = equipos.find(e => e.tipo === 'secretaria');
-    const retGroup = equipos.find(e => e.tipo === 'retiros');
-    const admGroup = equipos.find(e => e.tipo === 'administradores');
-
-    // 3. Enviar a Secretaría (Lectura)
-    let secMsgId = null;
-    if (secGroup) {
-      const sent = await safeTelegramCall(() => bot.sendMessage(secGroup.chat_id, message), 'sendAlert-Secretaria');
-      secMsgId = sent?.message_id;
-    }
-
-    // 4. Enviar a Grupos Operativos (Con Botones)
-    const buttons = [[{ text: '✋ TOMAR CASO', callback_data: `tomar:${refId}` }]];
-    
-    const targetGroups = [];
-    if (tipo === 'retiro' && retGroup) targetGroups.push(retGroup.chat_id);
-    if (admGroup) targetGroups.push(admGroup.chat_id);
-
-    for (const chatId of targetGroups) {
-      await safeTelegramCall(() => bot.sendMessage(chatId, message, {
+  await safeTelegramCall(() => {
+    if (message.caption) {
+      return bot.editMessageCaption(newText, {
+        chat_id: chatId,
+        message_id: messageId,
         reply_markup: { inline_keyboard: buttons }
-      }), `sendAlert-Target-${chatId}`);
+      });
+    } else {
+      return bot.editMessageText(newText, {
+        chat_id: chatId,
+        message_id: messageId,
+        reply_markup: { inline_keyboard: buttons }
+      });
     }
-
-    // 5. Registrar en tabla de bloqueo
-    await query(`
-      INSERT INTO telegram_casos_bloqueo (referencia_id, tipo_operacion, telegram_secretaria_message_id)
-      VALUES (?, ?, ?)
-    `, [refId, tipo, String(secMsgId)]);
-
-  } catch (err) {
-    logger.error(`[Telegram Alert Error]: ${err.message}`);
-  }
+  }, 'editTelegramMessage');
 }
-
-export default setupTelegramLogic;

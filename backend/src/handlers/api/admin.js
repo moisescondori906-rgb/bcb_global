@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import redis from '../../services/redisService.js';
 import { 
   getUsers, getLevels, findUserById, updateUser, 
-  getPublicContent, approveLevelPurchase, rejectRetiro,
+  getPublicContent, approveLevelPurchase, rejectRetiro, approveRetiro,
   boliviaTime, distributeInvestmentCommissions, refreshPublicContent, 
   invalidateLevelsCache, preloadLevels, syncLevels,
   getMensajesGlobales, createMensajeGlobal, deleteMensajeGlobal
@@ -115,6 +115,17 @@ router.post('/compras-nivel/:id/aprobar', asyncHandler(async (req, res) => {
   res.json({ ok: true, trace_id: result.traceId });
 }));
 
+// Alias para compatibilidad con el frontend
+router.post('/recargas/:id/aprobar', asyncHandler(async (req, res) => {
+  const result = await approveLevelPurchase(req.params.id, req.user.id);
+  const compra = await queryOne(`SELECT * FROM compras_nivel WHERE id = ?`, [req.params.id]);
+  if (compra) {
+    await distributeInvestmentCommissions(compra.usuario_id, compra.monto);
+    await redis.del('admin:ranking:invitados');
+  }
+  res.json({ ok: true, trace_id: result.traceId });
+}));
+
 router.post('/compras-nivel/:id/rechazar', asyncHandler(async (req, res) => {
   const { motivo } = req.body;
   await query(
@@ -122,6 +133,21 @@ router.post('/compras-nivel/:id/rechazar', asyncHandler(async (req, res) => {
     [motivo, req.user.id, req.params.id]
   );
   res.json({ ok: true });
+}));
+
+// Alias para compatibilidad con el frontend
+router.post('/recargas/:id/rechazar', asyncHandler(async (req, res) => {
+  const { motivo } = req.body;
+  await query(
+    `UPDATE compras_nivel SET estado = 'rechazada', admin_notas = ?, procesado_por = ?, procesado_at = NOW() WHERE id = ?`,
+    [motivo, req.user.id, req.params.id]
+  );
+  res.json({ ok: true });
+}));
+
+router.post('/retiros/:id/aprobar', asyncHandler(async (req, res) => {
+  const result = await approveRetiro(req.params.id, req.user.id);
+  res.json({ ok: true, trace_id: result.traceId });
 }));
 
 router.post('/retiros/:id/rechazar', asyncHandler(async (req, res) => {
