@@ -167,16 +167,20 @@ const PORT = process.env.PORT || 4000;
 
 async function startServer() {
   try {
-    // Sincronizar niveles institucionales
-    await syncLevels().catch(e => logger.warn(`[SYNC] Falló sincronización inicial de niveles: ${e.message}`));
-
-    const server = app.listen(PORT, () => {
+    // 1. ESCUCHAR PUERTO INMEDIATAMENTE (Evitar 502 Bad Gateway)
+    const server = app.listen(PORT, '0.0.0.0', () => {
       logger.info(`[SERVER] BCB Global Backend v9.1.0 estable en puerto ${PORT}`);
       logger.info(`[ENV] Modo: ${process.env.NODE_ENV}`);
     });
 
-    // 4. INICIALIZACIÓN DE TELEGRAM (AISLAMIENTO TOTAL)
-    // Se ejecuta tras un delay para no bloquear el inicio del server HTTP
+    // 2. INICIALIZACIONES ASÍNCRONAS (No bloqueantes para el puerto)
+    
+    // Sincronizar niveles institucionales
+    syncLevels()
+      .then(() => logger.info('[SYNC] Niveles sincronizados con éxito'))
+      .catch(e => logger.warn(`[SYNC] Falló sincronización de niveles: ${e.message}`));
+
+    // Inicialización de Telegram
     setTimeout(() => {
       initTelegramHandlers().catch(err => {
         logger.error('[TELEGRAM] Fallo crítico en inicialización de bots:', err);

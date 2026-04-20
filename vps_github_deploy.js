@@ -23,8 +23,8 @@ conn.on('ready', () => {
     'cd /var/www/bcb_global/backend && pm2 start ecosystem.config.cjs',
     'sleep 15',
     'pm2 status',
-    'pm2 logs --lines 100 --no-daemon || true',
-    'curl -v http://127.0.0.1:4000/api/users/me || true'
+    'pm2 logs bcb-global-backend --lines 200 --no-daemon --no-colors || true',
+    'curl -v http://127.0.0.1:4000/health || true'
   ];
 
   const executeNext = (index) => {
