@@ -21,9 +21,10 @@ conn.on('ready', () => {
     'cd /var/www/bcb_global/frontend && npm install && npm run build',
     'cd /var/www/bcb_global/backend && (pm2 delete bcb-global-backend || true) && pm2 start ecosystem.config.cjs',
     'pm2 delete bcb-global || true',
-    'sleep 10',
+    'sleep 15',
     'pm2 status',
-    'curl -I http://localhost:4000/api/users/me || true'
+    'pm2 logs bcb-global-backend --lines 50 --no-colors || true',
+    'curl -I http://127.0.0.1:4000/api/users/me || true'
   ];
 
   const executeNext = (index) => {
