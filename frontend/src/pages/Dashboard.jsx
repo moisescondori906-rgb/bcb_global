@@ -294,36 +294,40 @@ export default function Dashboard() {
 
       <FloatingQuestionnaire />
 
-      {/* Floating Action Buttons */}
-      <motion.div 
-        drag
-        dragConstraints={{ left: -300, right: 0, top: -500, bottom: 0 }}
-        className="fixed bottom-24 right-6 flex flex-col gap-5 z-[60]"
-      >
+      {/* Floating Action Menu v10.1.0 (Organized) */}
+      <div className="fixed bottom-24 right-6 flex flex-col gap-4 z-[60] items-end">
         <AnimatePresence>
           {showSupportMenu && (
             <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.8 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.8 }}
-              className="flex flex-col gap-4 mb-2 items-end"
+              initial={{ opacity: 0, scale: 0.5, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.5, y: 50 }}
+              className="flex flex-col gap-3 mb-2"
             >
+              {/* Ruleta (Now inside support menu for better order) */}
+              {pc?.ruleta_activa !== false && (
+                <Link to="/recompensas" className="group flex items-center gap-3 justify-end active:scale-95 transition-transform">
+                  <span className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 rounded-xl text-[9px] font-black text-white uppercase tracking-[0.2em] shadow-lg shadow-orange-500/20 border border-white/20">
+                    Girar Ruleta
+                  </span>
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-600 flex items-center justify-center text-white border border-white/30 shadow-xl relative overflow-hidden">
+                    <RouletteIcon size={20} className="animate-spin-slow" />
+                  </div>
+                </Link>
+              )}
+
+              {/* Support Links */}
               <a 
                 href={pc?.soporte_canal_url || '#'} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 group active:scale-95 transition-transform"
               >
-                <motion.span 
-                  initial={{ x: 10, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  className="bg-sav-dark/95 backdrop-blur-2xl border border-white/20 px-4 py-2.5 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-l-4 border-l-sav-primary"
-                >
+                <span className="bg-sav-dark/95 backdrop-blur-md border border-white/10 px-4 py-2 rounded-xl text-[9px] font-black text-white uppercase tracking-widest shadow-xl">
                   Canal Oficial
-                </motion.span>
-                <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-sav-primary to-rose-700 shadow-[0_15px_40px_-5px_rgba(220,38,38,0.6)] flex items-center justify-center text-white border-2 border-white/20 transition-all group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-sav-primary/40 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <UsersIcon size={24} className="relative z-10" />
+                </span>
+                <div className="w-12 h-12 rounded-2xl bg-sav-primary flex items-center justify-center text-white border border-white/10 shadow-xl">
+                  <UsersIcon size={20} />
                 </div>
               </a>
               <a 
@@ -332,104 +336,41 @@ export default function Dashboard() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 group active:scale-95 transition-transform"
               >
-                <motion.span 
-                  initial={{ x: 10, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className="bg-sav-dark/95 backdrop-blur-2xl border border-white/20 px-4 py-2.5 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-l-4 border-l-emerald-500"
-                >
+                <span className="bg-sav-dark/95 backdrop-blur-md border border-white/10 px-4 py-2 rounded-xl text-[9px] font-black text-white uppercase tracking-widest shadow-xl">
                   Soporte VIP
-                </motion.span>
-                <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-emerald-500 to-teal-700 shadow-[0_15px_40px_-5px_rgba(16,185,129,0.6)] flex items-center justify-center text-white border-2 border-white/20 transition-all group-hover:scale-110 group-hover:-rotate-6 group-hover:shadow-emerald-500/40 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <MessageIcon size={24} className="relative z-10" />
+                </span>
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500 flex items-center justify-center text-white border border-white/10 shadow-xl">
+                  <MessageIcon size={20} />
                 </div>
               </a>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {pc?.ruleta_activa !== false && (
-          <Link to="/recompensas" className="group active:scale-90 transition-transform flex items-center gap-3 justify-end">
-            <motion.span 
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 rounded-2xl text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-lg shadow-orange-500/20 border border-white/20"
-            >
-              Ruleta
-            </motion.span>
-            <motion.div 
-              animate={{ 
-                y: [0, -8, 0],
-                boxShadow: [
-                  "0 20px 40px -10px rgba(245,158,11,0.5)",
-                  "0 30px 60px -10px rgba(245,158,11,0.8)",
-                  "0 20px 40px -10px rgba(245,158,11,0.5)"
-                ]
-              }}
-              transition={{ 
-                y: { repeat: Infinity, duration: 2.5, ease: "easeInOut" },
-                boxShadow: { repeat: Infinity, duration: 2.5, ease: "easeInOut" }
-              }}
-              className="w-16 h-16 rounded-[1.8rem] bg-gradient-to-br from-amber-400 via-orange-500 to-rose-600 flex items-center justify-center text-white relative overflow-hidden border-2 border-white/40 shadow-2xl"
-            >
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-white/20" />
-              <RouletteIcon size={32} className="animate-spin-slow drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
-              
-              {/* Partículas de brillo */}
-              <motion.div 
-                animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5], rotate: 45 }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-                className="absolute top-2 left-2 text-white/40"
-              >
-                <SparklesIcon size={12} />
-              </motion.div>
-
-              <motion.div 
-                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.5] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-                className="absolute -top-1 -right-1 w-5 h-5 bg-sav-error rounded-full border-2 border-white shadow-lg flex items-center justify-center"
-              >
-                <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-              </motion.div>
-            </motion.div>
-          </Link>
-        )}
-
+        {/* Main Toggle Button */}
         <motion.button
-          whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => setShowSupportMenu(!showSupportMenu)}
           className={cn(
-            "w-16 h-16 rounded-[1.8rem] flex items-center justify-center text-white transition-all duration-500 border-2 relative overflow-hidden group",
+            "w-14 h-14 rounded-2xl flex items-center justify-center text-white transition-all duration-300 border-2 z-10 shadow-2xl",
             showSupportMenu 
-              ? "bg-sav-dark border-white/20 rotate-90 shadow-none" 
-              : "bg-gradient-to-br from-sav-primary via-sav-primary to-rose-700 border-white/20 shadow-[0_20px_50px_-10px_rgba(220,38,38,0.7)]"
+              ? "bg-sav-dark border-white/20 rotate-45" 
+              : "bg-gradient-to-br from-sav-primary to-rose-700 border-white/20"
           )}
         >
-          {/* Shimmer Effect */}
-          {!showSupportMenu && (
-            <motion.div 
-              animate={{ x: ['-100%', '100%'] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
-            />
-          )}
+          {showSupportMenu ? <X size={24} /> : <PlusIcon size={28} />}
           
-          <AnimatePresence mode="wait">
-            {showSupportMenu ? (
-              <motion.div key="close" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: 90 }}>
-                <CloseIcon size={28} />
-              </motion.div>
-            ) : (
-              <motion.div key="plus" initial={{ opacity: 0, rotate: 90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: -90 }}>
-                <PlusIcon size={32} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Notification Dot */}
+          {!showSupportMenu && (
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-sav-error rounded-full border-2 border-sav-dark flex items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+            </div>
+          )}
         </motion.button>
-      </motion.div>
+      </div>
+    </Layout>
+  );
+}
     </Layout>
   );
 }

@@ -4,13 +4,13 @@ module.exports = {
       name: 'bcb-global-backend',
       script: 'src/index.mjs',
       cwd: '/var/www/bcb_global/backend',
-      instances: 'max',
+      instances: 2, // Ajustado a 2 para estabilidad en VPS estándar
       exec_mode: 'cluster',
       env: {
         NODE_ENV: 'production',
         PORT: 4000,
         DEBUG: '*',
-        NODE_APP_INSTANCE: '0' // PM2 injects this automatically, but we declare it for safety
+        NODE_APP_INSTANCE: '0'
       },
       env_development: {
         NODE_ENV: 'development',

@@ -68,19 +68,27 @@ router.post('/', asyncHandler(async (req, res) => {
         throw new Error('Cloudinary not configured');
       }
     } catch (cloudErr) {
-      // Fallback: Guardar Localmente
+      // Fallback: Guardar Localmente (Blindado)
       logger.warn(`[RECHARGE] Cloudinary falló o no configurado, usando storage local: ${cloudErr.message}`);
-      const base64Data = comprobante_url.replace(/^data:image\/\w+;base64,/, '');
-      const buffer = Buffer.from(base64Data, 'base64');
-      const filename = `voucher_${Date.now()}_${uuidv4().substring(0, 8)}.jpg`;
-      const uploadDir = path.join(__dirname, '../../public/uploads');
-      
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+      try {
+        const base64Data = comprobante_url.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        const filename = `voucher_${Date.now()}_${uuidv4().substring(0, 8)}.jpg`;
+        const uploadDir = path.join(__dirname, '../../../public/uploads');
+        
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        
+        fs.writeFileSync(path.join(uploadDir, filename), buffer);
+        final_comprobante_url = `${process.env.BACKEND_URL || ''}/uploads/${filename}`;
+      } catch (fsErr) {
+        logger.error(`[RECHARGE-FS-ERROR] Falló guardado local: ${fsErr.message}`);
+        return res.status(500).json({ 
+          error: 'Error crítico al procesar el comprobante. Por favor, intenta de nuevo o contacta a soporte.',
+          traceId: uuidv4().substring(0, 8)
+        });
       }
-      
-      fs.writeFileSync(path.join(uploadDir, filename), buffer);
-      final_comprobante_url = `${process.env.BACKEND_URL || ''}/uploads/${filename}`;
     }
   }
 

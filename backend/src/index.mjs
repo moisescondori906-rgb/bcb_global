@@ -129,20 +129,23 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'https://bcb-global.com',
-  'https://www.bcb-global.com'
+  'https://www.bcb-global.com',
+  'capacitor://localhost',
+  'http://localhost'
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Permitir peticiones sin origin (como apps móviles o curl) en desarrollo
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.bcb-global.com') || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
       logger.warn(`[CORS-REJECTED] Origin: ${origin}`);
       callback(new Error('CORS no permitido por política de seguridad.'));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-slug']
 }));
 
 // Límites de subida aumentados para vouchers de alta resolución (Senior Standard)
