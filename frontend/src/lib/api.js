@@ -308,6 +308,13 @@ export const api = {
       updateUsuario: (id, data) => request(`/admin/telegram/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
       eliminarUsuario: (id) => request(`/admin/telegram/usuarios/${id}`, { method: 'DELETE' }),
       historial: () => request('/admin/telegram/historial'),
-    }
+    },
+    calendario: () => request('/admin/calendario'),
+    crearCalendario: (data) => request('/admin/calendario', { method: 'POST', body: JSON.stringify(data) }),
+    eliminarCalendario: (fecha) => request(`/admin/calendario/${fecha}`, { method: 'DELETE' }),
+    cuestionarios: () => request('/admin/cuestionarios'),
+    crearCuestionario: (data) => request('/admin/cuestionarios', { method: 'POST', body: JSON.stringify(data) }),
+    eliminarCuestionario: (id) => request(`/admin/cuestionarios/${id}`, { method: 'DELETE' }),
+    respuestasCuestionario: () => request('/admin/cuestionario/respuestas'),
   },
 };

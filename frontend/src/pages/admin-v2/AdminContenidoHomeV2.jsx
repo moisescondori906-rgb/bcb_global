@@ -22,6 +22,7 @@ export default function AdminContenidoHomeV2() {
   const [content, setContent] = useState({
     soporte_canal_url: '',
     soporte_gerente_url: '',
+    soporte_bot_url: '',
     marquee_text: '',
     comision_retiro: 12,
     ruleta_activa: true,
@@ -117,6 +118,20 @@ export default function AdminContenidoHomeV2() {
                   onChange={e => setContent({...content, soporte_gerente_url: e.target.value})}
                   className="w-full pl-14 pr-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-sav-primary/30 transition-all shadow-inner"
                   placeholder="https://wa.me/591..."
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Bot de Soporte (Directo)</label>
+              <div className="relative group">
+                <Zap className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-400 transition-colors" size={18} />
+                <input 
+                  type="url" 
+                  value={content.soporte_bot_url} 
+                  onChange={e => setContent({...content, soporte_bot_url: e.target.value})}
+                  className="w-full pl-14 pr-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-sav-primary/30 transition-all shadow-inner"
+                  placeholder="https://t.me/tu_bot"
                 />
               </div>
             </div>

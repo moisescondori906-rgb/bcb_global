@@ -20,12 +20,15 @@ import {
   UserCheck,
   UserX,
   CreditCard,
-  Target
+  Target,
+  DollarSign,
+  User,
+  ShieldAlert
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { formatCurrency, formatDate } from '../../utils/format';
 
-const UserRow = ({ user, onEdit, onDelete, onToggleStatus, onToggleBlock, onResetPassword }) => (
+const UserRow = ({ user, onEdit, onDelete, onToggleStatus, onToggleBlock, onResetPassword, onAdjustBalance }) => (
   <motion.tr 
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -52,13 +55,13 @@ const UserRow = ({ user, onEdit, onDelete, onToggleStatus, onToggleBlock, onRese
     </td>
     <td className="px-6 py-5 text-center">
       <div className="flex flex-col items-center">
-        <p className="text-sm font-black text-white tracking-tighter">{formatCurrency(user.saldo)}</p>
+        <p className="text-sm font-black text-white tracking-tighter">{formatCurrency(user.saldo_principal || user.saldo)}</p>
         <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Balance Disponible</p>
       </div>
     </td>
     <td className="px-6 py-5 text-center">
       <div className="flex flex-col items-center">
-        <p className="text-sm font-black text-sav-primary uppercase tracking-tighter italic">Nivel {user.nivel_id || 0}</p>
+        <p className="text-sm font-black text-sav-primary uppercase tracking-tighter italic">{user.nivel || 'Internar'}</p>
         <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">VIP Status</p>
       </div>
     </td>
@@ -72,14 +75,14 @@ const UserRow = ({ user, onEdit, onDelete, onToggleStatus, onToggleBlock, onRese
     </td>
     <td className="px-6 py-5 text-right">
       <div className="flex items-center justify-end gap-2">
+        <button onClick={() => onAdjustBalance(user)} className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20 shadow-lg" title="Ajustar Saldo">
+          <DollarSign size={16} />
+        </button>
         <button onClick={() => onToggleBlock(user)} className={`p-2.5 rounded-xl transition-all border border-white/5 shadow-lg ${user.bloqueado ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white'}`} title={user.bloqueado ? "Desbloquear" : "Bloquear acceso"}>
           <Shield size={16} />
         </button>
         <button onClick={() => onResetPassword(user)} className="p-2.5 rounded-xl bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-all border border-white/5 shadow-lg" title="Reset Password">
           <RefreshCw size={16} />
-        </button>
-        <button onClick={() => onEdit(user)} className="p-2.5 rounded-xl bg-sav-primary/10 text-sav-primary hover:bg-sav-primary hover:text-white transition-all border border-sav-primary/20 shadow-lg">
-          <Edit3 size={16} />
         </button>
       </div>
     </td>
@@ -94,6 +97,11 @@ export default function AdminUsuariosV2() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [adjustForm, setAdjustForm] = useState({ tipo: 'principal', monto: '', motivo: '' });
+  const [isAdjusting, setIsAdjusting] = useState(false);
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -101,12 +109,35 @@ export default function AdminUsuariosV2() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/admin/usuarios');
-      setUsers(data);
+      const data = await api.admin.usuarios();
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching users:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAdjustBalance = (user) => {
+    setSelectedUser(user);
+    setAdjustForm({ tipo: 'principal', monto: '', motivo: '' });
+    setShowAdjustModal(true);
+  };
+
+  const submitAdjustment = async (e) => {
+    e.preventDefault();
+    if (!adjustForm.monto || isNaN(adjustForm.monto)) return alert('Monto inválido');
+    
+    setIsAdjusting(true);
+    try {
+      await api.admin.ajusteUsuario(selectedUser.id, adjustForm);
+      setShowAdjustModal(false);
+      fetchUsers();
+      alert('Ajuste realizado con éxito');
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setIsAdjusting(false);
     }
   };
 
@@ -128,15 +159,6 @@ export default function AdminUsuariosV2() {
       alert('Contraseña actualizada');
     } catch (err) {
       alert(err.message);
-    }
-  };
-
-  const handleToggleStatus = async (user) => {
-    try {
-      await api.post(`/admin/usuarios/${user.id}/toggle-status`);
-      fetchUsers();
-    } catch (err) {
-      console.error('Error toggling status:', err);
     }
   };
 
@@ -226,7 +248,7 @@ export default function AdminUsuariosV2() {
                     user={user} 
                     onToggleBlock={handleToggleBlock}
                     onResetPassword={handleResetPassword}
-                    onEdit={() => {}} // TODO: Modal edición completa
+                    onAdjustBalance={handleAdjustBalance}
                   />
                 ))
               ) : (
@@ -269,6 +291,95 @@ export default function AdminUsuariosV2() {
           </div>
         </div>
       </div>
+
+      {/* Adjust Balance Modal */}
+      <AnimatePresence>
+        {showAdjustModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-2xl flex items-center justify-center p-6 z-[200]"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="bg-[#161926] border border-white/10 p-12 rounded-[50px] max-w-lg w-full shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/50" />
+              
+              <div className="flex items-center gap-4 mb-8">
+                <div className="p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                  <DollarSign size={24} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic">Ajuste de Capital</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{selectedUser?.nombre_usuario}</p>
+                </div>
+              </div>
+
+              <form onSubmit={submitAdjustment} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Tipo de Billetera</label>
+                  <select 
+                    value={adjustForm.tipo}
+                    onChange={e => setAdjustForm({...adjustForm, tipo: e.target.value})}
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white uppercase outline-none focus:border-emerald-500/30 shadow-inner"
+                  >
+                    <option value="principal">Saldo Principal</option>
+                    <option value="comisiones">Saldo Comisiones</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Monto a Ajustar (BOB)</label>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    value={adjustForm.monto} 
+                    onChange={e => setAdjustForm({...adjustForm, monto: e.target.value})}
+                    placeholder="Ej. 100 o -100"
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-emerald-500/30 shadow-inner"
+                    required
+                  />
+                  <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest ml-1">Usa valores negativos para restar saldo</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Motivo del Ajuste</label>
+                  <input 
+                    type="text" 
+                    value={adjustForm.motivo} 
+                    onChange={e => setAdjustForm({...adjustForm, motivo: e.target.value})}
+                    placeholder="Bono por evento / Corrección..."
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-emerald-500/30 shadow-inner"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    type="button"
+                    onClick={() => setShowAdjustModal(false)}
+                    className="flex-1 py-4 rounded-2xl bg-white/5 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={isAdjusting}
+                    className="flex-1 py-4 rounded-2xl bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2"
+                  >
+                    {isAdjusting ? <RefreshCw className="animate-spin" size={14} /> : <CheckCircle2 size={14} />}
+                    Aplicar Ajuste
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1178,7 +1178,16 @@ export async function getPublicContent() {
 
   try {
     const rows = await query(`SELECT * FROM configuraciones`);
-    const config = rows.reduce((acc, r) => ({ ...acc, [r.clave]: r.valor }), {});
+    const config = rows.reduce((acc, r) => {
+      let val = r.valor;
+      try {
+        // Intentar parsear si parece JSON (objetos, arrays, números, booleanos stringificados)
+        val = JSON.parse(r.valor);
+      } catch (e) {
+        // Si falla, usar el valor tal cual (es un string plano)
+      }
+      return { ...acc, [r.clave]: val };
+    }, {});
     
     // Mezclar con defaults para asegurar campos críticos
     const merged = { ...DEFAULT_CONFIG, ...config };
@@ -1191,7 +1200,14 @@ export async function getPublicContent() {
   }
 }
 
-export async function refreshPublicContent() {
+export async function refreshPublicContent(newContent = null) {
+  if (newContent) {
+    // Si se provee nuevo contenido, guardar en DB
+    for (const [clave, valor] of Object.entries(newContent)) {
+      await query(`INSERT INTO configuraciones (clave, valor) VALUES (?, ?) ON DUPLICATE KEY UPDATE valor = ?`, 
+        [clave, JSON.stringify(valor), JSON.stringify(valor)]);
+    }
+  }
   configCache.data = null;
   configCache.lastFetch = 0;
   return await getPublicContent();

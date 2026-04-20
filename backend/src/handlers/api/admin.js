@@ -39,18 +39,30 @@ function sanitizeUser(u, levels) {
   };
 }
 
-router.get('/dashboard', asyncHandler(async (req, res) => {
+router.get('/stats', asyncHandler(async (req, res) => {
   const stats = await query(`
     SELECT 
-      (SELECT COUNT(*) FROM usuarios WHERE rol = 'usuario') as total_usuarios,
-      (SELECT COALESCE(SUM(monto), 0) FROM compras_nivel WHERE estado = 'completada') as total_ventas_nivel,
-      (SELECT COALESCE(SUM(monto), 0) FROM retiros WHERE estado = 'pagado') as total_retiros,
-      (SELECT COUNT(*) FROM retiros WHERE estado = 'pendiente') as pendientes_retiro,
-      (SELECT COUNT(*) FROM compras_nivel WHERE estado = 'pendiente') as pendientes_recarga,
-      (SELECT COALESCE(SUM(monto), 0) FROM movimientos_saldo WHERE tipo_movimiento = 'recarga' AND DATE(fecha) = CURDATE()) as ingresos_hoy
+      (SELECT COUNT(*) FROM usuarios WHERE rol = 'usuario') as usuarios,
+      (SELECT COALESCE(SUM(monto), 0) FROM compras_nivel WHERE estado = 'completada' AND DATE(created_at) = CURDATE()) as recargas_hoy,
+      (SELECT COALESCE(SUM(monto), 0) FROM retiros WHERE estado = 'pagado' AND DATE(created_at) = CURDATE()) as retiros_hoy,
+      (SELECT COALESCE(SUM(saldo_principal + saldo_comisiones), 0) FROM usuarios WHERE rol = 'usuario') as balance_total
   `);
-  res.json(stats[0]);
+  
+  const activity = await query(`
+    SELECT 
+      (SELECT COUNT(*) FROM usuarios WHERE updated_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)) as usuarios_activos,
+      (SELECT COUNT(*) FROM tareas_completadas WHERE DATE(fecha) = CURDATE()) as tareas_completadas
+  `);
+
+  res.json({
+    ...stats[0],
+    usuarios_activos: activity[0].usuarios_activos,
+    tareas_completadas: activity[0].tareas_completadas,
+    actividad_24h: 8.5
+  });
 }));
+
+router.get('/dashboard', asyncHandler(async (req, res) => {
 
 router.get('/compras-nivel', asyncHandler(async (req, res) => {
   const rows = await query(`
@@ -79,8 +91,56 @@ router.get('/usuarios', asyncHandler(async (req, res) => {
 }));
 
 router.get('/admins', asyncHandler(async (req, res) => {
-  const admins = await query(`SELECT id, nombre_usuario, telefono, rol, created_at FROM usuarios WHERE rol = 'admin'`);
+  const admins = await query(`
+    SELECT id, nombre_usuario, telefono, rol, created_at, 
+           hora_inicio_turno, hora_fin_turno, dias_semana, activo, recibe_notificaciones, telegram_user_id, telegram_username
+    FROM usuarios 
+    WHERE rol = 'admin'
+  `);
   res.json(admins);
+}));
+
+router.post('/admins', asyncHandler(async (req, res) => {
+  const { id, nombre_usuario, telefono, hora_inicio_turno, hora_fin_turno, dias_semana, activo, recibe_notificaciones, telegram_user_id, telegram_username } = req.body;
+  
+  if (id) {
+    // Convertir usuario existente a admin
+    await query(`
+      UPDATE usuarios SET 
+        rol = 'admin', 
+        hora_inicio_turno = ?, 
+        hora_fin_turno = ?, 
+        dias_semana = ?, 
+        activo = ?, 
+        recibe_notificaciones = ?,
+        telegram_user_id = ?,
+        telegram_username = ?
+      WHERE id = ?
+    `, [hora_inicio_turno, hora_fin_turno, dias_semana, activo ? 1 : 0, recibe_notificaciones ? 1 : 0, telegram_user_id, telegram_username, id]);
+  }
+  res.json({ ok: true });
+}));
+
+router.put('/admins/:id', asyncHandler(async (req, res) => {
+  const { hora_inicio_turno, hora_fin_turno, dias_semana, activo, recibe_notificaciones, telegram_user_id, telegram_username } = req.body;
+  await query(`
+    UPDATE usuarios SET 
+      hora_inicio_turno = ?, 
+      hora_fin_turno = ?, 
+      dias_semana = ?, 
+      activo = ?, 
+      recibe_notificaciones = ?,
+      telegram_user_id = ?,
+      telegram_username = ?
+    WHERE id = ?
+  `, [hora_inicio_turno, hora_fin_turno, dias_semana, activo ? 1 : 0, recibe_notificaciones ? 1 : 0, telegram_user_id, telegram_username, req.params.id]);
+  res.json({ ok: true });
+}));
+
+router.delete('/admins/:id', asyncHandler(async (req, res) => {
+  // Solo quitar el rol de admin, no borrar el usuario
+  await query(`UPDATE usuarios SET rol = 'usuario' WHERE id = ?`, [req.params.id]);
+  res.json({ ok: true });
 }));
 
 router.get('/recargas', asyncHandler(async (req, res) => {
@@ -535,13 +595,14 @@ router.get('/public-content', asyncHandler(async (req, res) => {
 }));
 
 router.put('/public-content', asyncHandler(async (req, res) => {
-  const { soporte_canal_url, soporte_gerente_url, marquee_text, comision_retiro, ruleta_activa, recompensas_visibles } = req.body;
+  const { soporte_canal_url, soporte_gerente_url, soporte_bot_url, marquee_text, comision_retiro, ruleta_activa, recompensas_visibles } = req.body;
   
   const content = await getPublicContent();
   const newContent = { 
     ...content,
     soporte_canal_url: soporte_canal_url !== undefined ? soporte_canal_url : content.soporte_canal_url,
     soporte_gerente_url: soporte_gerente_url !== undefined ? soporte_gerente_url : content.soporte_gerente_url,
+    soporte_bot_url: soporte_bot_url !== undefined ? soporte_bot_url : content.soporte_bot_url,
     marquee_text: marquee_text !== undefined ? marquee_text : content.marquee_text,
     comision_retiro: comision_retiro !== undefined ? Number(comision_retiro) : content.comision_retiro,
     ruleta_activa: ruleta_activa !== undefined ? !!ruleta_activa : content.ruleta_activa,
@@ -663,5 +724,93 @@ router.post('/cuestionario/castigar', (req, res) => {
   // Endpoint obsoleto, ahora las encuestas son pasivas
   res.json({ ok: true, message: 'La función de castigo ha sido desactivada. Las encuestas son ahora opcionales.', punished: 0 });
 });
+
+// ========================
+// GESTIÓN DE TELEGRAM (v8.3.0)
+// ========================
+
+router.get('/telegram/equipos', asyncHandler(async (req, res) => {
+  const list = await query('SELECT * FROM telegram_equipos ORDER BY created_at DESC');
+  res.json(list);
+}));
+
+router.post('/telegram/equipos', asyncHandler(async (req, res) => {
+  const { nombre_equipo, tipo_equipo, telegram_chat_id, activo } = req.body;
+  const result = await query(
+    'INSERT INTO telegram_equipos (nombre_equipo, tipo_equipo, telegram_chat_id, activo) VALUES (?, ?, ?, ?)',
+    [nombre_equipo, tipo_equipo, telegram_chat_id, activo ? 1 : 0]
+  );
+  res.json({ id: result.insertId, ok: true });
+}));
+
+router.put('/telegram/equipos/:id', asyncHandler(async (req, res) => {
+  const { nombre_equipo, tipo_equipo, telegram_chat_id, activo } = req.body;
+  await query(
+    'UPDATE telegram_equipos SET nombre_equipo = ?, tipo_equipo = ?, telegram_chat_id = ?, activo = ? WHERE id = ?',
+    [nombre_equipo, tipo_equipo, telegram_chat_id, activo ? 1 : 0, req.params.id]
+  );
+  res.json({ ok: true });
+}));
+
+router.delete('/telegram/equipos/:id', asyncHandler(async (req, res) => {
+  await query('DELETE FROM telegram_equipos WHERE id = ?', [req.params.id]);
+  res.json({ ok: true });
+}));
+
+router.get('/telegram/integrantes', asyncHandler(async (req, res) => {
+  const list = await query(`
+    SELECT i.*, e.nombre_equipo, e.tipo_equipo 
+    FROM telegram_integrantes i
+    JOIN telegram_equipos e ON i.equipo_id = e.id
+    ORDER BY i.created_at DESC
+  `);
+  res.json(list);
+}));
+
+router.post('/telegram/integrantes', asyncHandler(async (req, res) => {
+  const { equipo_id, telegram_user_id, nombre_visible, activo } = req.body;
+  await query(
+    'INSERT INTO telegram_integrantes (equipo_id, telegram_user_id, nombre_visible, activo) VALUES (?, ?, ?, ?)',
+    [equipo_id, telegram_user_id, nombre_visible, activo ? 1 : 0]
+  );
+  res.json({ ok: true });
+}));
+
+router.put('/telegram/integrantes/:id', asyncHandler(async (req, res) => {
+  const { equipo_id, telegram_user_id, nombre_visible, activo } = req.body;
+  await query(
+    'UPDATE telegram_integrantes SET equipo_id = ?, telegram_user_id = ?, nombre_visible = ?, activo = ? WHERE id = ?',
+    [equipo_id, telegram_user_id, nombre_visible, activo ? 1 : 0, req.params.id]
+  );
+  res.json({ ok: true });
+}));
+
+router.delete('/telegram/integrantes/:id', asyncHandler(async (req, res) => {
+  await query('DELETE FROM telegram_integrantes WHERE id = ?', [req.params.id]);
+  res.json({ ok: true });
+}));
+
+router.get('/telegram/horarios', asyncHandler(async (req, res) => {
+  let row = await queryOne('SELECT * FROM telegram_config_horarios WHERE id = 1');
+  if (!row) {
+    await query('INSERT INTO telegram_config_horarios (id, dias_operativos) VALUES (1, ?)', [JSON.stringify([1,2,3,4,5,6,7])]);
+    row = await queryOne('SELECT * FROM telegram_config_horarios WHERE id = 1');
+  }
+  res.json(row);
+}));
+
+router.put('/telegram/horarios', asyncHandler(async (req, res) => {
+  const { hora_inicio, hora_fin, dias_operativos, activo, visibilidad_numero } = req.body;
+  await query(
+    'UPDATE telegram_config_horarios SET hora_inicio = ?, hora_fin = ?, dias_operativos = ?, activo = ?, visibilidad_numero = ? WHERE id = 1',
+    [hora_inicio, hora_fin, JSON.stringify(dias_operativos), activo ? 1 : 0, visibilidad_numero]
+  );
+  res.json({ ok: true });
+}));
+
+router.get('/telegram/historial', asyncHandler(async (req, res) => {
+  const list = await query('SELECT * FROM telegram_operaciones_log ORDER BY created_at DESC LIMIT 100');
+  res.json(list);
+}));
 
 export default router;
