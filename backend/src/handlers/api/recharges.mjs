@@ -118,14 +118,17 @@ router.post('/', asyncHandler(async (req, res) => {
   const options = {
     reply_markup: {
       inline_keyboard: [
-        [{ text: "📝 Tomar Caso", callback_data: `tomar:recarga:${id}` }]
+        [
+          { text: "✅ Aceptar", callback_data: `recarga_aprobar_${id}` },
+          { text: "❌ Rechazar", callback_data: `recarga_rechazar_${id}` }
+        ]
       ]
     }
   };
 
-  // No usamos await para no bloquear la respuesta HTTP
+  // Notificar de forma asíncrona y resiliente
   sendToAdmin(msg, options);
-  sendToSecretaria(msg, options);
+  sendToSecretaria(msg, { ...options, reply_markup: undefined }); // Secretaria solo ve el aviso, no botones de acción
 
   res.json({ success: true, message: 'Solicitud enviada correctamente. En espera de aprobación.' });
 }));

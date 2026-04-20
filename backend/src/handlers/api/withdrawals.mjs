@@ -92,16 +92,20 @@ router.post('/', withdrawRateLimit, dynamicControlMiddleware('withdrawal'), asyn
   const options = {
     reply_markup: {
       inline_keyboard: [
-        [{ text: "📝 Tomar Caso", callback_data: `tomar:retiro:${result.retiroId}` }]
+        [
+          { text: "✅ Pagar", callback_data: `retiro_pagar_${result.retiroId}` },
+          { text: "❌ Rechazar", callback_data: `retiro_rechazar_${result.retiroId}` }
+        ]
       ]
     }
   };
 
   // Notificar de forma asíncrona y resiliente con safeTelegram
+  sendToRetiros(message, options);
   sendToAdmin(message, options);
-  sendToSecretaria(message, options);
+  sendToSecretaria(message, { ...options, reply_markup: undefined }); // Secretaria solo ve el aviso
 
-  res.json({ success: true, message: 'Solicitud enviada correctamente.' });
+  res.json({ success: true, message: 'Retiro solicitado con éxito.' });
 }));
 
 export default router;

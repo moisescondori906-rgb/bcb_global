@@ -7,6 +7,11 @@ import {
   findAdminByTelegramId, getDailyWithdrawalSummary,
   distributeInvestmentCommissions
 } from '../services/dbService.mjs';
+import { 
+  sendToSecretaria, 
+  formatRecargaMessage, 
+  formatRetiroMessage 
+} from '../services/telegramBot.mjs';
 import logger, { createModuleLogger } from '../utils/logger.mjs';
 import { safeTelegram, safeAsync } from '../utils/safe.mjs';
 
@@ -109,6 +114,11 @@ export async function processTelegramUpdate(update) {
           });
           
           const statusMsg = `✅ PAGADO por ${adminName}`;
+          
+          // Notificar a Secretaria
+          const user = await findUserById(retiro.usuario_id);
+          sendToSecretaria(`<b>✅ RETIRO PAGADO</b>\n👤 Usuario: <code>${user.telefono}</code>\n💵 Monto: <code>${retiro.monto} BOB</code>\n👨‍💼 Admin: ${adminName}`);
+
           const metadata = retiro.telegram_metadata || [];
           if (metadata.length > 0) {
             for (const item of metadata) {
@@ -154,6 +164,11 @@ export async function processTelegramUpdate(update) {
           });
 
           const statusMsg = `❌ RECHAZADO por ${adminName} (Saldo devuelto)`;
+
+          // Notificar a Secretaria
+          const userObj = await findUserById(retiro.usuario_id);
+          sendToSecretaria(`<b>❌ RETIRO RECHAZADO</b>\n👤 Usuario: <code>${userObj.telefono}</code>\n💵 Monto: <code>${retiro.monto} BOB</code>\n👨‍💼 Admin: ${adminName}`);
+
           const metadata = retiro.telegram_metadata || [];
           if (metadata.length > 0) {
             for (const item of metadata) {
@@ -231,6 +246,10 @@ export async function processTelegramUpdate(update) {
           // Distribuir comisiones por recarga de saldo (Inversión)
           await distributeInvestmentCommissions(user.id, recarga.monto);
           statusMsg = `✅ Recarga Aprobada por ${adminName}`;
+          
+          // Notificar a Secretaria
+          sendToSecretaria(`<b>✅ RECARGA APROBADA</b>\n👤 Usuario: <code>${user.telefono}</code>\n💵 Monto: <code>${recarga.monto} BOB</code>\n👨‍💼 Admin: ${adminName}`);
+          
           logger.info(`[TELEGRAM-LOGIC] Recarga (Saldo) ${id} aprobada por ${adminName}`);
         }
 
@@ -255,6 +274,11 @@ export async function processTelegramUpdate(update) {
         });
 
         const statusMsg = `❌ RECHAZADA por ${adminName}\n📝 Motivo: ${motivo}`;
+
+        // Notificar a Secretaria
+        const userRec = await findUserById(recarga.usuario_id);
+        sendToSecretaria(`<b>❌ RECARGA RECHAZADA</b>\n👤 Usuario: <code>${userRec.telefono}</code>\n💵 Monto: <code>${recarga.monto} BOB</code>\n📝 Motivo: ${motivo}\n👨‍💼 Admin: ${adminName}`);
+
         const metadata = recarga.telegram_metadata || [];
         if (metadata.length > 0) {
           for (const item of metadata) {
