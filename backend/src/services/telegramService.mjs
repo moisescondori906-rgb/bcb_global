@@ -20,6 +20,16 @@ export async function setupTelegramLogic() {
     const { data, message, from, id: callbackId } = callbackQuery;
     if (!data || !from) return;
 
+    // 0. BLINDAJE DE SECRETARIA v10.7.0
+    // No permitir que los botones se accionen desde el grupo de secretaria
+    const targetSecretariaId = process.env.TELEGRAM_CHAT_SECRETARIA || '-1003900884989';
+    if (String(message.chat.id) === targetSecretariaId) {
+      return safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { 
+        text: '⚠️ Acciones deshabilitadas en este grupo. Use los grupos operativos.', 
+        show_alert: true 
+      }), 'answerCallbackQuery-secretariaBlock');
+    }
+
     // Formato esperado: accion:tipo:refId (ej: tomar:retiro:uuid)
     const [action, type, refId] = data.split(':');
     const telegramUserId = String(from.id);

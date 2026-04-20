@@ -51,17 +51,96 @@ export async function setupRetirosBot() {
 
 export async function setupSecretariaBot() {
   if (botSecretaria) return botSecretaria;
-  const token = process.env.TELEGRAM_BOT_TOKEN_SECRETARIA;
+  const token = process.env.TELEGRAM_BOT_TOKEN_SECRETARIA || '8252503149:AAHzPFtyO1QSpQ3VwObQ8gr1oEbXA21YkxM';
   if (!token || token === 'tu_token_aqui') return null;
 
   try {
     botSecretaria = new TelegramBot(token, { polling: true });
     botSecretaria.on('error', (err) => logger.error('[TELEGRAM SECRETARIA] Error:', err.message));
+    
+    // --- MANEJADOR DE MENSAJES DE SECRETARIA v10.7.0 ---
+    botSecretaria.on('message', async (msg) => {
+      const chatId = String(msg.chat.id);
+      const text = msg.text;
+      if (!text) return;
+
+      // Solo responder en el chat de secretaria configurado o si es comando /start
+      const targetSecretariaId = process.env.TELEGRAM_CHAT_SECRETARIA || '-1003900884989';
+      if (chatId !== targetSecretariaId && text !== '/start') return;
+
+      // 1. Comando de historial por teléfono (ej: +59174344916)
+      const phoneRegex = /^\+?591\d{8}$/;
+      if (phoneRegex.test(text.replace(/\s/g, ''))) {
+        const telefono = text.replace(/\s/g, '').replace('+', '');
+        await handleSecretariaHistory(botSecretaria, chatId, telefono);
+        return;
+      }
+
+      // 2. Comandos de botones rápidos
+      if (text === '/menu' || text === '/start') {
+        await botSecretaria.sendMessage(chatId, '<b>🏢 PANEL DE SECRETARÍA BCB GLOBAL</b>\n\n¿Qué desea consultar hoy?', {
+          parse_mode: 'HTML',
+          reply_markup: {
+            keyboard: [
+              [{ text: '📊 Resumen Diario' }, { text: '💳 Buscar Usuario' }],
+              [{ text: '📈 Recargas Pendientes' }, { text: '💰 Retiros Pendientes' }]
+            ],
+            resize_keyboard: true
+          }
+        });
+      }
+
+      if (text === '📊 Resumen Diario') {
+        // Lógica de resumen (reutilizar handleDailySummary si es posible)
+        await botSecretaria.sendMessage(chatId, 'Generando resumen...');
+      }
+
+      if (text === '💳 Buscar Usuario') {
+        await botSecretaria.sendMessage(chatId, 'Por favor, escribe el número de teléfono del usuario (ej: +59174344916)');
+      }
+    });
+
     logger.info('[TELEGRAM] Secretaria Bot inicializado.');
     return botSecretaria;
   } catch (err) {
     logger.error('[TELEGRAM] Error setup Secretaria Bot:', err.message);
     return null;
+  }
+}
+
+/**
+ * Lógica de Historial para Secretaria v10.7.0
+ */
+async function handleSecretariaHistory(bot, chatId, telefono) {
+  try {
+    const user = await queryOne('SELECT * FROM usuarios WHERE telefono = ?', [telefono]);
+    if (!user) {
+      return bot.sendMessage(chatId, `❌ Usuario <code>${telefono}</code> no encontrado.`);
+    }
+
+    const [recargas] = await query('SELECT * FROM compras_nivel WHERE usuario_id = ? ORDER BY created_at DESC LIMIT 5', [user.id]);
+    const [retiros] = await query('SELECT * FROM retiros WHERE usuario_id = ? ORDER BY created_at DESC LIMIT 5', [user.id]);
+
+    let msg = `<b>📋 HISTORIAL: ${user.nombre_usuario || user.telefono}</b>\n`;
+    msg += `🆔 ID: <code>${user.id.substring(0, 8)}</code>\n`;
+    msg += `💰 Saldo: <code>${user.saldo} BOB</code>\n\n`;
+
+    msg += `<b>💳 ÚLTIMAS RECARGAS:</b>\n`;
+    if (recargas.length === 0) msg += '<i>Sin registros</i>\n';
+    recargas.forEach(r => {
+      msg += `• ${new Date(r.created_at).toLocaleDateString()}: <b>${r.monto} BOB</b> (${r.estado})\n`;
+    });
+
+    msg += `\n<b>💰 ÚLTIMOS RETIROS:</b>\n`;
+    if (retiros.length === 0) msg += '<i>Sin registros</i>\n';
+    retiros.forEach(r => {
+      msg += `• ${new Date(r.created_at).toLocaleDateString()}: <b>${r.monto} BOB</b> (${r.estado})\n`;
+    });
+
+    await bot.sendMessage(chatId, msg, { parse_mode: 'HTML' });
+  } catch (err) {
+    logger.error('[TELEGRAM-HISTORY] Error:', err.message);
+    bot.sendMessage(chatId, '❌ Error al consultar historial.');
   }
 }
 
