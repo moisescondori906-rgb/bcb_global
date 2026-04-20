@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS compras_nivel (
   usuario_id VARCHAR(36) NOT NULL,
   nivel_id VARCHAR(36) NOT NULL,
   monto DECIMAL(20, 2) NOT NULL,
+  metodo_qr_id VARCHAR(36),
   comprobante_url TEXT,
   estado ENUM('pendiente', 'completada', 'rechazada') DEFAULT 'pendiente',
   reembolsado TINYINT(1) DEFAULT 0, -- refunded

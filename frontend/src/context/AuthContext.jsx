@@ -14,8 +14,10 @@ export function AuthProvider({ children }) {
       const health = await api.get('/health');
       if (health && health.version && health.version !== apiVersion) {
         console.log(`[VERSION] New version detected: ${health.version}. Reloading...`);
+        setApiVersion(health.version); // Actualizar estado antes de recargar
         localStorage.setItem('apiVersion', health.version);
-        window.location.reload();
+        // Pequeño delay para asegurar que el localStorage se guarde
+        setTimeout(() => window.location.reload(), 500);
       }
     } catch (err) {
       console.warn('[VersionCheck] Error checking backend version:', err.message);

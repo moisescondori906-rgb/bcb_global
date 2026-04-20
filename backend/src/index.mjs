@@ -43,10 +43,10 @@ app.use((req, res, next) => {
 });
 
 // Versión del API para forzar recargas en el frontend si es necesario
-const API_VERSION = '10.1.0';
+const API_VERSION = '10.2.0';
 
-// Endpoint de Healthcheck Profesional v10.0.0
-app.get('/health', async (req, res) => {
+// Endpoint de Healthcheck Profesional v10.2.0 (Bajo /api para Nginx)
+app.get('/api/health', async (req, res) => {
   const health = {
     status: 'ok',
     version: API_VERSION,
@@ -153,8 +153,8 @@ app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 // Servir archivos estáticos de forma segura
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
-app.use(express.static(path.join(__dirname, '../public')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // 2. IMPORTACIÓN DE RUTAS (CON ASYNC HANDLER INTEGRADO)
 import authRoutes from './handlers/api/auth.mjs';

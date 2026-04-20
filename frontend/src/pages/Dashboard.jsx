@@ -371,6 +371,3 @@ export default function Dashboard() {
     </Layout>
   );
 }
-    </Layout>
-  );
-}

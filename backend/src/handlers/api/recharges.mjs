@@ -74,7 +74,7 @@ router.post('/', asyncHandler(async (req, res) => {
         const base64Data = comprobante_url.replace(/^data:image\/\w+;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
         const filename = `voucher_${Date.now()}_${uuidv4().substring(0, 8)}.jpg`;
-        const uploadDir = path.join(__dirname, '../../../public/uploads');
+        const uploadDir = path.join(process.cwd(), 'public/uploads');
         
         if (!fs.existsSync(uploadDir)) {
           fs.mkdirSync(uploadDir, { recursive: true });
