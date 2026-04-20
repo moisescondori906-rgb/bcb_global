@@ -59,6 +59,14 @@ async function runFix() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     
+    // 4.1 Asegurar columna telegram_username en la tabla usuarios principal (v10.9.0)
+    logger.info('⏳ Verificando columna telegram_username en tabla usuarios...');
+    const userColumns = await query("SHOW COLUMNS FROM usuarios LIKE 'telegram_username'");
+    if (userColumns.length === 0) {
+      await query("ALTER TABLE usuarios ADD COLUMN telegram_username VARCHAR(100) AFTER telegram_user_id");
+      logger.info('✅ Columna telegram_username agregada a la tabla usuarios.');
+    }
+
     // Auto-registrar al administrador principal si no existe (Basado en .env o fallback)
     await query(`
       INSERT IGNORE INTO usuarios_telegram (telegram_id, nombre, telegram_username, activo)
