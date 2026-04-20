@@ -169,38 +169,30 @@ async function startServer() {
   try {
     // 1. ESCUCHAR PUERTO INMEDIATAMENTE (Evitar 502 Bad Gateway)
     const server = app.listen(PORT, '0.0.0.0', () => {
-      logger.info(`[SERVER] BCB Global Backend v9.1.0 estable en puerto ${PORT}`);
-      logger.info(`[ENV] Modo: ${process.env.NODE_ENV}`);
+      console.log(`[SERVER] BCB Global Backend v9.1.0 estable en puerto ${PORT}`);
     });
 
-    // 2. INICIALIZACIONES ASÍNCRONAS (No bloqueantes para el puerto)
-    
-    // Sincronizar niveles institucionales
-    syncLevels()
-      .then(() => logger.info('[SYNC] Niveles sincronizados con éxito'))
-      .catch(e => logger.warn(`[SYNC] Falló sincronización de niveles: ${e.message}`));
+    // 2. INICIALIZACIONES ASÍNCRONAS (No bloqueantes)
+    // Sincronizar niveles
+    syncLevels().catch(e => console.warn(`[SYNC] Falló: ${e.message}`));
 
-    // Inicialización de Telegram
+    // Telegram
     setTimeout(() => {
       initTelegramHandlers().catch(err => {
-        logger.error('[TELEGRAM] Fallo crítico en inicialización de bots:', err);
+        console.error('[TELEGRAM] Fallo:', err);
       });
     }, 2000);
 
-    // Graceful Shutdown (Senior Standard)
     const shutdown = (signal) => {
-      logger.info(`[SERVER] Señal ${signal} recibida. Cerrando conexiones...`);
-      server.close(() => {
-        logger.info('[SERVER] Servidor HTTP cerrado.');
-        process.exit(0);
-      });
+      console.log(`[SERVER] Señal ${signal} recibida.`);
+      server.close(() => process.exit(0));
     };
 
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGINT', () => shutdown('SIGINT'));
 
   } catch (err) {
-    console.error(`\x1b[41m[FATAL]\x1b[0m Error durante el arranque:`, err);
+    console.error(`[FATAL] Error durante el arranque:`, err);
     process.exit(1);
   }
 }
