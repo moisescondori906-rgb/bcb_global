@@ -208,8 +208,3 @@ async function startServer() {
 startServer();
 
 // Blindaje contra caídas por errores no capturados
-// Se mantienen al final como red de seguridad adicional pero ya se declararon arriba
-// process.on('uncaughtException', ...);
-// process.on('unhandledRejection', ...);
-
-startServer();

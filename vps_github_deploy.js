@@ -20,10 +20,11 @@ conn.on('ready', () => {
     'pm2 kill',
     'cd /var/www/bcb_global/backend && npm install',
     'cd /var/www/bcb_global/frontend && npm install && npm run build',
-    'cd /var/www/bcb_global/backend && pm2 start ecosystem.config.cjs',
-    'sleep 15',
+    'cd /var/www/bcb_global/backend && mkdir -p logs && pm2 start ecosystem.config.cjs',
+    'sleep 20',
     'pm2 status',
-    'pm2 logs bcb-global-backend --lines 200 --no-daemon --no-colors || true',
+    'tail -n 100 /var/www/bcb_global/backend/logs/out.log || true',
+    'tail -n 100 /var/www/bcb_global/backend/logs/err.log || true',
     'curl -v http://127.0.0.1:4000/health || true'
   ];
 
