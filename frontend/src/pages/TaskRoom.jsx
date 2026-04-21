@@ -336,10 +336,20 @@ export default function TaskRoom() {
               onClick={() => startTask(t)}
               delay={i * 0.05}
             >
-              <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-sav-border shrink-0">
-                <img src="/imag/logo.png" alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-sav-dark/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play size={24} className="text-white fill-white" />
+              <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-sav-border shrink-0 bg-black">
+                {/* Previsualización del video en lugar del logo estático */}
+                <video 
+                  src={t.video_url} 
+                  className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
+                  muted
+                  playsInline
+                  loop
+                  onMouseOver={(e) => e.target.play()}
+                  onMouseOut={(e) => e.target.pause()}
+                  // Auto-play pequeño fragmento si es posible o simplemente dejarlo listo
+                />
+                <div className="absolute inset-0 bg-sav-dark/20 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity pointer-events-none">
+                  <Play size={20} className="text-white fill-white/80" />
                 </div>
               </div>
               <div className="flex-1 min-w-0 space-y-1">
