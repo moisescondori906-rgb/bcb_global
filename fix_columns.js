@@ -10,15 +10,14 @@ const config = {
   readyTimeout: 60000
 };
 
-console.log('🔍 Verificando base de datos y tablas en el VPS...');
+console.log('🔍 Verificando columnas en el VPS...');
 
 conn.on('ready', () => {
   console.log('✅ Conexión SSH establecida.');
   
   const commands = [
-    'mysql -u root -p14738941lp -e "SHOW DATABASES LIKE \'bcb_global\';"',
-    'mysql -u root -p14738941lp -e "SHOW TABLES FROM bcb_global LIKE \'telegram_casos_bloqueo\';"',
-    'mysql -u root -p14738941lp -e "CREATE TABLE IF NOT EXISTS bcb_global.telegram_casos_bloqueo (id INT AUTO_INCREMENT PRIMARY KEY, referencia_id VARCHAR(255) UNIQUE, tipo_operacion VARCHAR(50), estado_operativo VARCHAR(50) DEFAULT \'pendiente\', tomado_por VARCHAR(255), tomado_at DATETIME, resuelto_at DATETIME, telegram_message_id VARCHAR(255), INDEX(referencia_id));"'
+    'mysql -u root -p14738941lp -e "ALTER TABLE bcb_global.retiros MODIFY COLUMN taken_by_admin_id VARCHAR(36);"',
+    'mysql -u root -p14738941lp -e "ALTER TABLE bcb_global.compras_nivel MODIFY COLUMN taken_by_admin_id VARCHAR(36);"'
   ];
 
   const executeNext = (index) => {

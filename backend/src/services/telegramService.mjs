@@ -199,10 +199,16 @@ export async function setupTelegramLogic() {
               }
             }
 
-            // Marcar como resuelto en bloqueo
+            // Marcar como resuelto en bloqueo y en la tabla real
             await conn.query(
               `UPDATE telegram_casos_bloqueo SET estado_operativo = 'resuelto', resuelto_at = ? WHERE referencia_id = ?`,
               [boliviaTime.now(), refId]
+            );
+
+            const table = opType === 'retiro' ? 'retiros' : 'compras_nivel';
+            await conn.query(
+              `UPDATE ${table} SET estado_operativo = ? WHERE id = ?`,
+              [isAceptar ? 'aceptado' : 'rechazado', refId]
             );
 
             await safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { text: `✅ Caso ${action}do correctamente.` }), 'answerCallbackQuery-resolver');
