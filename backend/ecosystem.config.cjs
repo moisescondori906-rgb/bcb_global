@@ -9,8 +9,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 4000,
-        DEBUG: '*',
-        NODE_APP_INSTANCE: '0'
+        DEBUG: '*'
       },
       env_development: {
         NODE_ENV: 'development',

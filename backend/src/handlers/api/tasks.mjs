@@ -93,11 +93,15 @@ router.get('/', dynamicControlMiddleware('task_list'), asyncHandler(async (req, 
   const numTareasDiarias = Number(level.num_tareas_diarias);
   const remaining = Math.max(0, numTareasDiarias - todayCompletedCount);
   
+  logger.info(`[TASKS-DEBUG] User: ${user.nombre_usuario} (${user.id}), Level: ${level.nombre}, Diarias: ${numTareasDiarias}, Completadas: ${todayCompletedCount}, Restantes: ${remaining}`);
+
   let availableTasks = [];
   if (remaining > 0) {
     const allTasks = await getTasks();
+    logger.info(`[TASKS-DEBUG] Total tareas en DB: ${allTasks.length}`);
     // Mezclamos tareas de forma aleatoria para que no sean siempre las mismas
     availableTasks = allTasks.sort(() => 0.5 - Math.random()).slice(0, Math.min(allTasks.length, remaining + 2));
+    logger.info(`[TASKS-DEBUG] Tareas seleccionadas: ${availableTasks.length}`);
   }
 
   res.json({
