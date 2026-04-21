@@ -33,8 +33,8 @@ export async function setupTelegramLogic() {
     // Formato esperado: accion:tipo:refId (ej: tomar:retiro:uuid)
     const [action, type, refId] = data.split(':');
     const telegramUserId = String(from.id);
-    const telegramUsername = from.username; // Capturar username para el registro v10.8.0
-    const telegramFirstName = from.first_name;
+    const telegramUsername = from.username || 'User_' + telegramUserId.substring(0, 5); // Fallback seguro
+    const telegramFirstName = from.first_name || 'Admin';
 
     // 1. IDEMPOTENCIA (Evitar doble procesamiento por clicks rápidos o reintentos de red)
     const isProcessed = await checkIdempotencyRedis(callbackId);
@@ -50,16 +50,24 @@ export async function setupTelegramLogic() {
         WHERE telegram_id = ?
       `, [telegramUserId]);
 
+      // Si no está en usuarios_telegram, buscamos en la tabla usuarios principal (rol admin)
       if (!member) {
-        const nombreVisible = telegramUsername || telegramFirstName || `User_${telegramUserId.substring(0, 5)}`;
-        await query(`
-          INSERT INTO usuarios_telegram (telegram_id, nombre, telegram_username, activo)
-          VALUES (?, ?, ?, 1)
-          ON DUPLICATE KEY UPDATE nombre = ?, telegram_username = ?, activo = 1
-        `, [telegramUserId, nombreVisible, telegramUsername, nombreVisible, telegramUsername]);
-        
-        member = { telegram_id: telegramUserId, nombre: nombreVisible, activo: 1 };
-        logger.info(`[TELEGRAM-AUTO-REG] Nuevo operador auto-registrado: ${nombreVisible} (${telegramUserId})`);
+        const webAdmin = await queryOne(`
+          SELECT id, nombre_usuario as nombre 
+          FROM usuarios 
+          WHERE telegram_user_id = ? AND rol = 'admin' AND activo = 1
+        `, [telegramUserId]);
+
+        if (webAdmin) {
+          // Auto-vincular para futuras validaciones rápidas
+          await query(`
+            INSERT IGNORE INTO usuarios_telegram (telegram_id, nombre, telegram_username, activo)
+            VALUES (?, ?, ?, 1)
+          `, [telegramUserId, webAdmin.nombre, telegramUsername]);
+          
+          member = { telegram_id: telegramUserId, nombre: webAdmin.nombre, activo: 1 };
+          logger.info(`[TELEGRAM-AUTH] Auto-vinculado administrador web: ${webAdmin.nombre} (${telegramUserId})`);
+        }
       }
 
       // 3. LOCK DISTRIBUIDO (Redlock)

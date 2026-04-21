@@ -37,13 +37,20 @@ function sanitizeUser(u, levels) {
 }
 
 router.get('/me', asyncHandler(async (req, res) => {
-  const user = req.requestUser;
-  const levels = await getLevels().catch(() => [
-    { id: 'l1', codigo: 'internar', nombre: 'Internar' },
-    { id: 'l2', codigo: 'global1', nombre: 'GLOBAL 1' }
-  ]);
-  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
-  res.json(sanitizeUser(user, levels));
+  try {
+    const user = req.requestUser;
+    if (!user) {
+      return res.status(401).json({ error: 'No autorizado' });
+    }
+    const levels = await getLevels().catch(() => [
+      { id: 'l1', codigo: 'internar', nombre: 'Internar' },
+      { id: 'l2', codigo: 'global1', nombre: 'GLOBAL 1' }
+    ]);
+    res.json(sanitizeUser(user, levels));
+  } catch (err) {
+    logger.error('[USERS-ME-ERROR]', err.message);
+    res.status(500).json({ error: 'Error interno al cargar perfil' });
+  }
 }));
 
 router.get('/stats', asyncHandler(async (req, res) => {

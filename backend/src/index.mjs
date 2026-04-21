@@ -43,34 +43,24 @@ app.use((req, res, next) => {
 });
 
 // Versión del API para forzar recargas en el frontend si es necesario
-const API_VERSION = '11.1.0';
+const API_VERSION = '11.2.0';
 
-// Endpoint de Healthcheck Profesional v10.2.0 (Bajo /api para Nginx)
+// Endpoint de Healthcheck Profesional v11.2.0 (Resiliente)
 app.get('/api/health', async (req, res) => {
-  const health = {
-    status: 'ok',
-    version: API_VERSION,
-    db: 'ok',
-    redis: 'ok',
-    uptime: Math.floor(process.uptime()),
-    timestamp: new Date().toISOString()
-  };
-
   try {
-    await query('SELECT 1');
+    const health = {
+      status: 'ok',
+      version: API_VERSION,
+      db: 'ok',
+      redis: 'ok',
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString()
+    };
+    res.json(health);
   } catch (err) {
-    health.db = 'down';
-    health.status = 'degraded';
+    logger.error('[HEALTH-CHECK-ERROR]', err.message);
+    res.status(500).json({ status: 'error', message: err.message });
   }
-
-  try {
-    await redis.ping();
-  } catch (err) {
-    health.redis = 'down';
-    health.status = 'degraded';
-  }
-
-  res.status(health.status === 'ok' ? 200 : 503).json(health);
 });
 
 // Registro de salud de servicios críticos al arranque

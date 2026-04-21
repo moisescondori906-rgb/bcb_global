@@ -22,7 +22,7 @@ conn.on('ready', () => {
     'pm2 kill',
     'cd /var/www/bcb_global/backend && npm install',
     'mkdir -p /var/www/bcb_global/backend/public/uploads',
-    'cd /var/www/bcb_global/backend && node scripts/fix_db_v10.mjs || true',
+    'cd /var/www/bcb_global/backend && node scripts/v11_fix_final.mjs || true',
     'cd /var/www/bcb_global/backend && node src/config/data/create-indices.mjs || true',
     'cd /var/www/bcb_global/frontend && npm install && npm run build',
     'cd /var/www/bcb_global/backend && mkdir -p logs && pm2 flush && pm2 start ecosystem.config.cjs',

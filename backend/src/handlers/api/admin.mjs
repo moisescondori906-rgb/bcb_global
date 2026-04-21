@@ -90,7 +90,7 @@ router.get('/usuarios', asyncHandler(async (req, res) => {
 router.get('/admins', asyncHandler(async (req, res) => {
   const admins = await query(`
     SELECT id, nombre_usuario, telefono, rol, created_at, 
-           hora_inicio_turno, hora_fin_turno, dias_semana, activo, recibe_notificaciones, telegram_user_id, telegram_username
+           hora_inicio_turno, hora_fin_turno, dias_semana, activo, recibe_notificaciones, telegram_user_id
     FROM usuarios 
     WHERE rol = 'admin'
   `);
@@ -98,7 +98,7 @@ router.get('/admins', asyncHandler(async (req, res) => {
 }));
 
 router.post('/admins', asyncHandler(async (req, res) => {
-  const { id, nombre_usuario, telefono, hora_inicio_turno, hora_fin_turno, dias_semana, activo, recibe_notificaciones, telegram_user_id, telegram_username } = req.body;
+  const { id, nombre_usuario, telefono, hora_inicio_turno, hora_fin_turno, dias_semana, activo, recibe_notificaciones, telegram_user_id } = req.body;
   
   if (id) {
     // Convertir usuario existente a admin
@@ -110,16 +110,15 @@ router.post('/admins', asyncHandler(async (req, res) => {
         dias_semana = ?, 
         activo = ?, 
         recibe_notificaciones = ?,
-        telegram_user_id = ?,
-        telegram_username = ?
+        telegram_user_id = ?
       WHERE id = ?
-    `, [hora_inicio_turno, hora_fin_turno, dias_semana, activo ? 1 : 0, recibe_notificaciones ? 1 : 0, telegram_user_id, telegram_username, id]);
+    `, [hora_inicio_turno, hora_fin_turno, dias_semana, activo ? 1 : 0, recibe_notificaciones ? 1 : 0, telegram_user_id, id]);
   }
   res.json({ ok: true });
 }));
 
 router.put('/admins/:id', asyncHandler(async (req, res) => {
-  const { hora_inicio_turno, hora_fin_turno, dias_semana, activo, recibe_notificaciones, telegram_user_id, telegram_username } = req.body;
+  const { hora_inicio_turno, hora_fin_turno, dias_semana, activo, recibe_notificaciones, telegram_user_id } = req.body;
   await query(`
     UPDATE usuarios SET 
       hora_inicio_turno = ?, 
@@ -127,10 +126,9 @@ router.put('/admins/:id', asyncHandler(async (req, res) => {
       dias_semana = ?, 
       activo = ?, 
       recibe_notificaciones = ?,
-      telegram_user_id = ?,
-      telegram_username = ?
+      telegram_user_id = ?
     WHERE id = ?
-  `, [hora_inicio_turno, hora_fin_turno, dias_semana, activo ? 1 : 0, recibe_notificaciones ? 1 : 0, telegram_user_id, telegram_username, req.params.id]);
+  `, [hora_inicio_turno, hora_fin_turno, dias_semana, activo ? 1 : 0, recibe_notificaciones ? 1 : 0, telegram_user_id, req.params.id]);
   res.json({ ok: true });
 }));
 
