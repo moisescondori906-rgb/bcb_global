@@ -81,7 +81,6 @@ router.post('/', asyncHandler(async (req, res) => {
   );
 
   // 4. Notificar vía Telegram (Resiliente con safeTelegram)
-  const user = req.requestUser;
   const msg = formatRecargaMessage({
     telefono: user?.telefono || user?.nombre_usuario || 'Desconocido',
     nivel: matchingLevel.nombre,

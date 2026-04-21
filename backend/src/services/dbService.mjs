@@ -111,12 +111,8 @@ export async function preloadLevels() {
  */
 export async function preloadConfig() {
   try {
-    const row = await queryOne('SELECT * FROM configuracion_global LIMIT 1');
-    if (row) {
-      configCache.data = row;
-      configCache.lastFetch = Date.now();
-      logger.info('[CACHE] Configuración global cargada.');
-    }
+    await getPublicContent();
+    logger.info('[CACHE] Configuración global cargada.');
   } catch (err) {
     logger.error('[CACHE-ERROR] Fallo al pre-cargar configuración:', err.message);
     configCache.data = DEFAULT_CONFIG; // Fallback
