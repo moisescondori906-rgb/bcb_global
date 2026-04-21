@@ -4,8 +4,8 @@ import './index.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ui/ErrorBoundary'
 
-// --- MECANISMO DE LIMPIEZA NUCLEAR v7.0.5 ---
-const APP_VERSION = '7.0.5';
+// --- MECANISMO DE LIMPIEZA NUCLEAR v11.4.2 ---
+const APP_VERSION = '11.4.2';
 const currentVersion = localStorage.getItem('global_app_version');
 
 if (currentVersion !== APP_VERSION) {
@@ -18,7 +18,17 @@ if (currentVersion !== APP_VERSION) {
     caches.keys().then(names => names.forEach(n => caches.delete(n)));
   }
   localStorage.setItem('global_app_version', APP_VERSION);
+  // Recargar la página para obtener el nuevo index.html
+  window.location.reload();
 }
+
+// Manejo de errores de carga de Chunks (ERR_ABORTED / 404)
+window.addEventListener('error', (e) => {
+  if (e.message?.includes('chunk') || e.target?.tagName === 'SCRIPT') {
+    console.warn('[BCB-GLOBAL] Error detectado en carga de assets. Forzando actualización...');
+    window.location.reload();
+  }
+}, true);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

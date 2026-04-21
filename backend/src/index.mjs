@@ -43,29 +43,29 @@ app.use((req, res, next) => {
 });
 
 // Versión del API para forzar recargas en el frontend si es necesario
-const API_VERSION = '11.4.1';
+const API_VERSION = '11.4.2';
 
-// Endpoint de Healthcheck Profesional v11.4.1 (Resiliente con Timeout)
+// Endpoint de Healthcheck Profesional v11.4.2 (Ultra Resiliente)
 app.get('/api/health', async (req, res) => {
   let dbStatus = 'ok';
   let redisStatus = 'ok';
   
   try {
-    // Timeout de 2s para DB
     const dbPromise = query('SELECT 1');
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000));
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000));
     await Promise.race([dbPromise, timeoutPromise]);
   } catch (err) {
     dbStatus = 'error';
+    logger.error(`[HEALTH-DB] ${err.message}`);
   }
 
   try {
-    // Timeout de 2s para Redis
     const redisPromise = redis.ping();
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000));
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000));
     await Promise.race([redisPromise, timeoutPromise]);
   } catch (err) {
     redisStatus = 'error';
+    logger.error(`[HEALTH-REDIS] ${err.message}`);
   }
 
   const health = {
@@ -80,6 +80,8 @@ app.get('/api/health', async (req, res) => {
   if (health.status === 'degraded') {
     res.status(207).json(health); 
   } else {
+    // Cache control para evitar peticiones repetitivas innecesarias (v11.4.2)
+    res.set('Cache-Control', 'public, max-age=10'); 
     res.json(health);
   }
 });
@@ -216,7 +218,7 @@ async function startServer() {
     console.log(`[STARTUP] Intentando iniciar servidor en puerto: ${PORT}`);
     // 1. ESCUCHAR PUERTO INMEDIATAMENTE (Evitar 502 Bad Gateway)
     const server = app.listen(PORT, '0.0.0.0', () => {
-      console.log(`[SERVER] BCB Global Backend v11.4.1 estable en puerto ${PORT}`);
+      console.log(`[SERVER] BCB Global Backend v11.4.2 estable en puerto ${PORT}`);
       
       // 1.5 Validar salud básica una vez arriba (No bloqueante)
       checkSystemHealth();
