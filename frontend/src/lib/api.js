@@ -193,7 +193,7 @@ export const api = {
   tasks: {
     list: () => request('/tasks'),
     get: (id) => request(`/tasks/${id}`),
-    responder: (id, respuesta) => request(`/tasks/${id}/responder`, { method: 'POST', body: JSON.stringify({ respuesta }) }),
+    responder: (id, data = {}) => request(`/tasks/${id}/responder`, { method: 'POST', body: JSON.stringify(data) }),
   },
   levels: {
     list: () => request('/levels'),

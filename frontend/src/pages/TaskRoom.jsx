@@ -107,8 +107,10 @@ export default function TaskRoom() {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      // Omitimos enviar respuesta ya que ahora solo es "Reclamar Premio"
-      const res = await api.tasks.responder(activeTask.id);
+      // Generar idempotency_key única para evitar doble cobro
+      const idempotency_key = `task_${activeTask.id}_${Date.now()}`;
+      
+      const res = await api.tasks.responder(activeTask.id, { idempotency_key });
       setShowResult(true);
       setEarnedAmount(res.monto);
       setIsCorrect(true); // Siempre correcto en este modo simplificado

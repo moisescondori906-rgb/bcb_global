@@ -97,14 +97,19 @@ router.get('/', dynamicControlMiddleware('task_list'), asyncHandler(async (req, 
 
   let availableTasks = [];
   if (remaining > 0) {
+    // 1. Obtener TODAS las tareas activas sin filtrar por nivel (v11.2.2)
     const allTasks = await getTasks();
-    logger.info(`[TASKS-DEBUG] Total tareas en DB: ${allTasks.length}`);
+    logger.info(`[TASKS-DEBUG] Total tareas activas en sistema: ${allTasks.length}`);
+    
     if (allTasks.length > 0) {
-      logger.info(`[TASKS-DEBUG] Primera tarea activa: ${allTasks[0].nombre} (activa=${allTasks[0].activa})`);
+      // 2. Aleatoriedad total: Mezclar todas las tareas disponibles
+      const shuffled = [...allTasks].sort(() => 0.5 - Math.random());
+      
+      // 3. Seleccionar una muestra para el usuario (le mostramos lo que le falta + un pequeño margen)
+      availableTasks = shuffled.slice(0, Math.min(shuffled.length, remaining + 3));
+      
+      logger.info(`[TASKS-DEBUG] Tareas aleatorias asignadas: ${availableTasks.length}`);
     }
-    // Mezclamos tareas de forma aleatoria para que no sean siempre las mismas
-    availableTasks = allTasks.sort(() => 0.5 - Math.random()).slice(0, Math.min(allTasks.length, remaining + 2));
-    logger.info(`[TASKS-DEBUG] Tareas seleccionadas: ${availableTasks.length}`);
   }
 
   res.json({
@@ -117,11 +122,9 @@ router.get('/', dynamicControlMiddleware('task_list'), asyncHandler(async (req, 
     tareas: availableTasks.map(t => ({
       id: t.id,
       nombre: t.nombre,
-      ganancia_tarea: Number(level.ganancia_tarea),
+      ganancia_tarea: Number(level.ganancia_tarea), // El premio siempre depende del nivel del usuario
       video_url: t.video_url,
-      descripcion: t.descripcion,
-      pregunta: t.pregunta,
-      opciones: typeof t.opciones === 'string' ? JSON.parse(t.opciones) : t.opciones
+      descripcion: t.descripcion
     }))
   });
 }));
