@@ -1,4 +1,4 @@
-import { setupAdminBot } from '../services/telegramBot.mjs';
+import { setupAdminBot, sendToSecretaria } from '../services/telegramBot.mjs';
 import { safeTelegramCall, safeAsync } from '../utils/safe.mjs';
 import { query, queryOne, transaction } from '../config/db.mjs';
 import { 
@@ -215,6 +215,20 @@ export async function setupTelegramLogic() {
 
             await safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { text: `✅ Caso ${action}do correctamente.` }), 'answerCallbackQuery-resolver');
             await updateTelegramMessage(bot, message, 'resuelto', adminName, refId, opType, action);
+
+            // 5. NOTIFICAR A SECRETARÍA v10.7.0 (Solo si es Aceptado)
+            if (isAceptar) {
+              const resText = opType === 'retiro' ? 'RETIRO PAGADO' : 'RECARGA COMPLETADA';
+              const secMsg = `<b>✅ ${resText}</b>\n` +
+                            `━━━━━━━━━━━━━━━━━━\n` +
+                            `👤 <b>Operador:</b> ${adminName}\n` +
+                            `🆔 <b>Ref:</b> <code>${refId.substring(0, 8)}</code>\n` +
+                            `🕒 <b>Finalizado:</b> ${boliviaTime.getTimeString()}\n` +
+                            `━━━━━━━━━━━━━━━━━━\n` +
+                            `<i>El caso ha sido procesado exitosamente.</i>`;
+              
+              sendToSecretaria(secMsg);
+            }
           }
         });
       } finally {
