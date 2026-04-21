@@ -8,7 +8,7 @@ const config = {
   port: 22,
   username: 'root',
   password: '14738941lp',
-  readyTimeout: 60000 // Aumentado a 60s
+  readyTimeout: 120000 // Aumentado a 120s
 };
 
 console.log('🚀 Iniciando despliegue desde GitHub en el servidor VPS...');

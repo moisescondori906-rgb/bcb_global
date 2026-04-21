@@ -72,29 +72,35 @@ export async function setupTelegramLogic() {
     }
 
     try {
-      // 2. IDENTIFICACIÓN DE ADMINISTRADOR WEB (Real Admin ID para dbService)
+      // 2. IDENTIFICACIÓN DE ADMINISTRADOR (Abierto v10.4.0)
+      // Buscamos si el usuario de Telegram está vinculado a un admin web
       let webAdmin = await queryOne(`
         SELECT id, nombre_usuario as nombre 
         FROM usuarios 
         WHERE (telegram_user_id = ? OR telegram_user_id = ?) AND rol = 'admin'
       `, [telegramUserId, from.username]);
 
+      // Si no está vinculado, permitimos el acceso pero usamos un Admin de la DB para auditoría
       if (!webAdmin) {
-        // Fallback: buscar en usuarios_telegram pero necesitamos un ID de la tabla usuarios
-        const member = await queryOne(`SELECT * FROM usuarios_telegram WHERE telegram_id = ?`, [telegramUserId]);
-        if (member) {
-          // Si está en usuarios_telegram pero no vinculado, buscamos el primer admin para auditoría (mejor que fallar)
-          webAdmin = await queryOne(`SELECT id, nombre_usuario as nombre FROM usuarios WHERE rol = 'admin' LIMIT 1`);
-        } else {
+        // Intentamos buscar cualquier admin activo para que la auditoría no falle
+        webAdmin = await queryOne(`SELECT id, nombre_usuario as nombre FROM usuarios WHERE rol = 'admin' LIMIT 1`);
+        
+        // Si no hay NINGÚN admin en la DB (raro), usamos un ID genérico o fallamos con gracia
+        if (!webAdmin) {
+          logger.error('[TELEGRAM] No se encontró ningún administrador en la tabla usuarios.');
           return safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { 
-            text: '❌ No estás autorizado. Contacta al super-admin.', 
+            text: '❌ Error crítico: No hay administradores configurados en el sistema.', 
             show_alert: true 
-          }), 'answerCallbackQuery-Unauthorized');
+          }), 'answerCallbackQuery-NoAdmins');
         }
+
+        // Usamos el nombre de Telegram del operador para el registro visual
+        webAdmin.nombre = telegramUsername;
+        logger.info(`[TELEGRAM-AUTH] Operador externo detectado: ${telegramUsername} (${telegramUserId}). Usando Admin ID: ${webAdmin.id} para auditoría.`);
       }
 
       const adminId = webAdmin.id;
-      const adminName = webAdmin.nombre || telegramUsername;
+      const adminName = webAdmin.nombre;
 
       // 3. LOCK DISTRIBUIDO (Redlock)
       const lock = await acquireLock(`telegram:${refId}`, 15000);
@@ -121,11 +127,12 @@ export async function setupTelegramLogic() {
           }
 
           if (action === 'tomar') {
-            if (caso.estado_operativo !== 'pendiente') {
-              throw new Error(`Este caso ya fue ${caso.estado_operativo} por otro operador.`);
+            // Permitir tomar incluso si ya está tomado (para permitir re-asignación libre v10.4.0)
+            if (caso.estado_operativo === 'resuelto') {
+              throw new Error(`Este caso ya fue resuelto por ${caso.tomado_por_nombre || 'otro operador'}.`);
             }
 
-            // Marcar como tomado en bloqueo
+            // Marcar como tomado en bloqueo (actualiza el responsable actual)
             await conn.query(`
               UPDATE telegram_casos_bloqueo 
               SET estado_operativo = 'tomado', 
@@ -147,7 +154,7 @@ export async function setupTelegramLogic() {
               [adminId, adminName, boliviaTime.now(), refId]
             );
 
-            await safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { text: '✅ Caso tomado. Eres el único responsable.' }), 'answerCallbackQuery-tomar');
+            await safeTelegramCall(() => bot.answerCallbackQuery(callbackId, { text: `✅ Caso tomado por ${adminName}.` }), 'answerCallbackQuery-tomar');
             await updateTelegramMessage(bot, message, 'tomado', adminName, refId, caso.tipo_operacion);
           }
 
@@ -155,10 +162,8 @@ export async function setupTelegramLogic() {
             if (caso.estado_operativo !== 'tomado') {
               throw new Error('Debes tomar el caso antes de resolverlo.');
             }
-            if (caso.tomado_por !== telegramUserId) {
-              throw new Error(`Solo el operador que tomó el caso puede resolverlo.`);
-            }
-
+            // Eliminada la restricción de "solo el que tomó puede resolver" para permitir gestión libre v10.4.0
+            
             const isAceptar = action === 'aceptar';
             const opType = caso.tipo_operacion;
 
