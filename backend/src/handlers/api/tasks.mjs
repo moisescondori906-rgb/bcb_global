@@ -127,7 +127,7 @@ router.get('/', dynamicControlMiddleware('task_list'), asyncHandler(async (req, 
 }));
 
 router.post('/:id/responder', taskRateLimit, dynamicControlMiddleware('task_complete'), asyncHandler(async (req, res) => {
-  const { respuesta, idempotency_key } = req.body;
+  const { idempotency_key } = req.body;
   const user = req.requestUser;
   if (!user?.id) return res.status(404).json({ error: 'Usuario no encontrado' });
 
@@ -149,12 +149,6 @@ router.post('/:id/responder', taskRateLimit, dynamicControlMiddleware('task_comp
   // Validar que la tarea esté activa (Gamificación Segura)
   if (task.activo === 0 || task.activo === false) {
     return res.status(400).json({ error: 'Esta tarea ya no está disponible.' });
-  }
-
-  // Validar respuesta (Normalización básica)
-  const normalize = (s) => String(s || '').trim().toUpperCase();
-  if (normalize(respuesta) !== normalize(task.respuesta_correcta)) {
-    return res.status(400).json({ error: 'Respuesta incorrecta' });
   }
 
   // Acreditación Transaccional e Idempotente

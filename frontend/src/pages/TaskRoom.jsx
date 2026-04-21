@@ -104,19 +104,19 @@ export default function TaskRoom() {
   };
 
   const onConfirmResponse = async () => {
-    if (!selectedOption || isSubmitting) return;
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const res = await api.tasks.responder(activeTask.id, selectedOption);
+      // Omitimos enviar respuesta ya que ahora solo es "Reclamar Premio"
+      const res = await api.tasks.responder(activeTask.id);
       setShowResult(true);
       setEarnedAmount(res.monto);
-      setCorrectAnswerFromServer(res.respuesta_correcta);
-      setIsCorrect(res.correcta);
-      if (res.correcta) refreshUser();
-      else setErrorMessage(res.mensaje || 'Respuesta incorrecta');
+      setIsCorrect(true); // Siempre correcto en este modo simplificado
+      refreshUser();
     } catch (err) {
       setErrorMessage(err.message || 'Error de conexión');
       setShowResult(true);
+      setIsCorrect(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -230,36 +230,27 @@ export default function TaskRoom() {
                   <Button onClick={() => { setActiveTask(null); fetchTasks(); }}>Continuar</Button>
                 </Card>
               ) : surveyVisible ? (
-                <Card className="p-8 space-y-6 animate-in">
-                  <div className="text-center space-y-2">
-                    <Badge variant="info">Verificación de Usuario</Badge>
-                    <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight">
-                      {activeTask.pregunta}
-                    </h3>
+                <Card className="p-8 space-y-8 animate-in text-center">
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 bg-sav-success/10 rounded-3xl flex items-center justify-center text-sav-success mx-auto shadow-lg">
+                      <Sparkles size={32} />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-black text-white uppercase tracking-tight leading-tight">
+                        Tarea Finalizada
+                      </h3>
+                      <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">
+                        ¡Has visualizado el contenido con éxito!
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-3">
-                    {activeTask.opciones?.map((opt, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setSelectedOption(opt)}
-                        className={cn(
-                          "w-full h-14 px-6 rounded-2xl border text-[11px] font-black uppercase tracking-widest text-left flex items-center justify-between transition-all",
-                          selectedOption === opt 
-                            ? "bg-sav-primary border-sav-primary text-white shadow-lg shadow-sav-primary/20" 
-                            : "bg-sav-surface border-sav-border text-sav-muted hover:border-white/20"
-                        )}
-                      >
-                        {opt}
-                        {selectedOption === opt && <Check size={16} />}
-                      </button>
-                    ))}
-                  </div>
+                  
                   <Button 
                     onClick={onConfirmResponse} 
                     loading={isSubmitting} 
-                    disabled={!selectedOption}
+                    className="h-16 shadow-sav-glow text-xs"
                   >
-                    Confirmar Respuesta
+                    Reclamar Premio
                   </Button>
                 </Card>
               ) : (
