@@ -1,22 +1,23 @@
 
 import { query } from '../src/config/db.mjs';
-import { v4 as uuidv4 } from 'uuid';
 import { v4_tasks } from '../src/config/data/v4_tasks.mjs';
 
 async function seed() {
   try {
-    console.log('🚀 Iniciando seeding de 12 tareas...');
+    console.log('🚀 Iniciando seeding forzado de 12 tareas (v11.3.2)...');
     
-    // 1. Obtener las primeras 12 tareas de v4_tasks
+    // 1. Desactivar TODAS las tareas actuales para empezar de cero visualmente
+    await query('UPDATE tareas SET activa = 0');
+    console.log('--- Todas las tareas previas marcadas como inactivas ---');
+
+    // 2. Seleccionar 12 tareas variadas de v4_tasks
+    // Mezclamos un poco para tener variedad
     const selectedTasks = v4_tasks.slice(0, 12);
-    
-    // 2. Limpiar tareas actuales (Opcional, pero asegura que tengamos exactamente 12)
-    // await query('DELETE FROM actividad_tareas'); // No borrar actividad para no afectar saldos
-    // await query('DELETE FROM tareas');
     
     for (let i = 0; i < selectedTasks.length; i++) {
       const t = selectedTasks[i];
-      const id = `task_v11_${i + 1}`; // ID determinístico para evitar duplicados si se corre varias veces
+      // Usamos el nombre como base para el ID para que sea reconocible y persistente
+      const id = `video_${t.nombre.toLowerCase().replace(/\s+/g, '_')}`;
       
       await query(`
         INSERT INTO tareas (id, nombre, video_url, descripcion, pregunta, respuesta_correcta, opciones, orden, activa)
@@ -38,17 +39,15 @@ async function seed() {
         i,
       ]);
       
-      console.log(`✅ Tarea sincronizada: ${t.nombre}`);
+      console.log(`✅ Tarea [${i+1}/12] Activada: ${t.nombre} (ID: ${id})`);
     }
 
-    // 3. Activar cualquier otra tarea que haya quedado por ahí
-    await query('UPDATE tareas SET activa = 1');
+    const activeCount = await query('SELECT COUNT(*) as total FROM tareas WHERE activa = 1');
+    console.log(`✨ Seeding completado exitosamente. Total tareas activas en DB: ${activeCount[0].total}`);
     
-    const count = await query('SELECT COUNT(*) as total FROM tareas WHERE activa = 1');
-    console.log(`✨ Seeding completado. Total tareas activas: ${count[0].total}`);
     process.exit(0);
   } catch (err) {
-    console.error('❌ Error en seeding:', err);
+    console.error('❌ Error CRÍTICO en seeding:', err);
     process.exit(1);
   }
 }

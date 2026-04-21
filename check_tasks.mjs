@@ -1,7 +1,17 @@
 
 import { query } from './backend/src/config/db.mjs';
-import dotenv from 'dotenv';
-dotenv.config({ path: './backend/.env' });
+import fs from 'fs';
+import path from 'path';
+
+// Cargar .env manualmente si dotenv no está en el root
+const envPath = path.resolve('./backend/.env');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const [key, value] = line.split('=');
+    if (key && value) process.env[key.trim()] = value.trim();
+  });
+}
 
 async function check() {
   try {

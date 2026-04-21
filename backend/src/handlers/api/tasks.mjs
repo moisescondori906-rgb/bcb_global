@@ -98,7 +98,7 @@ router.get('/', dynamicControlMiddleware('task_list'), asyncHandler(async (req, 
   let availableTasks = [];
   // 1. Obtener TODAS las tareas activas sin filtros (v11.3.0)
   const allTasks = await getTasks();
-  logger.info(`[TASKS-DEBUG] User: ${user.nombre_usuario}, Level: ${level.nombre}, Diarias: ${numTareasDiarias}, Completadas: ${todayCompletedCount}, Restantes: ${remaining}`);
+  logger.info(`[TASKS-DEBUG] User: ${user.nombre_usuario}, Level: ${level.nombre}, Diarias: ${numTareasDiarias}, Completadas: ${todayCompletedCount}, Restantes: ${remaining}, Total en Sistema: ${allTasks.length}`);
   
   // 2. Mostrar todas las tareas disponibles para que el usuario elija (Se pueden repetir)
   availableTasks = allTasks;
