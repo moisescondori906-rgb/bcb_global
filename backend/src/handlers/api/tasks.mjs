@@ -99,6 +99,9 @@ router.get('/', dynamicControlMiddleware('task_list'), asyncHandler(async (req, 
   if (remaining > 0) {
     const allTasks = await getTasks();
     logger.info(`[TASKS-DEBUG] Total tareas en DB: ${allTasks.length}`);
+    if (allTasks.length > 0) {
+      logger.info(`[TASKS-DEBUG] Primera tarea activa: ${allTasks[0].nombre} (activa=${allTasks[0].activa})`);
+    }
     // Mezclamos tareas de forma aleatoria para que no sean siempre las mismas
     availableTasks = allTasks.sort(() => 0.5 - Math.random()).slice(0, Math.min(allTasks.length, remaining + 2));
     logger.info(`[TASKS-DEBUG] Tareas seleccionadas: ${availableTasks.length}`);
