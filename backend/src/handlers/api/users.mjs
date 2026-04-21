@@ -108,11 +108,11 @@ router.get('/earnings', asyncHandler(async (req, res) => {
 
   const today = boliviaTime.todayStr();
 
-  // 1. Obtener historial (v11.3.4)
+  // 1. Obtener historial (v11.3.6)
   const movimientos = await query(`
     SELECT * FROM movimientos_saldo 
     WHERE usuario_id = ? 
-    ORDER BY created_at DESC 
+    ORDER BY fecha DESC 
     LIMIT 50
   `, [userId]);
 
