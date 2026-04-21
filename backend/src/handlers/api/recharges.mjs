@@ -83,8 +83,7 @@ router.post('/', asyncHandler(async (req, res) => {
     reply_markup: {
       inline_keyboard: [
         [
-          { text: "✅ Aceptar", callback_data: `recarga_aprobar_${id}` },
-          { text: "❌ Rechazar", callback_data: `recarga_rechazar_${id}` }
+          { text: "📝 Tomar Caso", callback_data: `tomar:recarga:${id}` }
         ]
       ]
     }

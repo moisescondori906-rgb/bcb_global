@@ -93,8 +93,7 @@ router.post('/', withdrawRateLimit, dynamicControlMiddleware('withdrawal'), asyn
     reply_markup: {
       inline_keyboard: [
         [
-          { text: "✅ Pagar", callback_data: `retiro_pagar_${result.retiroId}` },
-          { text: "❌ Rechazar", callback_data: `retiro_rechazar_${result.retiroId}` }
+          { text: "📝 Tomar Caso", callback_data: `tomar:retiro:${result.retiroId}` }
         ]
       ]
     }

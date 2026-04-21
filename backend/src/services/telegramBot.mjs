@@ -230,5 +230,5 @@ export function formatRecargaMessage(data) {
          `💵 <b>Monto:</b> <code>${data.monto} BOB</code>\n` +
          `🕒 <b>Fecha:</b> ${new Date().toLocaleString('es-BO')}\n` +
          `━━━━━━━━━━━━━━━━━━\n` +
-         `<i>Verifique el comprobante en el panel admin.</i>`;
+         `<i>Por favor, tome el caso para procesar.</i>`;
 }
