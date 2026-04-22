@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { asyncHandler } from './utils/asyncHandler.mjs';
 
 // CONFIGURACIÓN GLOBAL DE ZONA HORARIA (Bolivia - America/La_Paz)
 process.env.TZ = 'America/La_Paz';
