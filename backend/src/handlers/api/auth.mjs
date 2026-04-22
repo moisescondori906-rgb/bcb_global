@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { findUserByTelefono, createUser, getLevels, updateUser, createDeviceRequest } from '../../services/dbService.mjs';
 import { queryOne } from '../../config/db.mjs';
-import { setupAdminBot } from '../../services/telegramBot.mjs';
+import { sendToAdmin } from '../../services/telegramBot.mjs';
 import { BillingService } from '../../services/billingService.mjs';
 import { AuditService } from '../../services/auditService.mjs';
 import redis from '../../services/redisService.mjs';
@@ -165,18 +165,20 @@ router.post('/request-device-access', asyncHandler(async (req, res) => {
   // Crear la solicitud en la DB
   await createDeviceRequest(user.id, deviceId, deviceInfo);
 
-  // Notificar al admin por Telegram
-  const bot = await setupAdminBot();
-  const adminChatId = process.env.TELEGRAM_CHAT_ADMIN;
-  if (bot && adminChatId) {
-    const message = `⚠️ <b>SOLICITUD DE ACCESO A DISPOSITIVO</b>\n\n` +
-                    `👤 <b>Usuario:</b> ${user.nombre_usuario}\n` +
-                    `📞 <b>Teléfono:</b> ${user.telefono}\n` +
-                    `📱 <b>Nuevo ID:</b> <code>${deviceId}</code>\n` +
-                    `🔧 <b>Modelo:</b> ${deviceInfo?.model || 'Desconocido'}\n\n` +
-                    `Vaya al panel administrativo para aprobar o rechazar esta solicitud.`;
-    bot.sendMessage(adminChatId, message, { parse_mode: 'HTML' }).catch(err => logger.error(`[TELEGRAM-ERROR] ${err.message}`));
-  }
+  // Marcar alerta de seguridad para el usuario principal
+  await updateUser(user.id, { 
+    security_alert: `Intento de acceso desde un nuevo dispositivo (${deviceInfo?.model || 'Desconocido'})` 
+  });
+
+  // Notificar al admin por Telegram (Resiliente)
+  const message = `⚠️ <b>SOLICITUD DE ACCESO A DISPOSITIVO</b>\n\n` +
+                  `👤 <b>Usuario:</b> ${user.nombre_usuario}\n` +
+                  `📞 <b>Teléfono:</b> ${user.telefono}\n` +
+                  `📱 <b>Nuevo ID:</b> <code>${deviceId}</code>\n` +
+                  `🔧 <b>Modelo:</b> ${deviceInfo?.model || 'Desconocido'}\n\n` +
+                  `Vaya al panel administrativo para aprobar o rechazar esta solicitud.`;
+  
+  await sendToAdmin(message);
 
   res.json({ ok: true, message: 'Solicitud enviada con éxito. El administrador revisará su acceso pronto.' });
 }));
@@ -200,6 +202,7 @@ function sanitizeUser(u, levels) {
     tiene_password_fondo: !!u.password_fondo_hash,
     last_device_id: u.last_device_id,
     device_permission: u.device_permission,
+    security_alert: u.security_alert,
   };
 }
 

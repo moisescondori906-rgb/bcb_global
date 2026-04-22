@@ -8,6 +8,9 @@ let botAdmin = null;
 let botRetiros = null;
 let botSecretaria = null;
 
+// Solo el primer worker de PM2 (instancia 0) o si no estamos en PM2 debe hacer polling
+const SHOULD_POLL = !process.env.NODE_APP_INSTANCE || process.env.NODE_APP_INSTANCE === '0';
+
 /**
  * @section CONFIGURACIÓN DE BOTS
  */
@@ -21,11 +24,15 @@ export async function setupAdminBot() {
   }
 
   try {
-    botAdmin = new TelegramBot(token, { polling: true });
+    botAdmin = new TelegramBot(token, { polling: SHOULD_POLL });
     botAdmin.on('error', (err) => logger.error('[TELEGRAM ADMIN] Error:', err.message));
-    botAdmin.on('polling_error', (err) => logger.debug('[TELEGRAM ADMIN] Polling error:', err.message));
+    if (SHOULD_POLL) {
+      botAdmin.on('polling_error', (err) => logger.debug('[TELEGRAM ADMIN] Polling error:', err.message));
+      logger.info('[TELEGRAM] Admin Bot inicializado con Polling.');
+    } else {
+      logger.info('[TELEGRAM] Admin Bot inicializado (Solo Envío).');
+    }
 
-    logger.info('[TELEGRAM] Admin Bot inicializado.');
     return botAdmin;
   } catch (err) {
     logger.error('[TELEGRAM] Error setup Admin Bot:', err.message);
@@ -39,9 +46,13 @@ export async function setupRetirosBot() {
   if (!token || token === 'tu_token_aqui') return null;
 
   try {
-    botRetiros = new TelegramBot(token, { polling: true });
+    botRetiros = new TelegramBot(token, { polling: SHOULD_POLL });
     botRetiros.on('error', (err) => logger.error('[TELEGRAM RETIROS] Error:', err.message));
-    logger.info('[TELEGRAM] Retiros Bot inicializado.');
+    if (SHOULD_POLL) {
+      logger.info('[TELEGRAM] Retiros Bot inicializado con Polling.');
+    } else {
+      logger.info('[TELEGRAM] Retiros Bot inicializado (Solo Envío).');
+    }
     return botRetiros;
   } catch (err) {
     logger.error('[TELEGRAM] Error setup Retiros Bot:', err.message);
@@ -55,58 +66,62 @@ export async function setupSecretariaBot() {
   if (!token || token === 'tu_token_aqui') return null;
 
   try {
-    botSecretaria = new TelegramBot(token, { polling: true });
+    botSecretaria = new TelegramBot(token, { polling: SHOULD_POLL });
     botSecretaria.on('error', (err) => logger.error('[TELEGRAM SECRETARIA] Error:', err.message));
     
-    // --- MANEJADOR DE MENSAJES DE SECRETARIA v10.7.0 ---
-    botSecretaria.on('message', async (msg) => {
-      const chatId = String(msg.chat.id);
-      const text = msg.text;
-      if (!text) return;
+    if (SHOULD_POLL) {
+      // --- MANEJADOR DE MENSAJES DE SECRETARIA v10.7.0 ---
+      botSecretaria.on('message', async (msg) => {
+        const chatId = String(msg.chat.id);
+        const text = msg.text;
+        if (!text) return;
 
-      // Solo responder en el chat de secretaria configurado o si es comando /start
-      const targetSecretariaId = process.env.TELEGRAM_CHAT_SECRETARIA;
-      
-      // Permitir /start en cualquier lugar para obtener el ID si es necesario
-      if (text === '/start' && chatId !== targetSecretariaId) {
-        await botSecretaria.sendMessage(chatId, `🆔 Tu ID de Chat es: <code>${chatId}</code>\nConfigúralo en el .env como TELEGRAM_CHAT_SECRETARIA`, { parse_mode: 'HTML' });
-      }
+        // Solo responder en el chat de secretaria configurado o si es comando /start
+        const targetSecretariaId = process.env.TELEGRAM_CHAT_SECRETARIA;
+        
+        // Permitir /start en cualquier lugar para obtener el ID si es necesario
+        if (text === '/start' && chatId !== targetSecretariaId) {
+          await botSecretaria.sendMessage(chatId, `🆔 Tu ID de Chat es: <code>${chatId}</code>\nConfigúralo en el .env como TELEGRAM_CHAT_SECRETARIA`, { parse_mode: 'HTML' });
+        }
 
-      if (chatId !== targetSecretariaId && text !== '/start') return;
+        if (chatId !== targetSecretariaId && text !== '/start') return;
 
-      // 1. Comando de historial por teléfono (ej: +59174344916)
-      const phoneRegex = /^\+?591\d{8,11}$/; // Ampliado para soportar diferentes formatos
-      if (phoneRegex.test(text.replace(/\s/g, ''))) {
-        const telefono = text.replace(/\s/g, '').replace('+', '');
-        await handleSecretariaHistory(botSecretaria, chatId, telefono);
-        return;
-      }
+        // 1. Comando de historial por teléfono (ej: +59174344916)
+        const phoneRegex = /^\+?591\d{8,11}$/; // Ampliado para soportar diferentes formatos
+        if (phoneRegex.test(text.replace(/\s/g, ''))) {
+          const telefono = text.replace(/\s/g, '').replace('+', '');
+          await handleSecretariaHistory(botSecretaria, chatId, telefono);
+          return;
+        }
 
-      // 2. Comandos de botones rápidos
-      if (text === '/menu' || text === '/start') {
-        await botSecretaria.sendMessage(chatId, '<b>🏢 PANEL DE SECRETARÍA BCB GLOBAL</b>\n\n¿Qué desea consultar hoy?', {
-          parse_mode: 'HTML',
-          reply_markup: {
-            keyboard: [
-              [{ text: '📊 Resumen Diario' }, { text: '💳 Buscar Usuario' }],
-              [{ text: '📈 Recargas Pendientes' }, { text: '💰 Retiros Pendientes' }]
-            ],
-            resize_keyboard: true
-          }
-        });
-      }
+        // 2. Comandos de botones rápidos
+        if (text === '/menu' || text === '/start') {
+          await botSecretaria.sendMessage(chatId, '<b>🏢 PANEL DE SECRETARÍA BCB GLOBAL</b>\n\n¿Qué desea consultar hoy?', {
+            parse_mode: 'HTML',
+            reply_markup: {
+              keyboard: [
+                [{ text: '📊 Resumen Diario' }, { text: '💳 Buscar Usuario' }],
+                [{ text: '📈 Recargas Pendientes' }, { text: '💰 Retiros Pendientes' }]
+              ],
+              resize_keyboard: true
+            }
+          });
+        }
 
-      if (text === '📊 Resumen Diario') {
-        // Lógica de resumen (reutilizar handleDailySummary si es posible)
-        await botSecretaria.sendMessage(chatId, 'Generando resumen...');
-      }
+        if (text === '📊 Resumen Diario') {
+          // Lógica de resumen (reutilizar handleDailySummary si es posible)
+          await botSecretaria.sendMessage(chatId, 'Generando resumen...');
+        }
 
-      if (text === '💳 Buscar Usuario') {
-        await botSecretaria.sendMessage(chatId, 'Por favor, escribe el número de teléfono del usuario (ej: +59174344916)');
-      }
-    });
+        if (text === '💳 Buscar Usuario') {
+          await botSecretaria.sendMessage(chatId, 'Por favor, escribe el número de teléfono del usuario (ej: +59174344916)');
+        }
+      });
+      logger.info('[TELEGRAM] Secretaria Bot inicializado con Polling.');
+    } else {
+      logger.info('[TELEGRAM] Secretaria Bot inicializado (Solo Envío).');
+    }
 
-    logger.info('[TELEGRAM] Secretaria Bot inicializado.');
     return botSecretaria;
   } catch (err) {
     logger.error('[TELEGRAM] Error setup Secretaria Bot:', err.message);

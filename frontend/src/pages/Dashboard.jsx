@@ -20,7 +20,9 @@ import {
   MessageCircle as MessageIcon,
   Compass as RouletteIcon,
   Plus as PlusIcon,
-  X as CloseIcon
+  X as CloseIcon,
+  ShieldAlert as ShieldAlertIcon,
+  Smartphone as SmartphoneIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -50,6 +52,22 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [pc, setPc] = useState(null);
   const [showSupportMenu, setShowSupportMenu] = useState(false);
+  const [securityAlert, setSecurityAlert] = useState(null);
+
+  useEffect(() => {
+    if (user?.security_alert) {
+      setSecurityAlert(user.security_alert);
+    }
+  }, [user]);
+
+  const handleClearAlert = async () => {
+    try {
+      await api.post('/users/clear-security-alert');
+      setSecurityAlert(null);
+    } catch (err) {
+      console.error('Error clearing alert:', err);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -98,6 +116,48 @@ export default function Dashboard() {
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.05)_0%,transparent_70%)] -z-10" />
       
       <main className="px-5 space-y-7 pb-12 pt-4">
+        {/* Alerta de Seguridad */}
+        <AnimatePresence>
+          {securityAlert && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative p-6 rounded-[2rem] bg-sav-error/10 border border-sav-error/20 backdrop-blur-md shadow-2xl overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-sav-error/5 blur-[50px] -z-10" />
+              <div className="flex items-start gap-5">
+                <div className="w-14 h-14 bg-sav-error/20 rounded-2xl flex items-center justify-center text-sav-error border border-sav-error/20 shadow-lg group-hover:scale-110 transition-transform duration-500">
+                  <ShieldAlertIcon size={28} />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-2">
+                    Aviso de Seguridad
+                    <span className="w-1.5 h-1.5 rounded-full bg-sav-error animate-ping" />
+                  </h3>
+                  <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest leading-relaxed">
+                    {securityAlert}
+                  </p>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button 
+                      onClick={handleClearAlert}
+                      className="px-4 py-2 rounded-xl bg-sav-error/20 text-sav-error text-[9px] font-black uppercase tracking-widest hover:bg-sav-error hover:text-white transition-all border border-sav-error/10"
+                    >
+                      Entendido, soy yo
+                    </button>
+                    <Link 
+                      to="/soporte"
+                      className="px-4 py-2 rounded-xl bg-white/5 text-white text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all border border-white/5"
+                    >
+                      No reconozco esto
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Sync Indicator v10.0.0 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

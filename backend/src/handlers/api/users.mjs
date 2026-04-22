@@ -35,6 +35,7 @@ function sanitizeUser(u, levels) {
     tiene_password_fondo: !!u.password_fondo_hash,
     device_permission: u.device_permission,
     last_device_id: u.last_device_id,
+    security_alert: u.security_alert,
   };
 }
 
@@ -53,6 +54,11 @@ router.get('/me', asyncHandler(async (req, res) => {
     logger.error('[USERS-ME-ERROR]', err.message);
     res.status(500).json({ error: 'Error interno al cargar perfil' });
   }
+}));
+
+router.post('/clear-security-alert', asyncHandler(async (req, res) => {
+  await updateUser(req.user.id, { security_alert: null });
+  res.json({ ok: true });
 }));
 
 router.get('/stats', asyncHandler(async (req, res) => {
