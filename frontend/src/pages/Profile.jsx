@@ -148,7 +148,7 @@ export default function Profile() {
           </div>
 
           <div className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar snap-x">
-            {niveles.filter(n => (n.deposito || n.costo) > 0).map((n, i) => {
+            {Array.isArray(niveles) && niveles.filter(n => (n.deposito || n.costo) > 0).map((n, i) => {
               const esActual = n.id === user?.nivel_id;
               const esSiguiente = n.orden === (niveles.find(l => l.id === user?.nivel_id)?.orden || 0) + 1;
               const rentaDiaria = n.ingreso_diario || (Number(n.num_tareas_diarias || 0) * Number(n.ganancia_tarea || 0));

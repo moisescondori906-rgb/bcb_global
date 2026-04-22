@@ -42,8 +42,8 @@ export default function BillingRecord() {
   }, []);
 
   const items = tab === 'ingresos' 
-    ? [...recargas.map(r => ({ ...r, tipo_visual: 'recarga', monto_val: r.monto }))]
-    : [...retiros.map(r => ({ ...r, tipo_visual: 'retiro', monto_val: -r.monto }))];
+    ? (Array.isArray(recargas) ? recargas.map(r => ({ ...r, tipo_visual: 'recarga', monto_val: r.monto })) : [])
+    : (Array.isArray(retiros) ? retiros.map(r => ({ ...r, tipo_visual: 'retiro', monto_val: -r.monto })) : []);
 
   if (loading) {
     return (

@@ -76,7 +76,7 @@ export default function VIP() {
         </div>
 
         <div className="space-y-6">
-          {niveles.map((nivel, i) => {
+          {Array.isArray(niveles) && niveles.map((nivel, i) => {
             const esActual = nivel.id === user?.nivel_id;
             const esSuperior = esNivelSuperior(nivel);
             const bloqueado = nivel.activo === false;

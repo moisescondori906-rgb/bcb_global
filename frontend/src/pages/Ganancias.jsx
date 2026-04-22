@@ -185,7 +185,8 @@ export default function Ganancias() {
           <div className="space-y-3">
             <AnimatePresence mode="popLayout">
               {historyList.map((item, i) => {
-                const isPositive = !['retiro', 'extraccion', 'ajuste_admin_negativo'].some(t => item.tipo_movimiento?.toLowerCase().includes(t));
+                const tipoLower = item.tipo_movimiento?.toLowerCase() || '';
+                const isPositive = !['retiro', 'extraccion', 'ajuste_admin_negativo'].some(t => tipoLower.includes(t));
                 return (
                   <motion.div
                     layout

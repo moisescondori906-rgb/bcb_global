@@ -297,7 +297,7 @@ export default function Dashboard() {
           </div>
 
           <div className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar snap-x">
-            {niveles.filter(n => (n.deposito || n.costo) > 0).map((n, i) => {
+            {Array.isArray(niveles) && niveles.filter(n => (n.deposito || n.costo) > 0).map((n, i) => {
               const esActual = n.id === user?.nivel_id;
               return (
                 <Link 

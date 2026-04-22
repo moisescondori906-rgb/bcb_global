@@ -45,7 +45,7 @@ export default function PaymentMethods() {
         setMetodos(list || []);
         
         // Filtrar métodos por horario
-        const available = (list || []).filter(m => {
+        const available = Array.isArray(list) ? list.filter(m => {
           const schedule = {
             dias_semana: m.dias_semana,
             hora_inicio: m.hora_inicio,
@@ -53,7 +53,7 @@ export default function PaymentMethods() {
             enabled: true
           };
           return isScheduleOpen(schedule).ok;
-        });
+        }) : [];
         setFilteredMetodos(available);
       } catch (err) {
         console.error('Error cargando métodos:', err);

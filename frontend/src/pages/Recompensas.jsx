@@ -223,8 +223,9 @@ export default function Recompensas() {
                 style={{ transform: `rotate(${rotation}deg)` }}
               >
                 <svg viewBox="0 0 100 100" className="w-full h-full">
-                  {premios.map((premio, i) => {
-                    const angle = 360 / premios.length;
+                  {Array.isArray(premios) && premios.map((premio, i) => {
+                    const count = premios.length || 1;
+                    const angle = 360 / count;
                     const rotationAngle = i * angle;
                     const x1 = 50 + 50 * Math.cos((Math.PI * (rotationAngle - 90)) / 180);
                     const y1 = 50 + 50 * Math.sin((Math.PI * (rotationAngle - 90)) / 180);
@@ -254,7 +255,7 @@ export default function Recompensas() {
                       </g>
                     );
                   })}
-                  {premios.length === 0 && (
+                  {(!Array.isArray(premios) || premios.length === 0) && (
                     <circle cx="50" cy="50" r="50" fill="#f3f4f6" />
                   )}
                 </svg>

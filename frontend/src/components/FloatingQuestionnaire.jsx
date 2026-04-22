@@ -114,15 +114,15 @@ export default function FloatingQuestionnaire() {
             </div>
 
             <div className="p-8 flex-1 overflow-y-auto no-scrollbar space-y-8">
-              {cuestionario.preguntas?.map((p, pIdx) => (
+              {Array.isArray(cuestionario?.preguntas) && cuestionario.preguntas.map((p, pIdx) => (
                 <div key={p.id} className="space-y-4">
                   <div className="flex gap-3">
                     <span className="w-6 h-6 bg-sav-primary/10 text-sav-primary rounded-lg flex items-center justify-center text-xs font-black shrink-0">{pIdx + 1}</span>
-                    <h3 className="text-sm font-black text-white uppercase tracking-tight leading-tight">{p.texto}</h3>
+                    <h3 className="text-sm font-black text-white uppercase tracking-tight leading-tight">{p?.texto}</h3>
                   </div>
                   
                   <div className="space-y-2 ml-9">
-                    {p.opciones?.map((opt, oIdx) => (
+                    {Array.isArray(p?.opciones) && p.opciones.map((opt, oIdx) => (
                       <button
                         key={oIdx}
                         type="button"

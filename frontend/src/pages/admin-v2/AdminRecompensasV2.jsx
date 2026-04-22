@@ -14,7 +14,15 @@ import {
   User as UserIcon,
   Layers,
   CheckCircle2,
-  Ticket
+  Ticket,
+  Edit3,
+  ChevronRight,
+  Sparkles,
+  Search,
+  RefreshCw,
+  Percent,
+  DollarSign,
+  Users
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { formatCurrency } from '../../utils/format';
@@ -25,6 +33,7 @@ export default function AdminRecompensasV2() {
   const [niveles, setNiveles] = useState([]);
   const [configs, setConfigs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [showModal, setShowModal] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -125,6 +134,8 @@ export default function AdminRecompensasV2() {
     }
   };
 
+  const totalProb = premios.reduce((acc, p) => acc + Number(p.probabilidad), 0);
+
   return (
     <div className="space-y-10">
       {/* Header Section */}
@@ -162,6 +173,37 @@ export default function AdminRecompensasV2() {
           >
             <Plus size={18} /> Nuevo Premio Base
           </button>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-[#161926] border border-white/5 p-8 rounded-[40px] relative overflow-hidden group shadow-2xl shadow-black/40">
+           <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity"><RefreshCw size={80} /></div>
+           <div className="p-3.5 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20 w-fit mb-6 shadow-inner"><RefreshCw size={24} /></div>
+           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Total Rewards</p>
+           <div className="flex items-end gap-2">
+              <span className="text-4xl font-black text-white tracking-tighter">{premios.length}</span>
+              <span className="text-[10px] font-bold text-slate-600 uppercase mb-2 tracking-widest italic">Nodes Active</span>
+           </div>
+        </div>
+        <div className="bg-[#161926] border border-white/5 p-8 rounded-[40px] relative overflow-hidden group shadow-2xl shadow-black/40">
+           <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity"><Percent size={80} /></div>
+           <div className={`p-3.5 rounded-2xl ${totalProb > 100 ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'} w-fit mb-6 shadow-inner`}><Percent size={24} /></div>
+           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Probability Pool</p>
+           <div className="flex items-end gap-2">
+              <span className={`text-4xl font-black tracking-tighter ${totalProb > 100 ? 'text-rose-500 animate-pulse' : 'text-white'}`}>{totalProb}%</span>
+              <span className="text-[10px] font-bold text-slate-600 uppercase mb-2 tracking-widest italic">/ 100% System Limit</span>
+           </div>
+        </div>
+        <div className="bg-[#161926] border border-white/5 p-8 rounded-[40px] relative overflow-hidden group shadow-2xl shadow-black/40">
+           <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity"><Trophy size={80} /></div>
+           <div className="p-3.5 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20 w-fit mb-6 shadow-inner"><Trophy size={24} /></div>
+           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Highest Jackpot</p>
+           <div className="flex items-end gap-2">
+              <span className="text-4xl font-black text-white tracking-tighter">{formatCurrency(premios.length > 0 ? Math.max(...premios.map(p => Number(p.valor))) : 0)}</span>
+              <span className="text-[10px] font-bold text-slate-600 uppercase mb-2 tracking-widest italic">BOB Liquid</span>
+           </div>
         </div>
       </div>
 
@@ -225,10 +267,20 @@ export default function AdminRecompensasV2() {
 
       {/* Rewards Grid (Premios Base) */}
       <div className="bg-[#161926] border border-white/5 rounded-[45px] shadow-2xl shadow-black/40 overflow-hidden">
-        <div className="p-10 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
+        <div className="p-10 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/[0.01]">
            <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-sav-primary/10 text-sav-primary border border-sav-primary/20 shadow-inner"><Zap size={20} /></div>
               <h3 className="text-xl font-black text-white uppercase tracking-tighter italic">Nodos de Premio Base</h3>
+           </div>
+           <div className="relative group">
+              <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-sav-primary transition-colors" />
+              <input 
+                type="text" 
+                placeholder="Audit reward nodes..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full md:w-96 pl-14 pr-8 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner"
+              />
            </div>
         </div>
 
@@ -243,7 +295,7 @@ export default function AdminRecompensasV2() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.03]">
-              {premios.map((p) => (
+              {premios.filter(p => p.nombre.toLowerCase().includes(searchTerm.toLowerCase())).map((p) => (
                 <tr key={p.id} className="hover:bg-white/[0.01] transition-colors group">
                   <td className="px-10 py-6">
                     <div className="flex items-center gap-5">
@@ -350,10 +402,163 @@ export default function AdminRecompensasV2() {
         )}
       </AnimatePresence>
 
-      {/* Resto de Modales (Gift y Reward) Re-usados y simplificados */}
-      {/* ... (Se mantienen igual que en la versión anterior para no romper funcionalidad de tickets) ... */}
+      {/* Reward Creation Modal */}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-2xl flex items-center justify-center p-6 z-[200]"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="bg-[#161926] border border-white/10 p-12 rounded-[50px] max-w-lg w-full shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sav-primary to-rose-600 shadow-lg shadow-sav-primary/50" />
+              <div className="flex items-center gap-6 mb-10">
+                <div className="p-4 rounded-[1.8rem] bg-sav-primary/10 text-sav-primary border border-sav-primary/20 shadow-inner">
+                  <Zap size={32} />
+                </div>
+                <div>
+                  <h3 className="text-3xl font-black text-white uppercase tracking-tighter italic">{editingPremio ? 'Configure Reward Node' : 'Initialize New Reward'}</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Protocolo de Configuración Institucional</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Reward Name</label>
+                    <input type="text" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner" required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Value (BOB)</label>
+                    <input type="number" value={form.valor} onChange={e => setForm({...form, valor: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner" required />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Probability %</label>
+                    <input type="number" step="0.01" value={form.probabilidad} onChange={e => setForm({...form, probabilidad: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-sav-primary outline-none focus:border-sav-primary/30 shadow-inner" required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Visual Color (Hex)</label>
+                    <div className="flex gap-3">
+                       <input type="color" value={form.color} onChange={e => setForm({...form, color: e.target.value})} className="w-14 h-14 bg-[#0f111a] border border-white/5 rounded-xl p-1 cursor-pointer" />
+                       <input type="text" value={form.color} onChange={e => setForm({...form, color: e.target.value})} className="flex-1 bg-[#0f111a] border border-white/5 rounded-2xl px-4 py-4 text-[10px] font-mono text-slate-400 outline-none focus:border-sav-primary/30 shadow-inner" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Operational Index (Order)</label>
+                  <input type="number" value={form.orden} onChange={e => setForm({...form, orden: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner" required />
+                </div>
+
+                <div className="flex gap-4 pt-6">
+                   <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-8 py-5 rounded-[25px] bg-white/5 text-slate-400 font-black text-[11px] uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all border border-white/5">Cancel</button>
+                   <button type="submit" className="flex-1 px-8 py-5 rounded-[25px] bg-sav-primary text-white font-black text-[11px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-2xl shadow-sav-primary/30">Deploy Reward</button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Gift Tickets Modal */}
+      <AnimatePresence>
+        {showGiftModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-2xl flex items-center justify-center p-6 z-[200]"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="bg-[#161926] border border-white/10 p-12 rounded-[50px] max-w-lg w-full shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sav-primary to-indigo-600 shadow-lg shadow-sav-primary/50" />
+              
+              <div className="flex items-center gap-6 mb-10">
+                <div className="p-4 rounded-[1.8rem] bg-sav-primary/10 text-sav-primary border border-sav-primary/20 shadow-inner">
+                  <Ticket size={32} className="animate-bounce" />
+                </div>
+                <div>
+                  <h3 className="text-3xl font-black text-white uppercase tracking-tighter italic">Ticket Distribution</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Protocolo de Incentivos Masivos</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleGiftSubmit} className="space-y-8">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Target Audience</label>
+                  <select 
+                    value={giftForm.tipo} 
+                    onChange={e => setGiftForm({...giftForm, tipo: e.target.value})}
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-sav-primary/30 shadow-inner appearance-none cursor-pointer"
+                  >
+                    <option value="todos">Todos los Usuarios (Full Rollout)</option>
+                    <option value="nivel">Filtrar por Nivel VIP</option>
+                    <option value="usuario">Usuario Específico (Direct)</option>
+                  </select>
+                </div>
+
+                {giftForm.tipo === 'nivel' && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Select VIP Level</label>
+                    <select 
+                      value={giftForm.targetId} 
+                      onChange={e => setGiftForm({...giftForm, targetId: e.target.value})}
+                      className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-sav-primary/30 shadow-inner appearance-none cursor-pointer"
+                    >
+                      <option value="">-- Choose Level --</option>
+                      {niveles.map(n => <option key={n.id} value={n.id}>{n.nombre}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {giftForm.tipo === 'usuario' && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Target Username</label>
+                    <select 
+                      value={giftForm.targetId} 
+                      onChange={e => setGiftForm({...giftForm, targetId: e.target.value})}
+                      className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-sav-primary/30 shadow-inner appearance-none cursor-pointer"
+                    >
+                      <option value="">-- Choose User --</option>
+                      {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre_usuario}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Ticket Quantity</label>
+                  <input 
+                    type="number" 
+                    value={giftForm.cantidad} 
+                    onChange={e => setGiftForm({...giftForm, cantidad: e.target.value})} 
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-sav-primary outline-none focus:border-sav-primary/30 shadow-inner" 
+                    min="1" 
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                   <button type="button" onClick={() => setShowGiftModal(false)} className="flex-1 px-8 py-5 rounded-[25px] bg-white/5 text-slate-400 font-black text-[11px] uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all border border-white/5">Abort</button>
+                   <button type="submit" className="flex-1 px-8 py-5 rounded-[25px] bg-sav-primary text-white font-black text-[11px] uppercase tracking-widest hover:bg-sav-primary/80 transition-all shadow-2xl shadow-sav-primary/30 active:scale-95">Deploy Tickets</button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function Edit3({ size }) { return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit-3"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>; }

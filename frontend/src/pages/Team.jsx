@@ -171,7 +171,7 @@ export default function Team() {
           </div>
           
           <div className="space-y-3">
-            {niveles.map((n, i) => (
+            {Array.isArray(niveles) && niveles.map((n, i) => (
               <Card 
                 key={n.nivel} 
                 variant="outline" 

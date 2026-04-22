@@ -60,7 +60,7 @@ export default function Messages() {
 
         {/* Messages List */}
         <div className="space-y-5">
-          {messages.length === 0 ? (
+          {!Array.isArray(messages) || messages.length === 0 ? (
             <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
               <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-sav-muted">
                 <MessageIcon size={32} />
