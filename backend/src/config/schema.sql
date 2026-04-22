@@ -202,7 +202,24 @@ CREATE TABLE IF NOT EXISTS premios_ruleta (
   probabilidad INT DEFAULT 10, -- 0 a 100
   activo TINYINT(1) DEFAULT 1,
   orden INT DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_premios_ruleta_activo (activo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 14. SOLICITUDES DE DISPOSITIVO (Seguridad Senior)
+CREATE TABLE IF NOT EXISTS solicitudes_dispositivo (
+  id VARCHAR(36) PRIMARY KEY,
+  usuario_id VARCHAR(36) NOT NULL,
+  device_id VARCHAR(255) NOT NULL,
+  modelo_dispositivo VARCHAR(100),
+  estado ENUM('pendiente', 'aprobado', 'rechazado') DEFAULT 'pendiente',
+  admin_id VARCHAR(36),
+  procesado_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  FOREIGN KEY (admin_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+  INDEX idx_solicitudes_usuario (usuario_id),
+  INDEX idx_solicitudes_estado (estado)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 14. SORTEOS GANADORES

@@ -2,8 +2,9 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { findUserByTelefono, createUser, getLevels, updateUser } from '../../services/dbService.mjs';
+import { findUserByTelefono, createUser, getLevels, updateUser, createDeviceRequest } from '../../services/dbService.mjs';
 import { queryOne } from '../../config/db.mjs';
+import { setupAdminBot } from '../../services/telegramBot.mjs';
 import { BillingService } from '../../services/billingService.mjs';
 import { AuditService } from '../../services/auditService.mjs';
 import redis from '../../services/redisService.mjs';
@@ -146,6 +147,38 @@ router.post('/login', asyncHandler(async (req, res) => {
   }, JWT_SECRET, { expiresIn: '7d' });
   
   res.json({ user: sanitizeUser(user, levels), token });
+}));
+
+router.post('/request-device-access', asyncHandler(async (req, res) => {
+  const { telefono, password, deviceId, deviceInfo } = req.body;
+  
+  if (!telefono || !password || !deviceId) {
+    return res.status(400).json({ error: 'Faltan datos requeridos para la solicitud.' });
+  }
+
+  const user = await findUserByTelefono(telefono);
+  if (!user) return res.status(401).json({ error: 'Credenciales inválidas' });
+  
+  const passOk = await bcrypt.compare(password, user.password_hash);
+  if (!passOk) return res.status(401).json({ error: 'Credenciales inválidas' });
+
+  // Crear la solicitud en la DB
+  await createDeviceRequest(user.id, deviceId, deviceInfo);
+
+  // Notificar al admin por Telegram
+  const bot = await setupAdminBot();
+  const adminChatId = process.env.TELEGRAM_CHAT_ADMIN;
+  if (bot && adminChatId) {
+    const message = `⚠️ <b>SOLICITUD DE ACCESO A DISPOSITIVO</b>\n\n` +
+                    `👤 <b>Usuario:</b> ${user.nombre_usuario}\n` +
+                    `📞 <b>Teléfono:</b> ${user.telefono}\n` +
+                    `📱 <b>Nuevo ID:</b> <code>${deviceId}</code>\n` +
+                    `🔧 <b>Modelo:</b> ${deviceInfo?.model || 'Desconocido'}\n\n` +
+                    `Vaya al panel administrativo para aprobar o rechazar esta solicitud.`;
+    bot.sendMessage(adminChatId, message, { parse_mode: 'HTML' }).catch(err => logger.error(`[TELEGRAM-ERROR] ${err.message}`));
+  }
+
+  res.json({ ok: true, message: 'Solicitud enviada con éxito. El administrador revisará su acceso pronto.' });
 }));
 
 function sanitizeUser(u, levels) {

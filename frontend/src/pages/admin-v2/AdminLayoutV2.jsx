@@ -26,7 +26,9 @@ import {
   Send,
   Search,
   Settings,
-  Database
+  Database,
+  Lock,
+  History
 } from 'lucide-react';
 import Logo from '../../components/Logo.jsx';
 import { APP_DISPLAY_NAME } from '../../theme/branding.js';
@@ -37,7 +39,7 @@ const menuGroups = [
     items: [
       { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/admin/usuarios', icon: Users, label: 'Usuarios' },
-      { to: '/admin/ranking', icon: Trophy, label: 'Ranking Invitados' },
+      { to: '/admin/dispositivos', icon: Lock, label: 'Dispositivos' },
     ]
   },
   {
@@ -53,6 +55,7 @@ const menuGroups = [
       { to: '/admin/tareas', icon: Play, label: 'Gestión Tareas' },
       { to: '/admin/niveles', icon: Layers, label: 'Niveles VIP' },
       { to: '/admin/calendario', icon: Calendar, label: 'Calendario' },
+      { to: '/admin/ranking', icon: Trophy, label: 'Ranking' },
     ]
   },
   {

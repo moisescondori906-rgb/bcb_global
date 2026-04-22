@@ -14,7 +14,9 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, user: currentUser } = useAuth();
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
+  const { login, requestDeviceAccess, user: currentUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,7 +36,24 @@ export default function Login() {
       const user = await login(telefono, password);
       navigate(user?.rol === 'admin' ? '/admin' : '/');
     } catch (err) {
+      if (err.code === 'DEVICE_LOCKED') {
+        setShowRequestModal(true);
+      }
       setError(err.message || 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRequestAccess = async () => {
+    setLoading(true);
+    try {
+      const telefono = '+591' + numero.replace(/\D/g, '').trim();
+      await requestDeviceAccess(telefono, password);
+      setRequestSent(true);
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Error al enviar solicitud');
     } finally {
       setLoading(false);
     }
@@ -131,6 +150,62 @@ export default function Login() {
             </Button>
           </form>
         </Card>
+
+        {/* Modal de Solicitud de Dispositivo */}
+        <AnimatePresence>
+          {showRequestModal && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+            >
+              <motion.div 
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="w-full max-w-sm bg-sav-surface border border-sav-border p-8 rounded-[2rem] shadow-2xl space-y-6 text-center"
+              >
+                <div className="w-16 h-16 bg-sav-error/10 rounded-2xl flex items-center justify-center mx-auto text-sav-error border border-sav-error/20">
+                  <Smartphone size={32} />
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black text-white uppercase tracking-tight">Acceso Denegado</h3>
+                  <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest leading-relaxed">
+                    {requestSent 
+                      ? 'Su solicitud ha sido enviada. Por favor contacte al administrador para agilizar la aprobación.'
+                      : 'Este dispositivo no está autorizado para acceder a esta cuenta. ¿Desea enviar una solicitud de acceso al administrador?'}
+                  </p>
+                </div>
+
+                {!requestSent ? (
+                  <div className="flex flex-col gap-3">
+                    <Button 
+                      onClick={handleRequestAccess}
+                      loading={loading}
+                      variant="premium"
+                    >
+                      Solicitar Acceso
+                    </Button>
+                    <button 
+                      onClick={() => setShowRequestModal(false)}
+                      className="text-[10px] font-bold text-sav-muted uppercase tracking-widest hover:text-white transition-colors py-2"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={() => setShowRequestModal(false)}
+                    variant="outline"
+                  >
+                    Entendido
+                  </Button>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="mt-10 text-center space-y-4">
           <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.2em]">

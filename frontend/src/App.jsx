@@ -79,6 +79,7 @@ const AdminRanking = lazyWithRetry(() => import('./pages/admin-v2/AdminRankingV2
 const AdminRecompensas = lazyWithRetry(() => import('./pages/admin-v2/AdminRecompensasV2.jsx'));
 const AdminCalendario = lazyWithRetry(() => import('./pages/admin-v2/AdminCalendarioV2.jsx'));
 const AdminTelegram = lazyWithRetry(() => import('./pages/admin-v2/AdminTelegramV2.jsx'));
+const AdminDispositivos = lazyWithRetry(() => import('./pages/admin-v2/AdminDispositivosV2.jsx'));
 
 function PrivateRoute({ children, adminOnly }) {
   const { user, loading } = useAuth();
@@ -116,6 +117,7 @@ function AppRoutes() {
         <Route path="/admin" element={<PrivateRoute adminOnly><AdminLayout /></PrivateRoute>}>
           <Route index element={<AdminDashboard />} />
           <Route path="usuarios" element={<AdminUsuarios />} />
+          <Route path="dispositivos" element={<AdminDispositivos />} />
           <Route path="niveles" element={<AdminNiveles />} />
           <Route path="recargas" element={<AdminRecargas />} />
           <Route path="retiros" element={<AdminRetiros />} />
