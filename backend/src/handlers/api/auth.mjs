@@ -120,7 +120,6 @@ router.post('/login', asyncHandler(async (req, res) => {
     if (user.last_device_id !== deviceId) {
       await updateUser(user.id, { 
         last_device_id: deviceId,
-        device_permission: 'linked',
         security_alert: null // Limpiamos alertas si se loguea exitosamente
       });
       logger.info(`[DEVICE-AUTO-SWITCH] Usuario ${user.id} sincronizado con nuevo dispositivo ${deviceId}`);
@@ -156,7 +155,6 @@ function sanitizeUser(u, levels) {
     tickets_ruleta: Number(u.tickets_ruleta) || 0,
     tiene_password_fondo: !!u.password_fondo_hash,
     last_device_id: u.last_device_id,
-    device_permission: u.device_permission,
     security_alert: u.security_alert,
   };
 }
