@@ -142,22 +142,8 @@ export function AuthProvider({ children }) {
 
   const refreshUser = useCallback(() => loadUser(true), [loadUser]);
 
-  const requestDeviceAccess = useCallback(async (telefono, password) => {
-    const deviceId = getDeviceId();
-    const deviceInfo = {
-      model: navigator.userAgent.split('(')[1]?.split(')')[0] || 'Navegador Web',
-      platform: navigator.platform
-    };
-    return await api.post('/auth/request-device-access', { 
-      telefono, 
-      password, 
-      deviceId,
-      deviceInfo
-    });
-  }, [getDeviceId]);
-
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser, requestDeviceAccess }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

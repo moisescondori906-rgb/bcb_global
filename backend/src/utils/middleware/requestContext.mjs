@@ -62,6 +62,16 @@ export async function attachRequestUser(req, res, next) {
       return res.status(401).json({ error: 'Sesión inválida o usuario no encontrado' });
     }
 
+    // VALIDACIÓN DE DISPOSITIVO ÚNICO (Kick out previous session)
+    if (req.user.rol === 'usuario' && req.user.deviceId && req.requestUser.last_device_id) {
+      if (req.user.deviceId !== req.requestUser.last_device_id) {
+        return res.status(401).json({ 
+          error: 'Su sesión ha sido cerrada porque se inició sesión en otro dispositivo.',
+          code: 'SESSION_KICKED'
+        });
+      }
+    }
+
     // Doble validación: El usuario debe pertenecer al tenant del contexto (si aplica)
     if (req.requestUser && req.tenantId && req.requestUser.tenant_id !== req.tenantId) {
       return res.status(403).json({ 

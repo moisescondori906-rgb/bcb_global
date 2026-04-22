@@ -115,27 +115,15 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   if (user.bloqueado) return res.status(403).json({ error: 'Cuenta bloqueada temporalmente. Contacte a soporte.' });
 
-  // RESTRICCIÓN DE DISPOSITIVO ÚNICO (Senior Security Standard)
-  if (user.rol === 'usuario') { 
-    if (user.last_device_id && deviceId && user.last_device_id !== deviceId) {
-      // Si tiene permiso explícito 'switch_device', permitimos el cambio una vez
-      if (user.device_permission === 'switch_pending') {
-        await updateUser(user.id, { 
-          last_device_id: deviceId,
-          device_permission: 'linked' 
-        });
-        logger.info(`[DEVICE-SWITCH] Usuario ${user.id} cambió a nuevo dispositivo ${deviceId}`);
-      } else {
-        return res.status(403).json({ 
-          error: 'Esta cuenta ya está vinculada a otro dispositivo móvil. Solicite permiso al administrador para cambiar de dispositivo.',
-          code: 'DEVICE_LOCKED'
-        });
-      }
-    }
-
-    // Vincular dispositivo si es la primera vez
-    if (!user.last_device_id && deviceId) {
-      await updateUser(user.id, { last_device_id: deviceId, device_permission: 'linked' });
+  // VINCULACIÓN DE DISPOSITIVO (Último dispositivo manda)
+  if (user.rol === 'usuario' && deviceId) {
+    if (user.last_device_id !== deviceId) {
+      await updateUser(user.id, { 
+        last_device_id: deviceId,
+        device_permission: 'linked',
+        security_alert: null // Limpiamos alertas si se loguea exitosamente
+      });
+      logger.info(`[DEVICE-AUTO-SWITCH] Usuario ${user.id} sincronizado con nuevo dispositivo ${deviceId}`);
     }
   }
 
@@ -143,56 +131,11 @@ router.post('/login', asyncHandler(async (req, res) => {
   const token = jwt.sign({ 
     id: user.id, 
     rol: user.rol,
-    tenantId: user.tenant_id
+    tenantId: user.tenant_id,
+    deviceId: deviceId || user.last_device_id
   }, JWT_SECRET, { expiresIn: '7d' });
   
   res.json({ user: sanitizeUser(user, levels), token });
-}));
-
-router.post('/request-device-access', asyncHandler(async (req, res) => {
-  const { telefono, password, deviceId, deviceInfo } = req.body;
-  
-  if (!telefono || !password || !deviceId) {
-    return res.status(400).json({ error: 'Faltan datos requeridos para la solicitud.' });
-  }
-
-  const user = await findUserByTelefono(telefono);
-  if (!user) return res.status(401).json({ error: 'Credenciales inválidas' });
-  
-  const passOk = await bcrypt.compare(password, user.password_hash);
-  if (!passOk) return res.status(401).json({ error: 'Credenciales inválidas' });
-
-  // Crear la solicitud en la DB
-  const requestId = await createDeviceRequest(user.id, deviceId, deviceInfo);
-
-  // Marcar alerta de seguridad para el usuario principal
-  await updateUser(user.id, { 
-    security_alert: `Intento de acceso desde un nuevo dispositivo (${deviceInfo?.model || 'Desconocido'})` 
-  });
-
-  // Notificar al admin y secretaria por Telegram (Resiliente)
-  const message = `⚠️ <b>SOLICITUD DE ACCESO A DISPOSITIVO</b>\n\n` +
-                  `👤 <b>Usuario:</b> ${user.nombre_usuario}\n` +
-                  `📞 <b>Teléfono:</b> ${user.telefono}\n` +
-                  `📱 <b>Nuevo ID:</b> <code>${deviceId}</code>\n` +
-                  `🔧 <b>Modelo:</b> ${deviceInfo?.model || 'Desconocido'}\n\n` +
-                  `<i>¿Desea autorizar el acceso a este nuevo dispositivo?</i>`;
-  
-  const options = {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          { text: '✅ Aprobar', callback_data: `device_req:${requestId}:aprobado` },
-          { text: '❌ Rechazar', callback_data: `device_req:${requestId}:rechazado` }
-        ]
-      ]
-    }
-  };
-
-  await sendToAdmin(message, options);
-  await sendToSecretaria(message, options);
-
-  res.json({ ok: true, message: 'Solicitud enviada con éxito. El administrador revisará su acceso pronto.' });
 }));
 
 function sanitizeUser(u, levels) {

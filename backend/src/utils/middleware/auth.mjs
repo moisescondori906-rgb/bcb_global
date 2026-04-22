@@ -17,7 +17,8 @@ export const authenticate = (req, res, next) => {
       id: decoded.id,
       rol: decoded.rol,
       tenantId: decoded.tenantId,
-      region: decoded.region
+      region: decoded.region,
+      deviceId: decoded.deviceId
     };
 
     next();

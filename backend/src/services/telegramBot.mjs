@@ -30,12 +30,6 @@ export async function setupAdminBot() {
     
     if (SHOULD_POLL) {
       botAdmin.on('polling_error', (err) => logger.debug('[TELEGRAM ADMIN] Polling error:', err.message));
-      
-      // --- MANEJADOR DE CALLBACKS (Admin Bot) ---
-      botAdmin.on('callback_query', async (query) => {
-        await handleDeviceRequestCallback(botAdmin, query);
-      });
-
       logger.info('[TELEGRAM] Admin Bot inicializado con Polling.');
     } else {
       logger.info('[TELEGRAM] Admin Bot inicializado (Solo Envío).');
@@ -126,11 +120,6 @@ export async function setupSecretariaBot() {
         }
       });
 
-      // --- MANEJADOR DE CALLBACKS (Secretaria Bot) ---
-      botSecretaria.on('callback_query', async (query) => {
-        await handleDeviceRequestCallback(botSecretaria, query);
-      });
-
       logger.info('[TELEGRAM] Secretaria Bot inicializado con Polling.');
     } else {
       logger.info('[TELEGRAM] Secretaria Bot inicializado (Solo Envío).');
@@ -140,68 +129,6 @@ export async function setupSecretariaBot() {
   } catch (err) {
     logger.error('[TELEGRAM] Error setup Secretaria Bot:', err.message);
     return null;
-  }
-}
-
-/**
- * Lógica Centralizada para Procesar Solicitudes de Dispositivo vía Telegram
- */
-async function handleDeviceRequestCallback(bot, callbackQuery) {
-  const chatId = String(callbackQuery.message.chat.id);
-  const data = callbackQuery.data; // Formato: "device_req:[ID]:[status]"
-  
-  if (data.startsWith('device_req:')) {
-    const [_, requestId, status] = data.split(':');
-    
-    // Verificar autorización (Admin o Secretaria)
-    const isAdminChat = chatId === String(process.env.TELEGRAM_CHAT_ADMIN);
-    const isSecretariaChat = chatId === String(process.env.TELEGRAM_CHAT_SECRETARIA);
-    
-    if (!isAdminChat && !isSecretariaChat) {
-      return bot.answerCallbackQuery(callbackQuery.id, { text: '❌ No autorizado desde este chat' });
-    }
-
-    try {
-      // 1. Obtener la solicitud y validarla
-      const request = await queryOne('SELECT * FROM solicitudes_dispositivo WHERE id = ?', [requestId]);
-      if (!request) return bot.answerCallbackQuery(callbackQuery.id, { text: '❌ Solicitud no encontrada' });
-      if (request.estado !== 'pendiente') {
-        return bot.answerCallbackQuery(callbackQuery.id, { text: `⚠️ Esta solicitud ya fue procesada como: ${request.estado.toUpperCase()}` });
-      }
-
-      // 2. Procesar en Base de Datos
-      const [admin] = await query('SELECT id FROM usuarios WHERE rol = "admin" LIMIT 1');
-      await processDeviceRequest(requestId, status, admin?.id || 'system');
-      
-      const actionText = status === 'aprobado' ? '✅ APROBADO' : '❌ RECHAZADO';
-      const footer = `\n\n<b>ESTADO FINAL: ${actionText}</b>\n👤 Procesado por: ${callbackQuery.from.first_name}`;
-
-      // 3. Actualizar el mensaje actual (Elimina botones)
-      const updateMsg = (callbackQuery.message.caption || callbackQuery.message.text) + footer;
-      
-      if (callbackQuery.message.caption) {
-        await bot.editMessageCaption(updateMsg, {
-          chat_id: chatId,
-          message_id: callbackQuery.message.message_id,
-          parse_mode: 'HTML'
-        });
-      } else {
-        await bot.editMessageText(updateMsg, {
-          chat_id: chatId,
-          message_id: callbackQuery.message.message_id,
-          parse_mode: 'HTML'
-        });
-      }
-
-      bot.answerCallbackQuery(callbackQuery.id, { text: `Solicitud ${status} con éxito` });
-      
-      // 4. (Opcional) Podríamos notificar al OTRO bot, pero requiere rastrear el message_id enviado a ambos.
-      // Por simplicidad v11, dejamos que el primer bot que procese bloquee la solicitud en DB.
-
-    } catch (err) {
-      logger.error('[TELEGRAM-CALLBACK] Error:', err.message);
-      bot.answerCallbackQuery(callbackQuery.id, { text: '❌ Error al procesar: ' + err.message });
-    }
   }
 }
 
