@@ -18,8 +18,16 @@ async function migrate() {
     }
 
     // 2. Opcional: Asegurar que existan los índices de búsqueda para rendimiento
-    await query('CREATE INDEX IF NOT EXISTS idx_actividad_usuario_dia ON actividad_tareas (usuario_id, fecha_dia)');
-    console.log('✅ Índice de búsqueda idx_actividad_usuario_dia verificado.');
+    try {
+      await query('CREATE INDEX idx_actividad_usuario_dia ON actividad_tareas (usuario_id, fecha_dia)');
+      console.log('✅ Índice de búsqueda idx_actividad_usuario_dia creado.');
+    } catch (err) {
+      if (err.code === 'ER_DUP_KEYNAME') {
+        console.log('ℹ️ El índice idx_actividad_usuario_dia ya existía.');
+      } else {
+        console.warn('⚠️ No se pudo crear el índice idx_actividad_usuario_dia (continuando):', err.message);
+      }
+    }
 
     console.log('✨ Migración completada exitosamente.');
     process.exit(0);
