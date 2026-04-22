@@ -99,7 +99,7 @@ export default function Dashboard() {
   const actionItems = [
     { to: '/vip', icon: TrendingUpIcon, label: 'Membresía VIP', color: 'text-sav-primary', bg: 'bg-sav-primary/10' },
     { to: '/invitar', icon: UsersIcon, label: 'Invitar', color: 'text-orange-400', bg: 'bg-orange-500/10' },
-    { to: '/recompensas', icon: RouletteIcon, label: 'Ruleta', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    { to: '/premios', icon: RouletteIcon, label: 'Premios', color: 'text-amber-400', bg: 'bg-amber-500/10' },
     { to: '/equipo', icon: UsersIcon, label: 'Mi Equipo', color: 'text-blue-400', bg: 'bg-blue-500/10' },
     { to: '/movimientos', icon: FileTextIcon, label: 'Movimientos', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     { to: '/acerca-de', icon: InfoIcon, label: 'Nosotros', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
@@ -366,9 +366,9 @@ export default function Dashboard() {
             >
               {/* Ruleta (Now inside support menu for better order) */}
               {pc?.ruleta_activa !== false && (
-                <Link to="/recompensas" className="group flex items-center gap-3 justify-end active:scale-95 transition-transform">
+                <Link to="/premios" className="group flex items-center gap-3 justify-end active:scale-95 transition-transform">
                   <span className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 rounded-xl text-[9px] font-black text-white uppercase tracking-[0.2em] shadow-lg shadow-orange-500/20 border border-white/20">
-                    Girar Ruleta
+                    Centro de Premios
                   </span>
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-600 flex items-center justify-center text-white border border-white/30 shadow-xl relative overflow-hidden">
                     <RouletteIcon size={20} className="animate-spin-slow" />

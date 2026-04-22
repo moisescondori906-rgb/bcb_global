@@ -223,7 +223,7 @@ export const api = {
     config: () => request('/sorteo/config'),
     premios: () => request('/sorteo/premios'),
     historial: () => request('/sorteo/historial'),
-    girar: () => request('/sorteo/girar', { method: 'POST' }),
+    girar: (data) => request('/sorteo/girar', { method: 'POST', body: JSON.stringify(data) }),
   },
   admin: {
     dashboard: () => request('/admin/dashboard'),
@@ -300,6 +300,11 @@ export const api = {
     actualizarPremioRuleta: (id, data) => request(`/admin/premios-ruleta/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     eliminarPremioRuleta: (id) => request(`/admin/premios-ruleta/${id}`, { method: 'DELETE' }),
     regalarTickets: (data) => request('/admin/regalar-tickets', { method: 'POST', body: JSON.stringify(data) }),
+    sorteoConfig: {
+      list: () => request('/sorteo/admin/config-personalizada'),
+      save: (data) => request('/sorteo/admin/config-personalizada', { method: 'POST', body: JSON.stringify(data) }),
+      delete: (id) => request(`/sorteo/admin/config-personalizada/${id}`, { method: 'DELETE' }),
+    },
     publicContent: () => request('/admin/public-content'),
     updatePublicContent: (data) => request('/admin/public-content', { method: 'PUT', body: JSON.stringify(data) }),
     mensajes: () => request('/admin/mensajes'),

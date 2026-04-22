@@ -12,7 +12,10 @@ const config = {
 
 conn.on('ready', () => {
   console.log('✅ SSH Ready');
-  conn.exec('tail -n 50 /var/log/nginx/error.log', (err, stream) => {
+  const sql = `
+    DESC premios_ruleta;
+  `;
+  conn.exec(`mysql -u root -p14738941lp bcb_global -e "${sql}"`, (err, stream) => {
     if (err) throw err;
     stream.on('close', (code, signal) => {
       conn.end();
