@@ -570,7 +570,7 @@ export async function invalidateLevelsCache() {
 // ========================
 
 export async function getTasks() {
-  return await query(`SELECT * FROM tareas WHERE activa = 1 ORDER BY orden ASC`);
+  return await query(`SELECT * FROM tareas WHERE activa = 1 ORDER BY RAND()`);
 }
 
 export async function getTaskById(id) {
