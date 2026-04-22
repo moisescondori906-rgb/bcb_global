@@ -4,8 +4,8 @@ module.exports = {
       name: 'bcb-global-backend',
       script: 'src/index.mjs',
       cwd: '/var/www/bcb_global/backend',
-      instances: 2, // Ajustado a 2 para estabilidad en VPS estándar
-      exec_mode: 'cluster',
+      instances: 1, 
+      exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
         PORT: 4000,

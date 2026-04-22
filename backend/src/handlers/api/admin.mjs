@@ -52,7 +52,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
   const activity = await query(`
     SELECT 
       (SELECT COUNT(*) FROM usuarios WHERE updated_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)) as usuarios_activos,
-      (SELECT COUNT(*) FROM tareas_completadas WHERE DATE(fecha) = CURDATE()) as tareas_completadas
+      (SELECT COUNT(*) FROM actividad_tareas WHERE fecha_dia = CURDATE()) as tareas_completadas
   `);
 
   res.json({
