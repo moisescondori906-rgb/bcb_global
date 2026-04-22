@@ -418,7 +418,7 @@ export default function Dashboard() {
               : "bg-gradient-to-br from-sav-primary to-rose-700 border-white/20"
           )}
         >
-          {showSupportMenu ? <X size={24} /> : <PlusIcon size={28} />}
+          {showSupportMenu ? <CloseIcon size={24} /> : <PlusIcon size={28} />}
           
           {/* Notification Dot */}
           {!showSupportMenu && (

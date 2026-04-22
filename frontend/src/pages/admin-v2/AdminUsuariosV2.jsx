@@ -59,8 +59,10 @@ const UserRow = ({ user, onEdit, onDelete, onToggleStatus, onToggleBlock, onRese
     </td>
     <td className="px-6 py-5 text-center">
       <div className="flex flex-col items-center">
-        <p className="text-sm font-black text-white tracking-tighter">{formatCurrency(user.saldo_principal || user.saldo)}</p>
-        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Balance Disponible</p>
+        <p className="text-sm font-black text-white tracking-tighter">{formatCurrency(user.saldo_principal)}</p>
+        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Capital Principal</p>
+        <p className="text-[10px] font-black text-emerald-500 tracking-tighter mt-1">{formatCurrency(user.saldo_comisiones)}</p>
+        <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest leading-none">Comisiones</p>
       </div>
     </td>
     <td className="px-6 py-5 text-center">
