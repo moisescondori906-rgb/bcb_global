@@ -5,10 +5,11 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { isScheduleOpen } from '../lib/schedule';
 import { 
   Upload, CheckCircle2, Info, AlertCircle, 
   ShieldCheck, ArrowRight, Loader2, QrCode, 
-  CreditCard, Smartphone, Banknote
+  CreditCard, Smartphone, Banknote, Clock
 } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import { Card } from '../components/ui/Card';
@@ -24,6 +25,7 @@ export default function PaymentMethods() {
   const selectedLevel = location.state?.level;
 
   const [metodos, setMetodos] = useState([]);
+  const [filteredMetodos, setFilteredMetodos] = useState([]);
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [comprobante, setComprobante] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -41,6 +43,18 @@ export default function PaymentMethods() {
       try {
         const list = await api.recharges.metodos();
         setMetodos(list || []);
+        
+        // Filtrar métodos por horario
+        const available = (list || []).filter(m => {
+          const schedule = {
+            dias_semana: m.dias_semana,
+            hora_inicio: m.hora_inicio,
+            hora_fin: m.hora_fin,
+            enabled: true
+          };
+          return isScheduleOpen(schedule).ok;
+        });
+        setFilteredMetodos(available);
       } catch (err) {
         console.error('Error cargando métodos:', err);
       }
@@ -142,33 +156,43 @@ export default function PaymentMethods() {
             </div>
 
             <div className="grid grid-cols-1 gap-3">
-              {metodos.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => setSelectedMethod(m)}
-                  className={cn(
-                    "w-full p-5 rounded-3xl border flex items-center gap-4 transition-all",
-                    selectedMethod?.id === m.id 
-                      ? "bg-sav-primary border-sav-primary shadow-lg" 
-                      : "bg-white/5 border-white/5 hover:bg-white/10"
-                  )}
-                >
-                  <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center",
-                    selectedMethod?.id === m.id ? "bg-white/20 text-white" : "bg-sav-dark text-sav-primary"
-                  )}>
-                    {m.tipo === 'qr' ? <QrCode size={24} /> : m.tipo === 'transferencia' ? <Smartphone size={24} /> : <Banknote size={24} />}
-                  </div>
-                  <div className="text-left">
-                    <p className={cn("text-sm font-black uppercase", selectedMethod?.id === m.id ? "text-white" : "text-white/90")}>
-                      {m.nombre_banco || 'Pago QR'}
-                    </p>
-                    <p className={cn("text-[9px] font-bold uppercase tracking-widest", selectedMethod?.id === m.id ? "text-white/60" : "text-sav-muted")}>
-                      {m.nombre_titular}
-                    </p>
-                  </div>
-                </button>
-              ))}
+              {filteredMetodos.length > 0 ? (
+                filteredMetodos.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => setSelectedMethod(m)}
+                    className={cn(
+                      "w-full p-5 rounded-3xl border flex items-center gap-4 transition-all",
+                      selectedMethod?.id === m.id 
+                        ? "bg-sav-primary border-sav-primary shadow-lg" 
+                        : "bg-white/5 border-white/5 hover:bg-white/10"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-12 h-12 rounded-2xl flex items-center justify-center",
+                      selectedMethod?.id === m.id ? "bg-white/20 text-white" : "bg-sav-dark text-sav-primary"
+                    )}>
+                      {m.tipo === 'qr' ? <QrCode size={24} /> : m.tipo === 'transferencia' ? <Smartphone size={24} /> : <Banknote size={24} />}
+                    </div>
+                    <div className="text-left">
+                      <p className={cn("text-sm font-black uppercase", selectedMethod?.id === m.id ? "text-white" : "text-white/90")}>
+                        {m.nombre_banco || 'Pago QR'}
+                      </p>
+                      <p className={cn("text-[9px] font-bold uppercase tracking-widest", selectedMethod?.id === m.id ? "text-white/60" : "text-sav-muted")}>
+                        {m.nombre_titular}
+                      </p>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <Card className="p-8 text-center border-sav-error/20 bg-sav-error/5">
+                  <Clock className="mx-auto text-sav-error mb-4 opacity-50" size={32} />
+                  <h4 className="text-xs font-black text-white uppercase tracking-widest mb-2">No hay métodos disponibles</h4>
+                  <p className="text-[9px] text-sav-muted font-bold uppercase tracking-wide">
+                    En este momento no hay nodos de pago habilitados. Por favor, intenta más tarde dentro del horario de atención.
+                  </p>
+                </Card>
+              )}
             </div>
           </section>
 

@@ -281,7 +281,7 @@ router.get('/metodos-qr-all', asyncHandler(async (req, res) => {
 }));
 
 router.post('/metodos-qr', asyncHandler(async (req, res) => {
-  const { nombre_titular, imagen_qr_url, imagen_base64, admin_id, activo, orden } = req.body;
+  const { nombre_titular, imagen_qr_url, imagen_base64, admin_id, activo, orden, dias_semana, hora_inicio, hora_fin } = req.body;
   let final_url = imagen_qr_url;
 
   if (imagen_base64) {
@@ -294,13 +294,13 @@ router.post('/metodos-qr', asyncHandler(async (req, res) => {
   }
 
   const id = uuidv4();
-  await query(`INSERT INTO metodos_qr (id, nombre_titular, imagen_qr_url, admin_id, activo, orden) VALUES (?, ?, ?, ?, ?, ?)`,
-    [id, nombre_titular, final_url, admin_id, activo !== false ? 1 : 0, orden || 0]);
+  await query(`INSERT INTO metodos_qr (id, nombre_titular, imagen_qr_url, admin_id, activo, orden, dias_semana, hora_inicio, hora_fin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, nombre_titular, final_url, admin_id, activo !== false ? 1 : 0, orden || 0, dias_semana || '0,1,2,3,4,5,6', hora_inicio || '00:00:00', hora_fin || '23:59:59']);
   res.json({ id, ok: true, imagen_qr_url: final_url });
 }));
 
 router.put('/metodos-qr/:id', asyncHandler(async (req, res) => {
-  const { nombre_titular, imagen_qr_url, imagen_base64, admin_id, activo, orden, seleccionada } = req.body;
+  const { nombre_titular, imagen_qr_url, imagen_base64, admin_id, activo, orden, seleccionada, dias_semana, hora_inicio, hora_fin } = req.body;
   let final_url = imagen_qr_url;
 
   if (imagen_base64) {
@@ -312,8 +312,8 @@ router.put('/metodos-qr/:id', asyncHandler(async (req, res) => {
     final_url = result.secure_url;
   }
 
-  await query(`UPDATE metodos_qr SET nombre_titular = ?, imagen_qr_url = ?, admin_id = ?, activo = ?, orden = ?, seleccionada = ? WHERE id = ?`,
-    [nombre_titular, final_url, admin_id, activo !== false ? 1 : 0, orden || 0, seleccionada ? 1 : 0, req.params.id]);
+  await query(`UPDATE metodos_qr SET nombre_titular = ?, imagen_qr_url = ?, admin_id = ?, activo = ?, orden = ?, seleccionada = ?, dias_semana = ?, hora_inicio = ?, hora_fin = ? WHERE id = ?`,
+    [nombre_titular, final_url, admin_id, activo !== false ? 1 : 0, orden || 0, seleccionada ? 1 : 0, dias_semana, hora_inicio, hora_fin, req.params.id]);
   res.json({ ok: true, imagen_qr_url: final_url });
 }));
 

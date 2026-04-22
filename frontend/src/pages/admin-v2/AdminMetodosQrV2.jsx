@@ -19,7 +19,11 @@ import {
   ChevronRight,
   Target,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Clock,
+  ExternalLink,
+  Edit2,
+  X
 } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import { api } from '../../lib/api';
@@ -31,7 +35,10 @@ export default function AdminMetodosQrV2() {
   const [formData, setFormData] = useState({
     nombre: '',
     imagen: null,
+    hora_inicio: '00:00',
+    hora_fin: '23:59',
   });
+  const [editingMetodo, setEditingMetodo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,7 +65,7 @@ export default function AdminMetodosQrV2() {
     }
   };
 
-  const handleFile = async (e) => {
+  const handleFile = async (e, isEdit = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) return alert('Formato inválido');
@@ -76,7 +83,11 @@ export default function AdminMetodosQrV2() {
       const compressedFile = await imageCompression(file, options);
       const reader = new FileReader();
       reader.onload = () => {
-        setFormData(prev => ({ ...prev, imagen: reader.result }));
+        if (isEdit) {
+          setEditingMetodo(prev => ({ ...prev, imagen_base64: reader.result }));
+        } else {
+          setFormData(prev => ({ ...prev, imagen: reader.result }));
+        }
         setIsProcessing(false);
       };
       reader.readAsDataURL(compressedFile);
@@ -96,9 +107,12 @@ export default function AdminMetodosQrV2() {
       await api.admin.crearMetodoQr({ 
         nombre_titular: formData.nombre, 
         imagen_base64: formData.imagen,
-        admin_id: selectedAdminId
+        admin_id: selectedAdminId,
+        hora_inicio: formData.hora_inicio,
+        hora_fin: formData.hora_fin,
+        dias_semana: '0,1,2,3,4,5,6'
       });
-      setFormData({ nombre: '', imagen: null });
+      setFormData({ nombre: '', imagen: null, hora_inicio: '00:00', hora_fin: '23:59' });
       if (fileRef.current) fileRef.current.value = '';
       await fetchData();
     } catch (err) {
@@ -107,6 +121,29 @@ export default function AdminMetodosQrV2() {
       setIsSaving(false);
     }
   };
+
+  const handleUpdate = async () => {
+     if (!editingMetodo) return;
+     setIsSaving(true);
+     try {
+       await api.admin.actualizarMetodoQr(editingMetodo.id, {
+         nombre_titular: editingMetodo.nombre_titular,
+         admin_id: editingMetodo.admin_id,
+         hora_inicio: editingMetodo.hora_inicio,
+         hora_fin: editingMetodo.hora_fin,
+         dias_semana: editingMetodo.dias_semana || '0,1,2,3,4,5,6',
+         activo: editingMetodo.activo,
+         seleccionada: editingMetodo.seleccionada,
+         imagen_base64: editingMetodo.imagen_base64 || null
+       });
+       setEditingMetodo(null);
+       await fetchData();
+     } catch (err) {
+       alert(err.message);
+     } finally {
+       setIsSaving(false);
+     }
+   };
 
   const toggleActivo = async (id, actualActivo) => {
     setLoadingId(id);
@@ -215,6 +252,33 @@ export default function AdminMetodosQrV2() {
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Hora Inicio</label>
+                <div className="relative">
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={14} />
+                  <input
+                    type="time"
+                    value={formData.hora_inicio}
+                    onChange={(e) => setFormData(prev => ({ ...prev, hora_inicio: e.target.value }))}
+                    className="w-full pl-10 pr-4 py-4 rounded-xl bg-[#0f111a] border border-white/5 text-[10px] font-black text-white outline-none focus:border-sav-primary/30 transition-all shadow-inner"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Hora Fin</label>
+                <div className="relative">
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={14} />
+                  <input
+                    type="time"
+                    value={formData.hora_fin}
+                    onChange={(e) => setFormData(prev => ({ ...prev, hora_fin: e.target.value }))}
+                    className="w-full pl-10 pr-4 py-4 rounded-xl bg-[#0f111a] border border-white/5 text-[10px] font-black text-white outline-none focus:border-sav-primary/30 transition-all shadow-inner"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Código QR Institucional</label>
               <div className="grid grid-cols-2 gap-4">
@@ -238,7 +302,7 @@ export default function AdminMetodosQrV2() {
                   )}
                 </div>
               </div>
-              <input ref={fileRef} type="file" className="hidden" accept="image/*" onChange={handleFile} />
+              <input ref={fileRef} type="file" className="hidden" accept="image/*" onChange={(e) => handleFile(e)} />
             </div>
 
             <button 
@@ -274,6 +338,9 @@ export default function AdminMetodosQrV2() {
                         <QrCode size={24} />
                       </div>
                       <div className="flex gap-2">
+                        <button onClick={() => setEditingMetodo(m)} className="p-3 rounded-xl bg-sav-primary/10 text-sav-primary border border-sav-primary/20 hover:bg-sav-primary hover:text-white transition-all">
+                          <Edit2 size={16} />
+                        </button>
                         <button onClick={() => handleDelete(m.id)} className="p-3 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all shadow-lg shadow-rose-500/5">
                           <Trash2 size={16} />
                         </button>
@@ -290,11 +357,17 @@ export default function AdminMetodosQrV2() {
                         )}
                       </div>
                       <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Responsable: <span className="text-sav-primary">{admins.find(a => a.id === m.admin_id)?.nombre || 'Desconocido'}</span></p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-[9px] font-black text-slate-400 uppercase">
+                          <Clock size={12} className="text-sav-primary" />
+                          {m.hora_inicio?.slice(0, 5) || '00:00'} - {m.hora_fin?.slice(0, 5) || '23:59'}
+                        </div>
+                      </div>
                     </div>
 
                     <div className="aspect-square w-full max-w-[160px] mx-auto bg-white rounded-3xl p-3 shadow-2xl shadow-black/40 relative group/qr">
-                      <img src={m.imagen_url} alt="QR" className="w-full h-full object-contain" />
-                      <a href={m.imagen_url} target="_blank" rel="noreferrer" className="absolute inset-0 bg-black/60 opacity-0 group-hover/qr:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
+                      <img src={m.imagen_qr_url} alt="QR" className="w-full h-full object-contain" />
+                      <a href={m.imagen_qr_url} target="_blank" rel="noreferrer" className="absolute inset-0 bg-black/60 opacity-0 group-hover/qr:opacity-100 transition-opacity flex items-center justify-center rounded-3xl">
                         <ExternalLink size={24} className="text-white" />
                       </a>
                     </div>
@@ -321,6 +394,109 @@ export default function AdminMetodosQrV2() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editingMetodo && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-xl bg-[#161926] border border-white/10 rounded-[40px] p-10 shadow-2xl relative overflow-hidden"
+            >
+              <button 
+                onClick={() => setEditingMetodo(null)}
+                className="absolute top-8 right-8 p-3 rounded-2xl bg-white/5 text-slate-400 hover:text-white transition-all"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="flex items-center gap-4 mb-10">
+                <div className="p-3.5 rounded-2xl bg-sav-primary/10 text-sav-primary border border-sav-primary/20">
+                  <Edit2 size={24} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic">Editar Punto de Pago</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ajustar configuración del nodo</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Titular / Entidad</label>
+                  <input
+                    type="text"
+                    value={editingMetodo.nombre_titular}
+                    onChange={(e) => setEditingMetodo(prev => ({ ...prev, nombre_titular: e.target.value }))}
+                    className="w-full px-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white uppercase outline-none focus:border-sav-primary/30 transition-all shadow-inner"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Hora Inicio</label>
+                    <div className="relative">
+                      <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={14} />
+                      <input
+                        type="time"
+                        value={editingMetodo.hora_inicio?.slice(0, 5)}
+                        onChange={(e) => setEditingMetodo(prev => ({ ...prev, hora_inicio: e.target.value }))}
+                        className="w-full pl-10 pr-4 py-4 rounded-xl bg-[#0f111a] border border-white/5 text-[10px] font-black text-white outline-none focus:border-sav-primary/30 transition-all shadow-inner"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Hora Fin</label>
+                    <div className="relative">
+                      <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={14} />
+                      <input
+                        type="time"
+                        value={editingMetodo.hora_fin?.slice(0, 5)}
+                        onChange={(e) => setEditingMetodo(prev => ({ ...prev, hora_fin: e.target.value }))}
+                        className="w-full pl-10 pr-4 py-4 rounded-xl bg-[#0f111a] border border-white/5 text-[10px] font-black text-white outline-none focus:border-sav-primary/30 transition-all shadow-inner"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Actualizar Código QR (Opcional)</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      onClick={() => fileRef.current?.click()}
+                      className="h-32 rounded-3xl border-2 border-dashed border-white/5 bg-[#0f111a] text-slate-600 hover:border-sav-primary/30 hover:bg-sav-primary/5 transition-all flex flex-col items-center justify-center gap-2"
+                    >
+                      <Upload size={24} />
+                      <span className="text-[8px] font-black uppercase tracking-widest">Cambiar QR</span>
+                    </button>
+                    <div className="h-32 rounded-3xl bg-[#0f111a] border border-white/5 flex items-center justify-center overflow-hidden">
+                      <img src={editingMetodo.imagen_base64 || editingMetodo.imagen_qr_url} alt="QR" className="w-full h-full object-contain p-2" />
+                    </div>
+                  </div>
+                  <input ref={fileRef} type="file" className="hidden" accept="image/*" onChange={(e) => handleFile(e, true)} />
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    onClick={() => setEditingMetodo(null)}
+                    className="flex-1 py-5 rounded-2xl bg-white/5 text-slate-400 font-black text-[11px] uppercase tracking-widest hover:bg-white/10 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={handleUpdate}
+                    disabled={isSaving}
+                    className="flex-2 px-12 py-5 rounded-2xl bg-sav-primary text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-sav-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

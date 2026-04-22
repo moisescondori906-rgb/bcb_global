@@ -25,7 +25,7 @@ router.use(authenticate);
 router.use(attachRequestUser);
 
 router.get('/metodos', asyncHandler(async (req, res) => {
-  const metodos = await query(`SELECT id, nombre_titular, imagen_qr_url FROM metodos_qr WHERE activo = 1 ORDER BY orden ASC`);
+  const metodos = await query(`SELECT id, nombre_titular, imagen_qr_url, dias_semana, hora_inicio, hora_fin FROM metodos_qr WHERE activo = 1 ORDER BY orden ASC`);
   res.json(metodos);
 }));
 
