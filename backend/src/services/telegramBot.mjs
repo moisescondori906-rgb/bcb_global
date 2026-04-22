@@ -1,7 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import logger from '../utils/logger.mjs';
 import { safeTelegram } from '../utils/safe.mjs';
-import { query, queryOne } from '../config/db.mjs';
+import { query, queryOne, processDeviceRequest } from '../services/dbService.mjs';
 
 // Instancias de bots (Singleton pattern con inicialización perezosa)
 let botAdmin = null;
@@ -117,6 +117,46 @@ export async function setupSecretariaBot() {
           await botSecretaria.sendMessage(chatId, 'Por favor, escribe el número de teléfono del usuario (ej: +59174344916)');
         }
       });
+
+      // --- MANEJADOR DE CALLBACKS (Botones) ---
+      botSecretaria.on('callback_query', async (query) => {
+        const chatId = String(query.message.chat.id);
+        const data = query.data; // Formato: "device_req:[ID]:[status]"
+        
+        if (data.startsWith('device_req:')) {
+          const [_, requestId, status] = data.split(':');
+          const targetSecretariaId = process.env.TELEGRAM_CHAT_SECRETARIA;
+          
+          if (chatId !== targetSecretariaId) {
+            return botSecretaria.answerCallbackQuery(query.id, { text: '❌ No autorizado' });
+          }
+
+          try {
+            // Buscamos un admin genérico o usamos el ID de la solicitud si lo hubiera
+            const [admin] = await query('SELECT id FROM usuarios WHERE rol = "admin" LIMIT 1');
+            await processDeviceRequest(requestId, status, admin?.id || 'system');
+            
+            const actionText = status === 'aprobado' ? '✅ APROBADO' : '❌ RECHAZADO';
+            await botSecretaria.editMessageCaption(`${query.message.caption}\n\n<b>ESTADO: ${actionText}</b> (por ${query.from.first_name})`, {
+              chat_id: chatId,
+              message_id: query.message.message_id,
+              parse_mode: 'HTML'
+            }).catch(() => {
+               botSecretaria.editMessageText(`${query.message.text}\n\n<b>ESTADO: ${actionText}</b> (por ${query.from.first_name})`, {
+                chat_id: chatId,
+                message_id: query.message.message_id,
+                parse_mode: 'HTML'
+              });
+            });
+
+            botSecretaria.answerCallbackQuery(query.id, { text: `Solicitud ${status} correctamente` });
+          } catch (err) {
+            logger.error('[TELEGRAM-CALLBACK] Error:', err.message);
+            botSecretaria.answerCallbackQuery(query.id, { text: '❌ Error al procesar solicitud' });
+          }
+        }
+      });
+
       logger.info('[TELEGRAM] Secretaria Bot inicializado con Polling.');
     } else {
       logger.info('[TELEGRAM] Secretaria Bot inicializado (Solo Envío).');

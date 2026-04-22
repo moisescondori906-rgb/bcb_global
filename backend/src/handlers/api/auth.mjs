@@ -163,22 +163,34 @@ router.post('/request-device-access', asyncHandler(async (req, res) => {
   if (!passOk) return res.status(401).json({ error: 'Credenciales inválidas' });
 
   // Crear la solicitud en la DB
-  await createDeviceRequest(user.id, deviceId, deviceInfo);
+  const requestId = await createDeviceRequest(user.id, deviceId, deviceInfo);
 
   // Marcar alerta de seguridad para el usuario principal
   await updateUser(user.id, { 
     security_alert: `Intento de acceso desde un nuevo dispositivo (${deviceInfo?.model || 'Desconocido'})` 
   });
 
-  // Notificar al admin por Telegram (Resiliente)
+  // Notificar al admin y secretaria por Telegram (Resiliente)
   const message = `⚠️ <b>SOLICITUD DE ACCESO A DISPOSITIVO</b>\n\n` +
                   `👤 <b>Usuario:</b> ${user.nombre_usuario}\n` +
                   `📞 <b>Teléfono:</b> ${user.telefono}\n` +
                   `📱 <b>Nuevo ID:</b> <code>${deviceId}</code>\n` +
                   `🔧 <b>Modelo:</b> ${deviceInfo?.model || 'Desconocido'}\n\n` +
-                  `Vaya al panel administrativo para aprobar o rechazar esta solicitud.`;
+                  `<i>¿Desea autorizar el acceso a este nuevo dispositivo?</i>`;
   
-  await sendToAdmin(message);
+  const options = {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: '✅ Aprobar', callback_data: `device_req:${requestId}:aprobado` },
+          { text: '❌ Rechazar', callback_data: `device_req:${requestId}:rechazado` }
+        ]
+      ]
+    }
+  };
+
+  await sendToAdmin(message, options);
+  await sendToSecretaria(message, options);
 
   res.json({ ok: true, message: 'Solicitud enviada con éxito. El administrador revisará su acceso pronto.' });
 }));
