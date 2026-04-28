@@ -4,6 +4,9 @@ dist/
 build/
 .env
 .env.*
+!.env
+# Excepciones para .env específicos
+!/frontend/.env
 .env.local
 .env.*.local
 *.log
