@@ -1,19 +1,22 @@
 import logger from '../utils/logger.mjs';
 import 'dotenv/config';
 
-let Redis;
-let Redlock;
+let RedisClient; // Renombrado para evitar conflictos con la clase Redis mock/real
+let RedlockClient; // Renombrado
+let redis;
+let queueRedis;
+let redlock;
+let cluster;
 
 if (process.env.DEMO_MODE === 'true') {
   logger.warn('⚠️ DEMO_MODE activado para Redis. Las conexiones a Redis han sido omitidas.');
 
   // Mock para la clase Redis de ioredis
-  Redis = function() {
-    this.status = 'ready'; // Añadimos la propiedad status
+  RedisClient = function() {
+    this.status = 'ready';
     this.on = (event, handler) => {
-      // Solo ejecutamos los handlers de 'ready' y 'connect' para que el sistema crea que Redis está listo
       if (event === 'ready' || event === 'connect') {
-        process.nextTick(() => handler()); // Ejecutar asincrónicamente
+        process.nextTick(() => handler());
       }
     };
     this.quit = async () => { logger.info('[REDIS-MOCK] quit() llamado.'); return 'OK'; };
@@ -38,77 +41,83 @@ if (process.env.DEMO_MODE === 'true') {
       exec: async () => { logger.debug('[REDIS-MOCK] pipeline().exec() llamado.'); return []; }
     });
   };
-  Redis.Cluster = Redis; // Mock Cluster también
+  RedisClient.Cluster = RedisClient; // Mock Cluster también
 
   // Mock para la clase Redlock
-  Redlock = function() {
-    this.acquire = async () => ({ release: async () => {} });
+  RedlockClient = function() {
+    this.acquire = async (resources, ttl) => { logger.debug(`[REDLOCK-MOCK] acquire(${resources}, ${ttl}) llamado.`); return { release: async () => logger.debug('[REDLOCK-MOCK] release() llamado.') }; };
+    // The original mock for Redlock did not have a 'release' method directly on the Redlock instance.
+    // It was only on the acquired lock object. Adding a mock for it as per the new RedlockClient mock structure.
   };
+
+  redis = new RedisClient();
+  queueRedis = new RedisClient();
+  redlock = new RedlockClient();
+
 } else {
-  // Imports originales si no estamos en modo demo
   // Usamos import dinámico para evitar ReferenceError si ioredis no está instalado
   const ioredisModule = await import('ioredis');
-  Redis = ioredisModule.default;
+  RedisClient = ioredisModule.default;
   const redlockModule = await import('redlock');
-  Redlock = redlockModule.default;
-}
+  RedlockClient = redlockModule.default;
 
-/**
- * Enterprise Redis Cluster & Separation of Responsibilities.
- * - Cache: Almacenamiento temporal y Feature Flags.
- * - Locks: Redlock para concurrencia.
- * - Queues: BullMQ.
- * - State: Sesiones y Rate Limiting.
- */
-const redisConfig = {
-  host: process.env.REDIS_HOST || '127.0.0.1',
-  port: process.env.REDIS_PORT || 6379,
-  password: process.env.REDIS_PASSWORD,
-  retryStrategy: times => Math.min(times * 50, 2000),
-  maxRetriesPerRequest: null,
-};
+  /**
+   * Enterprise Redis Cluster & Separation of Responsibilities.
+   * - Cache: Almacenamiento temporal y Feature Flags.
+   * - Locks: Redlock para concurrencia.
+   * - Queues: BullMQ.
+   * - State: Sesiones y Rate Limiting.
+   */
+  const redisConfig = {
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    port: process.env.REDIS_PORT || 6379,
+    password: process.env.REDIS_PASSWORD,
+    retryStrategy: times => Math.min(times * 50, 2000),
+    maxRetriesPerRequest: null,
+  };
 
-// 1. Cliente para Cache y Estado (Instancia principal)
-const redis = new Redis({
-  ...redisConfig,
-  reconnectOnError: (err) => {
-    const targetError = 'READONLY';
-    if (err.message.slice(0, targetError.length) === targetError) {
-      return true; // Reconnect on READONLY error (cluster failover)
+  // 1. Cliente para Cache y Estado (Instancia principal)
+  redis = new RedisClient({
+    ...redisConfig,
+    reconnectOnError: (err) => {
+      const targetError = 'READONLY';
+      if (err.message.slice(0, targetError.length) === targetError) {
+        return true; // Reconnect on READONLY error (cluster failover)
+      }
+      return false;
     }
-    return false;
-  }
-});
-
-// Eventos de Resiliencia v9.0.0
-redis.on('reconnecting', (delay) => logger.warn(`[REDIS-RECONNECT] Reintentando en ${delay}ms...`));
-redis.on('error', (err) => logger.error(`[REDIS-FATAL]: ${err.message}`));
-redis.on('ready', () => logger.info('[REDIS] Sistema listo y operativo.'));
-
-// 2. Cliente para Colas (Dedicado para evitar bloqueos)
-const queueRedis = new Redis(redisConfig);
-
-// 3. Soporte para Cluster Real (Si se define en ENV)
-let cluster = null;
-if (process.env.REDIS_CLUSTER_NODES) {
-  const clusterNodes = JSON.parse(process.env.REDIS_CLUSTER_NODES);
-  cluster = new Redis.Cluster(clusterNodes, {
-    redisOptions: { password: process.env.REDIS_PASSWORD }
   });
+
+  // Eventos de Resiliencia v9.0.0
+  redis.on('reconnecting', (delay) => logger.warn(`[REDIS-RECONNECT] Reintentando en ${delay}ms...`));
+  redis.on('error', (err) => logger.error(`[REDIS-FATAL]: ${err.message}`));
+  redis.on('ready', () => logger.info('[REDIS] Sistema listo y operativo.'));
+
+  // 2. Cliente para Colas (Dedicado para evitar bloqueos)
+  queueRedis = new RedisClient(redisConfig);
+
+  // 3. Soporte para Cluster Real (Si se define en ENV)
+  let cluster = null;
+  if (process.env.REDIS_CLUSTER_NODES) {
+    const clusterNodes = JSON.parse(process.env.REDIS_CLUSTER_NODES);
+    cluster = new RedisClient.Cluster(clusterNodes, {
+      redisOptions: { password: process.env.REDIS_PASSWORD }
+    });
+  }
+
+  // 4. Configuración de Redlock (Quorum)
+  // Se pueden usar múltiples clientes si hay varios nodos independientes.
+  redlock = new RedlockClient([redis], {
+    driftFactor: 0.01,
+    retryCount: 20,
+    retryDelay: 100,
+    retryJitter: 100,
+    automaticExtensionThreshold: 2000,
+  });
+
+  redis.on('connect', () => logger.info('[REDIS] Cache/State Conectado.'));
+  queueRedis.on('connect', () => logger.info('[REDIS] Queue Dedicated Conectado.'));
 }
-
-// 4. Configuración de Redlock (Quorum)
-// Se pueden usar múltiples clientes si hay varios nodos independientes.
-const redlock = new Redlock([redis], {
-  driftFactor: 0.01,
-  retryCount: 20,
-  retryDelay: 100,
-  retryJitter: 100,
-  automaticExtensionThreshold: 2000,
-});
-
-redis.on('connect', () => logger.info('[REDIS] Cache/State Conectado.'));
-queueRedis.on('connect', () => logger.info('[REDIS] Queue Dedicated Conectado.'));
 
 /**
  * Adquiere un Lock Distribuido Enterprise con soporte multi-tenant.
@@ -132,7 +141,7 @@ export const releaseLock = async (lock) => {
 };
 
 /**
- * Rate Limit segmentado por Tenant.
+ * Rate Limit segmentado por Tenant. 
  */
 export const checkGlobalRateLimit = async (userId, traceId = 'enterprise', tenantId = null) => {
   const key = tenantId ? `ratelimit:${tenantId}:${userId}` : `ratelimit:${userId}`;
@@ -158,4 +167,4 @@ export const closeRedis = async () => {
   if (cluster) await cluster.quit();
 };
 
-export { redis as default, queueRedis, cluster };
+export { redis as default, queueRedis, cluster, redlock };
