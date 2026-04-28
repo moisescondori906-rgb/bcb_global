@@ -1,0 +1,24 @@
+{
+  "appId": "com.sav.app",
+  "appName": "CV Global",
+  "webDir": "dist",
+  "server": {
+    "url": "https://sav-lat.vercel.app",
+    "allowNavigation": [
+      "sav-lat.vercel.app",
+      "*.vercel.app"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "launchAutoHide": true,
+      "backgroundColor": "#0F172A",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": true,
+      "androidSpinnerStyle": "large",
+      "spinnerColor": "#ffffff"
+    }
+  }
+}
