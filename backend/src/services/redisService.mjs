@@ -1,7 +1,57 @@
-import Redis from 'ioredis';
-import Redlock from 'redlock';
 import logger from '../utils/logger.mjs';
 import 'dotenv/config';
+
+let Redis;
+let Redlock;
+
+if (process.env.DEMO_MODE === 'true') {
+  logger.warn('⚠️ DEMO_MODE activado para Redis. Las conexiones a Redis han sido omitidas.');
+
+  // Mock para la clase Redis de ioredis
+  Redis = function() {
+    this.status = 'ready'; // Añadimos la propiedad status
+    this.on = (event, handler) => {
+      // Solo ejecutamos los handlers de 'ready' y 'connect' para que el sistema crea que Redis está listo
+      if (event === 'ready' || event === 'connect') {
+        process.nextTick(() => handler()); // Ejecutar asincrónicamente
+      }
+    };
+    this.quit = async () => { logger.info('[REDIS-MOCK] quit() llamado.'); return 'OK'; };
+    this.get = async (key) => { logger.debug(`[REDIS-MOCK] get(${key}) llamado.`); return null; };
+    this.set = async (key, value) => { logger.debug(`[REDIS-MOCK] set(${key}, ${value}) llamado.`); return 'OK'; };
+    this.setex = async (key, ttl, value) => { logger.debug(`[REDIS-MOCK] setex(${key}, ${ttl}, ${value}) llamado.`); return 'OK'; };
+    this.incr = async (key) => { logger.debug(`[REDIS-MOCK] incr(${key}) llamado.`); return 0; };
+    this.expire = async (key, ttl) => { logger.debug(`[REDIS-MOCK] expire(${key}, ${ttl}) llamado.`); return 0; };
+    this.del = async (key) => { logger.debug(`[REDIS-MOCK] del(${key}) llamado.`); return 0; };
+    this.srem = async (key, member) => { logger.debug(`[REDIS-MOCK] srem(${key}, ${member}) llamado.`); return 0; };
+    this.sadd = async (key, member) => { logger.debug(`[REDIS-MOCK] sadd(${key}, ${member}) llamado.`); return 0; };
+    this.smembers = async (key) => { logger.debug(`[REDIS-MOCK] smembers(${key}) llamado.`); return []; };
+    this.hgetall = async (key) => { logger.debug(`[REDIS-MOCK] hgetall(${key}) llamado.`); return {}; };
+    this.hset = async (key, field, value) => { logger.debug(`[REDIS-MOCK] hset(${key}, ${field}, ${value}) llamado.`); return 0; };
+    this.hdel = async (key, field) => { logger.debug(`[REDIS-MOCK] hdel(${key}, ${field}) llamado.`); return 0; };
+    this.multi = () => ({
+        exec: async () => { logger.debug('[REDIS-MOCK] multi().exec() llamado.'); return []; },
+        set: (key, value) => { logger.debug(`[REDIS-MOCK] multi().set(${key}, ${value}) llamado.`); return this; },
+        expire: (key, ttl) => { logger.debug(`[REDIS-MOCK] multi().expire(${key}, ${ttl}) llamado.`); return this; }
+    });
+    this.pipeline = () => ({
+      exec: async () => { logger.debug('[REDIS-MOCK] pipeline().exec() llamado.'); return []; }
+    });
+  };
+  Redis.Cluster = Redis; // Mock Cluster también
+
+  // Mock para la clase Redlock
+  Redlock = function() {
+    this.acquire = async () => ({ release: async () => {} });
+  };
+} else {
+  // Imports originales si no estamos en modo demo
+  // Usamos import dinámico para evitar ReferenceError si ioredis no está instalado
+  const ioredisModule = await import('ioredis');
+  Redis = ioredisModule.default;
+  const redlockModule = await import('redlock');
+  Redlock = redlockModule.default;
+}
 
 /**
  * Enterprise Redis Cluster & Separation of Responsibilities.

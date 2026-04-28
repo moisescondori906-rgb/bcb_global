@@ -20,7 +20,18 @@ const poolConfig = {
   keepAliveInitialDelay: 10000,
 };
 
-const pool = mysql.createPool(poolConfig);
+let pool;
+if (process.env.DEMO_MODE === 'true') {
+  logger.warn('⚠️ DEMO_MODE activado. La conexión a MySQL ha sido omitida. Algunas funcionalidades que dependen de la DB no funcionarán.');
+  pool = {
+    query: async () => [[]],
+    execute: async () => [[]], // Añadimos el mock para execute
+    end: async () => {},
+    on: () => {}
+  }; // Mock del pool
+} else {
+  pool = mysql.createPool(poolConfig);
+}
 
 // Sistema de reconexión automática v9.0.0
 pool.on('error', (err) => {
