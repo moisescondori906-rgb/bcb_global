@@ -123,13 +123,13 @@ export default function Recompensas() {
     return (
       <Layout>
         <div className="p-8 text-center space-y-6 flex flex-col items-center justify-center min-h-[70vh] bg-white">
-          <div className="w-24 h-24 bg-rose-50 text-rose-600 rounded-[2.5rem] flex items-center justify-center shadow-xl border border-rose-100 animate-pulse">
+          <div className="w-24 h-24 bg-red-50 text-red-600 rounded-[2.5rem] flex items-center justify-center shadow-xl border border-red-100 animate-pulse">
             <AlertCircle size={48} strokeWidth={1.5} />
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-black text-[#1a1f36] uppercase tracking-tighter">Premios Bloqueados</h2>
             <p className="text-sm text-gray-400 font-medium leading-relaxed max-w-xs mx-auto">
-              Tu acceso a la ruleta de premios ha sido <span className="text-rose-600 font-bold uppercase">bloqueado por hoy</span> como castigo por no responder el cuestionario obligatorio de ayer.
+              Tu acceso a la ruleta de premios ha sido <span className="text-red-600 font-bold uppercase">bloqueado por hoy</span> como castigo por no responder el cuestionario obligatorio de ayer.
             </p>
           </div>
           <div className="bg-amber-50 p-6 rounded-[2rem] border border-amber-100 text-left w-full shadow-inner">
@@ -190,14 +190,14 @@ export default function Recompensas() {
         {/* Header Section */}
         <div className="bg-[#1a1f36] pt-12 pb-32 px-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full -mr-48 -mt-48 blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 rounded-full -ml-32 -mb-32 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full -ml-32 -mb-32 blur-3xl" />
           
           <div className="relative z-10 max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-6">
               <Sparkles className="text-amber-400" size={16} />
-              <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Ruleta de la Suerte Premium</span>
+              <span className="text-[10px] font-black text-gray-900 uppercase tracking-[0.3em]">Ruleta de la Suerte Premium</span>
             </div>
-            <h1 className="text-5xl font-black text-white uppercase tracking-tighter mb-4 leading-none">
+            <h1 className="text-5xl font-black text-gray-900 uppercase tracking-tighter mb-4 leading-none">
               GIRA Y <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-rose-400">GANA</span>
             </h1>
             <p className="text-white/40 text-xs font-bold max-w-xs mx-auto uppercase tracking-widest leading-relaxed">

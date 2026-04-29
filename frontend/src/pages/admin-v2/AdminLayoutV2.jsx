@@ -96,20 +96,20 @@ export default function AdminLayoutV2() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0f111a] text-slate-200 flex overflow-hidden">
+    <div className="min-h-screen bg-sav-dark text-gray-800 flex overflow-hidden">
       {/* Sidebar Ultra Modern */}
       <motion.aside 
         initial={false}
         animate={{ width: isSidebarOpen ? 280 : 0, opacity: isSidebarOpen ? 1 : 0 }}
-        className="fixed lg:relative z-[100] h-screen bg-[#161926] border-r border-white/5 flex flex-col shadow-2xl overflow-hidden"
+        className="fixed lg:relative z-[100] h-screen bg-sav-card border-r border-black/5 flex flex-col shadow-2xl overflow-hidden"
       >
         {/* Header Sidebar */}
-        <div className="p-6 flex items-center gap-4 border-b border-white/5 bg-[#1a1e2e]">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sav-primary to-rose-500 p-2 shadow-lg shadow-sav-primary/20">
+        <div className="p-6 flex items-center gap-4 border-b border-black/5 bg-sav-surface">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sav-primary to-blue-500 p-2 shadow-lg shadow-sav-primary/20">
             <img src="/imag/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col overflow-hidden">
-            <h1 className="text-lg font-black tracking-tighter text-white uppercase truncate">{APP_DISPLAY_NAME}</h1>
+            <h1 className="text-lg font-black tracking-tighter text-gray-900 uppercase truncate">{APP_DISPLAY_NAME}</h1>
             <p className="text-[8px] font-bold text-sav-primary uppercase tracking-[0.2em]">Console V2.0</p>
           </div>
         </div>
@@ -124,40 +124,40 @@ export default function AdminLayoutV2() {
                   const isActive = location.pathname === item.to;
                   return (
                     <Link
-                      key={item.to}
-                      to={item.to}
-                      className={`
-                        flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group
-                        ${isActive 
-                          ? 'bg-sav-primary/10 text-white border border-sav-primary/20 shadow-lg shadow-sav-primary/5' 
-                          : 'hover:bg-white/[0.03] text-slate-400 hover:text-slate-200 border border-transparent'
-                        }
-                      `}
-                    >
-                      <item.icon size={18} className={`transition-colors ${isActive ? 'text-sav-primary' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                      <span className="text-[11px] font-bold uppercase tracking-tight">{item.label}</span>
-                      {isActive && (
-                        <motion.div 
-                          layoutId="activeIndicator"
-                          className="ml-auto w-1 h-4 bg-sav-primary rounded-full"
-                        />
-                      )}
-                    </Link>
-                  );
-                })}
+                        key={item.to}
+                        to={item.to}
+                        className={`
+                          flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group
+                          ${isActive 
+                            ? 'bg-sav-primary/10 text-gray-900 border border-sav-primary/20 shadow-lg shadow-sav-primary/5' 
+                            : 'hover:bg-gray-100 text-slate-600 hover:text-slate-800 border border-transparent'
+                          }
+                        `}
+                      >
+                        <item.icon size={18} className={`transition-colors ${isActive ? 'text-sav-primary' : 'text-slate-500 group-hover:text-slate-700'}`} />
+                        <span className="text-[11px] font-bold uppercase tracking-tight">{item.label}</span>
+                        {isActive && (
+                          <motion.div 
+                            layoutId="activeIndicator"
+                            className="ml-auto w-1 h-4 bg-sav-primary rounded-full"
+                          />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )))}
-        </nav>
+            )))}
+          </nav>
 
-        {/* Footer Sidebar / User Info */}
-        <div className="p-4 border-t border-white/5 bg-[#1a1e2e]/50">
-          <div className="bg-[#1a1e2e] border border-white/5 rounded-2xl p-4 mb-3 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-sav-primary font-black border border-white/5 shadow-inner">
-              {user?.nombre_usuario?.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex flex-col overflow-hidden">
-              <p className="text-xs font-black text-white truncate">{user?.nombre_usuario}</p>
+          {/* Footer Sidebar / User Info */}
+          <div className="p-4 border-t border-black/5 bg-sav-surface">
+            <div className="bg-sav-surface border border-black/5 rounded-2xl p-4 mb-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gray-200 flex items-center justify-center text-sav-primary font-black border border-black/5 shadow-inner">
+                {user?.nombre_usuario?.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex flex-col overflow-hidden">
+                <p className="text-xs font-black text-gray-900 truncate">{user?.nombre_usuario}</p>
               <p className="text-[8px] font-bold text-sav-primary uppercase tracking-widest">{user?.rol}</p>
             </div>
           </div>
@@ -174,29 +174,29 @@ export default function AdminLayoutV2() {
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
         {/* Top Header Fixed */}
         <header className={`
-          z-50 h-20 px-8 flex items-center justify-between border-b border-white/5 transition-all duration-300
-          ${scrolled ? 'bg-[#0f111a]/80 backdrop-blur-xl shadow-xl' : 'bg-transparent'}
+          z-50 h-20 px-8 flex items-center justify-between border-b border-black/5 transition-all duration-300
+          ${scrolled ? 'bg-sav-dark/80 backdrop-blur-xl shadow-xl' : 'bg-transparent'}
         `}>
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-slate-400"
+              className="p-2.5 rounded-xl bg-gray-100 border border-black/10 hover:bg-gray-200 transition-all text-gray-700"
             >
               {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <div className="hidden sm:flex flex-col">
-              <h2 className="text-sm font-black text-white uppercase tracking-tighter">Panel de Control</h2>
+              <h2 className="text-sm font-black text-gray-900 uppercase tracking-tighter">Panel de Control</h2>
               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">BCB Global Institutional</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5">
+            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 border border-black/5">
               <Search size={16} className="text-slate-500" />
               <input 
                 type="text" 
                 placeholder="Buscar en el sistema..." 
-                className="bg-transparent border-none outline-none text-[11px] font-bold text-slate-300 w-48"
+                className="bg-transparent border-none outline-none text-[11px] font-bold text-gray-700 w-48"
               />
             </div>
             <div className="flex items-center gap-2">

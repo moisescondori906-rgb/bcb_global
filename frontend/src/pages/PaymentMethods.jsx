@@ -110,9 +110,9 @@ export default function PaymentMethods() {
           <div className="w-24 h-24 rounded-[2.5rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-8 border border-emerald-500/20 shadow-2xl">
             <CheckCircle2 size={48} />
           </div>
-          <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">¡Pago Recibido!</h2>
+          <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter mb-4">¡Pago Recibido!</h2>
           <p className="text-sav-muted font-bold text-sm leading-relaxed mb-10 max-w-xs">
-            Tu solicitud para <span className="text-white">{selectedLevel?.nombre}</span> está siendo verificada.
+            Tu solicitud para <span className="text-slate-700">{selectedLevel?.nombre}</span> está siendo verificada.
           </p>
           <Button onClick={() => navigate('/')} className="w-full max-w-xs h-14 uppercase tracking-widest">
             VOLVER AL INICIO
@@ -134,7 +134,7 @@ export default function PaymentMethods() {
               <div className="flex justify-between items-center relative z-10">
                 <div>
                   <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest mb-1">Membresía Seleccionada</p>
-                  <h3 className="text-xl font-black text-white uppercase">{selectedLevel?.nombre}</h3>
+                  <h3 className="text-xl font-black text-gray-900 uppercase">{selectedLevel?.nombre}</h3>
                 </div>
                 <div className="text-right">
                   <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest mb-1">Total a Pagar</p>
@@ -152,7 +152,7 @@ export default function PaymentMethods() {
               <div className="w-8 h-8 rounded-xl bg-sav-primary/10 flex items-center justify-center text-sav-primary border border-sav-primary/20">
                 <CreditCard size={16} />
               </div>
-              <h3 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">1. Selecciona Método</h3>
+              <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.3em]">1. Selecciona Método</h3>
             </div>
 
             <div className="grid grid-cols-1 gap-3">
@@ -170,12 +170,12 @@ export default function PaymentMethods() {
                   >
                     <div className={cn(
                       "w-12 h-12 rounded-2xl flex items-center justify-center",
-                      selectedMethod?.id === m.id ? "bg-white/20 text-white" : "bg-sav-dark text-sav-primary"
+                      selectedMethod?.id === m.id ? "bg-white/20 text-white" : "bg-sav-surface text-sav-primary"
                     )}>
                       {m.tipo === 'qr' ? <QrCode size={24} /> : m.tipo === 'transferencia' ? <Smartphone size={24} /> : <Banknote size={24} />}
                     </div>
                     <div className="text-left">
-                      <p className={cn("text-sm font-black uppercase", selectedMethod?.id === m.id ? "text-white" : "text-white/90")}>
+                      <p className={cn("text-sm font-black uppercase", selectedMethod?.id === m.id ? "text-gray-900" : "text-slate-600")}>
                         {m.nombre_banco || 'Pago QR'}
                       </p>
                       <p className={cn("text-[9px] font-bold uppercase tracking-widest", selectedMethod?.id === m.id ? "text-white/60" : "text-sav-muted")}>

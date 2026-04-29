@@ -47,12 +47,12 @@ export default function Layout({ children }) {
                 {isActive && (
                   <motion.div
                     layoutId="active-pill"
-                    className="absolute -top-1 w-8 h-1 bg-sav-primary rounded-full shadow-[0_0_15px_rgba(220,38,38,0.8)]"
+                    className="absolute -top-1 w-8 h-1 bg-sav-primary rounded-full shadow-[0_0_15px_rgba(135,206,235,0.8)]"
                   />
-                )}
+                )
                 <div className={cn(
                   "transition-all duration-300",
-                  isActive ? "scale-110 drop-shadow-[0_0_10px_rgba(220,38,38,0.5)]" : "scale-100 opacity-60 group-active:scale-90"
+                  isActive ? "scale-110 drop-shadow-[0_0_10px_rgba(135,206,235,0.5)]" : "scale-100 opacity-60 group-active:scale-90"
                 )}>
                   <Icon size={26} strokeWidth={isActive ? 2.5 : 1.5} />
                 </div>

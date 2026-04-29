@@ -42,8 +42,8 @@ const UserRow = ({ user, onEdit, onDelete, onToggleStatus, onToggleBlock, onRese
         </div>
         <div className="flex flex-col overflow-hidden">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-black text-white truncate uppercase tracking-tight">{user.nombre_usuario}</p>
-            {user.bloqueado && <Shield className="text-rose-500" size={12} />}
+            <p className="text-sm font-black text-gray-900 truncate uppercase tracking-tight">{user.nombre_usuario}</p>
+            {user.bloqueado && <Shield className="text-blue-500" size={12} />}
           </div>
           <div className="flex flex-col">
             <p className="text-[10px] font-bold text-slate-400 truncate">{user.nombre_real || 'Sin nombre real'}</p>
@@ -73,7 +73,7 @@ const UserRow = ({ user, onEdit, onDelete, onToggleStatus, onToggleBlock, onRese
     </td>
     <td className="px-6 py-5 text-center">
       <div className="flex flex-col items-center gap-1">
-        <span className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${user.bloqueado ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : user.activo ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+        <span className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${user.bloqueado ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : user.activo ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
           {user.bloqueado ? 'BLOQUEADO' : user.activo ? 'Cuenta Activa' : 'Inactivo'}
         </span>
         <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">{formatDate(user.created_at)}</p>
@@ -90,7 +90,7 @@ const UserRow = ({ user, onEdit, onDelete, onToggleStatus, onToggleBlock, onRese
         <button onClick={() => onResetDevice(user)} className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-all border border-amber-500/20 shadow-lg" title="Resetear Dispositivo">
           <Smartphone size={16} />
         </button>
-        <button onClick={() => onToggleBlock(user)} className={`p-2.5 rounded-xl transition-all border border-white/5 shadow-lg ${user.bloqueado ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white'}`} title={user.bloqueado ? "Desbloquear" : "Bloquear acceso"}>
+        <button onClick={() => onToggleBlock(user)} className={`p-2.5 rounded-xl transition-all border border-white/5 shadow-lg ${user.bloqueado ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white'}`} title={user.bloqueado ? "Desbloquear" : "Bloquear acceso"}>
           <Shield size={16} />
         </button>
         <button onClick={() => onResetPassword(user)} className="p-2.5 rounded-xl bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-all border border-white/5 shadow-lg" title="Cambiar Contraseñas">

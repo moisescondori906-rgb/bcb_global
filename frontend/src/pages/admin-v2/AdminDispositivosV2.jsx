@@ -58,11 +58,11 @@ export default function AdminDispositivosV2() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
         <div className="space-y-2">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-sav-primary to-rose-600 text-white shadow-xl shadow-sav-primary/20">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-sav-primary to-blue-600 text-white shadow-xl shadow-sav-primary/20">
               <Lock size={24} />
             </div>
             <div>
-              <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Control de Dispositivos</h1>
+              <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic">Control de Dispositivos</h1>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
                 <ShieldCheck size={14} className="text-sav-primary" /> Gestión de seguridad multi-dispositivo
               </p>
@@ -78,7 +78,7 @@ export default function AdminDispositivosV2() {
               placeholder="Buscar por usuario, teléfono o ID..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#161926] border border-white/5 rounded-2xl py-4 pl-12 pr-6 text-xs font-bold text-white outline-none focus:border-sav-primary/30 transition-all shadow-2xl"
+              className="w-full bg-sav-card border border-black/5 rounded-2xl py-4 pl-12 pr-6 text-xs font-bold text-slate-700 outline-none focus:border-sav-primary/30 transition-all shadow-2xl"
             />
           </div>
           <button 
@@ -95,7 +95,7 @@ export default function AdminDispositivosV2() {
         <AnimatePresence mode="popLayout">
           {loading ? (
             Array(4).fill(0).map((_, i) => (
-              <div key={i} className="bg-[#161926] border border-white/5 h-64 rounded-[30px] animate-pulse" />
+              <div key={i} className="bg-sav-card border border-black/5 h-64 rounded-[30px] animate-pulse" />
             ))
           ) : filteredList.length > 0 ? (
             filteredList.map((r, index) => (
@@ -105,7 +105,7 @@ export default function AdminDispositivosV2() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-[#161926] border border-white/5 p-6 rounded-[30px] flex flex-col justify-between group hover:border-sav-primary/20 transition-all duration-500 shadow-xl shadow-black/20"
+                className="bg-sav-card border border-black/5 p-6 rounded-[30px] flex flex-col justify-between group hover:border-sav-primary/20 transition-all duration-500 shadow-xl shadow-black/20"
               >
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
@@ -114,16 +114,16 @@ export default function AdminDispositivosV2() {
                         <Smartphone size={20} />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-white uppercase tracking-tighter truncate w-24">{r.nombre_usuario}</p>
+                        <p className="text-xs font-black text-slate-700 uppercase tracking-tighter truncate w-24">{r.nombre_usuario}</p>
                         <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{r.telefono}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-[#0f111a] rounded-2xl p-4 border border-white/5 space-y-3">
+                  <div className="bg-sav-surface rounded-2xl p-4 border border-black/5 space-y-3">
                     <div>
                       <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Modelo Detectado</p>
-                      <p className="text-xs font-black text-white tracking-tight uppercase italic">{r.modelo_dispositivo || 'Desconocido'}</p>
+                      <p className="text-xs font-black text-slate-700 tracking-tight uppercase italic">{r.modelo_dispositivo || 'Desconocido'}</p>
                     </div>
                     <div>
                       <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Device ID</p>
@@ -145,7 +145,7 @@ export default function AdminDispositivosV2() {
                   </button>
                   <button 
                     onClick={() => handleProcess(r.id, 'rechazado')}
-                    className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-slate-400 text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all"
+                    className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-slate-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all"
                   >
                     <XCircle size={14} /> Rechazar
                   </button>

@@ -112,8 +112,8 @@ export default function Dashboard() {
       <div className="fixed inset-0 bg-sav-dark -z-10" />
       {/* Dynamic Background Effects */}
       <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-sav-primary/20 blur-[120px] rounded-full -z-10 animate-pulse" />
-      <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-rose-600/10 blur-[100px] rounded-full -z-10" />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.05)_0%,transparent_70%)] -z-10" />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[100px] rounded-full -z-10" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(135,206,235,0.05)_0%,transparent_70%)] -z-10" />
       
       <main className="px-5 space-y-7 pb-12 pt-4">
         {/* Alerta de Seguridad */}
@@ -189,7 +189,7 @@ export default function Dashboard() {
             <div className="relative w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-sav-muted hover:text-white transition-all duration-300 backdrop-blur-md group-hover:border-sav-primary/50 group-hover:bg-sav-primary/5">
               <BellIcon size={22} className="group-hover:animate-bounce" />
               {/* Notif Badge */}
-              <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-sav-primary rounded-full border-2 border-sav-dark shadow-[0_0_10px_rgba(220,38,38,0.8)]" />
+              <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-sav-primary rounded-full border-2 border-sav-dark shadow-[0_0_10px_rgba(135,206,235,0.8)]" />
             </div>
           </Link>
         </header>
@@ -314,7 +314,7 @@ export default function Dashboard() {
                       {esActual && <div className="w-1.5 h-1.5 rounded-full bg-sav-success animate-pulse" />}
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest leading-none">Renta Diaria</p>
+                      <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest leading-none">Ganancia Diaria</p>
                       <p className="text-lg font-black text-white">+{Number(n.ingreso_diario || 0).toFixed(2)}</p>
                     </div>
                     <div className="pt-3 border-t border-white/5 flex justify-between items-center">

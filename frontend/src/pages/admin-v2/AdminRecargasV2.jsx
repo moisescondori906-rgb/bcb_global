@@ -90,7 +90,7 @@ export default function AdminRecargasV2() {
               <CreditCard size={24} />
             </div>
             <div>
-              <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Institutional Recharges</h1>
+              <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic">Institutional Recharges</h1>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
                 <ShieldCheck size={14} className="text-emerald-500" /> Verificación de ingresos BCB Global
               </p>
@@ -106,13 +106,13 @@ export default function AdminRecargasV2() {
               placeholder="Buscar por usuario o ID..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#161926] border border-white/5 rounded-2xl py-4 pl-12 pr-6 text-xs font-bold text-white outline-none focus:border-emerald-500/30 transition-all shadow-2xl"
+              className="w-full bg-sav-surface border border-gray-200 rounded-2xl py-4 pl-12 pr-6 text-xs font-bold text-slate-700 outline-none focus:border-emerald-500/30 transition-all shadow-2xl"
             />
           </div>
           <select 
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-[#161926] border border-white/5 rounded-2xl py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-300 outline-none focus:border-emerald-500/30 transition-all shadow-2xl appearance-none cursor-pointer"
+            className="bg-sav-card border border-black/5 rounded-2xl py-4 px-6 text-[10px] font-black uppercase tracking-widest text-gray-700 outline-none focus:border-emerald-500/30 transition-all shadow-2xl appearance-none cursor-pointer"
           >
             <option value="pendiente">Solo Pendientes</option>
             <option value="aprobada">Aprobadas</option>
@@ -133,7 +133,7 @@ export default function AdminRecargasV2() {
         <AnimatePresence mode="popLayout">
           {loading ? (
             Array(8).fill(0).map((_, i) => (
-              <div key={i} className="bg-[#161926] border border-white/5 h-64 rounded-[30px] animate-pulse" />
+              <div key={i} className="bg-sav-card border border-black/5 h-64 rounded-[30px] animate-pulse" />
             ))
           ) : paginatedList.length > 0 ? (
             paginatedList.map((r, index) => (
@@ -143,7 +143,7 @@ export default function AdminRecargasV2() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-[#161926] border border-white/5 p-6 rounded-[30px] flex flex-col justify-between group hover:border-emerald-500/20 transition-all duration-500 shadow-xl shadow-black/20"
+                className="bg-sav-card border border-black/5 p-6 rounded-[30px] flex flex-col justify-between group hover:border-emerald-500/20 transition-all duration-500 shadow-xl shadow-black/20"
               >
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
@@ -152,23 +152,23 @@ export default function AdminRecargasV2() {
                         {r.nombre_usuario?.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-xs font-black text-white uppercase tracking-tighter truncate w-24">{r.nombre_usuario}</p>
+                        <p className="text-xs font-black text-gray-900 uppercase tracking-tighter truncate w-24">{r.nombre_usuario}</p>
                         <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">ID: {r.id.substring(0, 8)}...</p>
                       </div>
                     </div>
                     <span className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest border ${
                       r.estado === 'aprobada' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                      r.estado === 'rechazada' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+                      r.estado === 'rechazada' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
                       'bg-amber-500/10 text-amber-500 border-amber-500/20'
                     }`}>
                       {r.estado}
                     </span>
                   </div>
 
-                  <div className="bg-[#0f111a] rounded-2xl p-4 border border-white/5">
+                  <div className="bg-sav-surface rounded-2xl p-4 border border-black/5">
                     <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Monto Depositado</p>
                     <div className="flex items-end gap-1">
-                      <span className="text-2xl font-black text-white tracking-tighter">{formatCurrency(r.monto)}</span>
+                      <span className="text-2xl font-black text-gray-900 tracking-tighter">{formatCurrency(r.monto)}</span>
                       <span className="text-[10px] font-bold text-emerald-500 mb-1 uppercase tracking-widest italic">BOB</span>
                     </div>
                   </div>

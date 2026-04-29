@@ -146,7 +146,7 @@ export default function AdminRecompensasV2() {
               <Gift size={24} />
             </div>
             <div>
-              <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Control de Premios</h1>
+              <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic">Control de Premios</h1>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
                 <ShieldCheck size={14} className="text-sav-primary" /> Gestión de probabilidades y premios forzados
               </p>
@@ -157,7 +157,7 @@ export default function AdminRecompensasV2() {
         <div className="flex flex-wrap items-center gap-4">
           <button 
             onClick={() => setShowGiftModal(true)}
-            className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#161926] border border-white/5 text-slate-300 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all shadow-xl"
+            className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-sav-card border border-black/5 text-gray-700 text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 hover:text-gray-900 transition-all shadow-xl"
           >
             <Ticket size={18} /> Regalar Tickets
           </button>
@@ -178,25 +178,25 @@ export default function AdminRecompensasV2() {
 
       {/* Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-[#161926] border border-white/5 p-8 rounded-[40px] relative overflow-hidden group shadow-2xl shadow-black/40">
+        <div className="bg-sav-card border border-black/5 p-8 rounded-[40px] relative overflow-hidden group shadow-2xl shadow-black/40">
            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity"><RefreshCw size={80} /></div>
            <div className="p-3.5 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20 w-fit mb-6 shadow-inner"><RefreshCw size={24} /></div>
            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Total Rewards</p>
            <div className="flex items-end gap-2">
-              <span className="text-4xl font-black text-white tracking-tighter">{premios.length}</span>
+              <span className="text-4xl font-black text-gray-900 tracking-tighter">{premios.length}</span>
               <span className="text-[10px] font-bold text-slate-600 uppercase mb-2 tracking-widest italic">Nodes Active</span>
            </div>
         </div>
-        <div className="bg-[#161926] border border-white/5 p-8 rounded-[40px] relative overflow-hidden group shadow-2xl shadow-black/40">
+        <div className="bg-sav-card border border-black/5 p-8 rounded-[40px] relative overflow-hidden group shadow-2xl shadow-black/40">
            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity"><Percent size={80} /></div>
            <div className={`p-3.5 rounded-2xl ${totalProb > 100 ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'} w-fit mb-6 shadow-inner`}><Percent size={24} /></div>
            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Probability Pool</p>
            <div className="flex items-end gap-2">
-              <span className={`text-4xl font-black tracking-tighter ${totalProb > 100 ? 'text-rose-500 animate-pulse' : 'text-white'}`}>{totalProb}%</span>
+              <span className={`text-4xl font-black tracking-tighter ${totalProb > 100 ? 'text-rose-500 animate-pulse' : 'text-gray-900'}`}>{totalProb}%</span>
               <span className="text-[10px] font-bold text-slate-600 uppercase mb-2 tracking-widest italic">/ 100% System Limit</span>
            </div>
         </div>
-        <div className="bg-[#161926] border border-white/5 p-8 rounded-[40px] relative overflow-hidden group shadow-2xl shadow-black/40">
+        <div className="bg-sav-card border border-black/5 p-8 rounded-[40px] relative overflow-hidden group shadow-2xl shadow-black/40">
            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity"><Trophy size={80} /></div>
            <div className="p-3.5 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20 w-fit mb-6 shadow-inner"><Trophy size={24} /></div>
            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Highest Jackpot</p>

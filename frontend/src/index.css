@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  --color-sav-primary: #DC2626;
-  --color-sav-dark: #0A0A0A;
-  --color-sav-card: #141414;
-  --color-sav-surface: #1F1F1F;
-  --color-sav-accent: #EF4444;
-  --color-sav-accent-hot: #B91C1C;
-  --color-sav-muted: #737373;
+  --color-sav-primary: #87CEEB; /* Celeste Pastel */
+  --color-sav-dark: #F8F8F8;
+  --color-sav-card: #FFFFFF;
+  --color-sav-surface: #F0F0F0;
+  --color-sav-accent: #ADD8E6; /* Celeste más vibrante */
+  --color-sav-accent-hot: #6495ED; /* Celeste más oscuro */
+  --color-sav-muted: #525252;
   --color-sav-success: #10B981;
-  --color-sav-error: #F43F5E;
-  --color-sav-border: rgba(255, 255, 255, 0.08);
+  --color-sav-error: #ADD8E6; /* Celeste Pastel */
+  --color-sav-border: rgba(0, 0, 0, 0.1);
 
-  --shadow-sav-glow: 0 0 52px -16px rgba(220, 38, 38, 0.55);
-  --shadow-sav-glow-strong: 0 0 84px -20px rgba(220, 38, 38, 0.62), 0 0 120px -44px rgba(249, 115, 22, 0.45), 0 30px 70px -20px rgba(0, 0, 0, 0.72);
+  --shadow-sav-glow: 0 0 52px -16px rgba(173, 216, 230, 0.55);
+  --shadow-sav-glow-strong: 0 0 84px -20px rgba(173, 216, 230, 0.62), 0 0 120px -44px rgba(249, 115, 22, 0.45), 0 30px 70px -20px rgba(0, 0, 0, 0.72);
   
   --animate-marquee-slow: marquee 40s linear infinite;
 }
@@ -25,7 +25,7 @@
 
 @layer base {
   body {
-    @apply bg-sav-dark text-white font-sans antialiased select-none touch-manipulation overflow-x-hidden;
+    @apply bg-sav-dark text-gray-900 font-sans antialiased select-none touch-manipulation overflow-x-hidden;
     -webkit-tap-highlight-color: transparent;
   }
 

@@ -89,13 +89,13 @@ export default function AdminRetirosV2() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
         <div className="space-y-2">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-rose-500 to-orange-600 text-white shadow-xl shadow-rose-500/20">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-red-500 to-orange-500 text-white shadow-xl shadow-red-500/20">
               <Wallet size={24} />
             </div>
             <div>
-              <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Institutional Withdrawals</h1>
+              <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic">Institutional Withdrawals</h1>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                <ShieldCheck size={14} className="text-rose-500" /> Liquidación de beneficios BCB Global
+                <ShieldCheck size={14} className="text-red-500" /> Liquidación de beneficios BCB Global
               </p>
             </div>
           </div>
@@ -103,19 +103,19 @@ export default function AdminRetirosV2() {
 
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative group flex-1 min-w-[300px]">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-rose-500 transition-colors" />
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-red-500 transition-colors" />
             <input 
               type="text" 
               placeholder="Buscar por usuario, ID o teléfono..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#161926] border border-white/5 rounded-2xl py-4 pl-12 pr-6 text-xs font-bold text-white outline-none focus:border-rose-500/30 transition-all shadow-2xl"
+              className="w-full bg-sav-card border border-black/5 rounded-2xl py-4 pl-12 pr-6 text-xs font-bold text-gray-900 outline-none focus:border-red-500/30 transition-all shadow-2xl"
             />
           </div>
           <select 
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-[#161926] border border-white/5 rounded-2xl py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-300 outline-none focus:border-rose-500/30 transition-all shadow-2xl appearance-none cursor-pointer"
+            className="bg-sav-card border border-black/5 rounded-2xl py-4 px-6 text-[10px] font-black uppercase tracking-widest text-gray-700 outline-none focus:border-red-500/30 transition-all shadow-2xl appearance-none cursor-pointer"
           >
             <option value="pendiente">Solo Pendientes</option>
             <option value="pagado">Pagados</option>
@@ -136,7 +136,7 @@ export default function AdminRetirosV2() {
         <AnimatePresence mode="popLayout">
           {loading ? (
             Array(8).fill(0).map((_, i) => (
-              <div key={i} className="bg-[#161926] border border-white/5 h-80 rounded-[40px] animate-pulse" />
+              <div key={i} className="bg-sav-card border border-black/5 h-80 rounded-[40px] animate-pulse" />
             ))
           ) : paginatedList.length > 0 ? (
             paginatedList.map((r, index) => (
@@ -146,37 +146,37 @@ export default function AdminRetirosV2() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-[#161926] border border-white/5 p-8 rounded-[40px] flex flex-col justify-between group hover:border-rose-500/20 transition-all duration-500 shadow-xl shadow-black/20 relative overflow-hidden"
+                className="bg-sav-card border border-black/5 p-8 rounded-[40px] flex flex-col justify-between group hover:border-red-500/20 transition-all duration-500 shadow-xl shadow-black/20 relative overflow-hidden"
               >
-                <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${r.estado === 'pagado' ? 'from-emerald-500 to-teal-500' : 'from-rose-500 to-orange-500'} opacity-[0.03] rounded-bl-full`} />
+                <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${r.estado === 'pagado' ? 'from-emerald-500 to-teal-500' : 'from-red-500 to-orange-500'} opacity-[0.03] rounded-bl-full`} />
 
                 <div className="space-y-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center font-black text-rose-500 border border-white/5 shadow-inner">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center font-black text-red-500 border border-black/5 shadow-inner">
                         {r.nombre_usuario?.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-black text-white uppercase tracking-tighter truncate w-24">{r.nombre_usuario}</p>
+                        <p className="text-sm font-black text-gray-900 uppercase tracking-tighter truncate w-24">{r.nombre_usuario}</p>
                         <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Withdrawal ID: {r.id.substring(0, 8)}...</p>
                       </div>
                     </div>
                     <span className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border ${
                       r.estado === 'pagado' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 shadow-lg shadow-emerald-500/5' :
-                      r.estado === 'rechazado' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20 shadow-lg shadow-rose-500/5' :
+                      r.estado === 'rechazado' ? 'bg-red-500/10 text-red-500 border-red-500/20 shadow-lg shadow-red-500/5' :
                       'bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-lg shadow-amber-500/5'
                     }`}>
                       {r.estado}
                     </span>
                   </div>
 
-                  <div className="bg-[#0f111a] rounded-[30px] p-6 border border-white/5 shadow-inner">
+                  <div className="bg-sav-surface rounded-[30px] p-6 border border-black/5 shadow-inner">
                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
-                      <DollarSign size={10} className="text-rose-500" /> Amount to Pay
+                      <DollarSign size={10} className="text-red-500" /> Amount to Pay
                     </p>
                     <div className="flex items-end gap-1.5">
-                      <span className="text-3xl font-black text-white tracking-tighter">{formatCurrency(r.monto)}</span>
-                      <span className="text-[11px] font-bold text-rose-500 mb-1.5 uppercase tracking-widest italic">BOB</span>
+                      <span className="text-3xl font-black text-gray-900 tracking-tighter">{formatCurrency(r.monto)}</span>
+                      <span className="text-[11px] font-bold text-red-500 mb-1.5 uppercase tracking-widest italic">BOB</span>
                     </div>
                   </div>
 
@@ -192,12 +192,12 @@ export default function AdminRetirosV2() {
                             <div>
                               <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-0.5">{db?.nombre_banco || 'BANCO'}</p>
                               <p className="text-xs font-black text-white uppercase tracking-tight italic">{db?.nombre_titular || 'Sin Titular'}</p>
-                              <p className="text-[10px] font-black text-rose-500 tracking-widest">{db?.numero_cuenta || 'S/N'}</p>
+                              <p className="text-[10px] font-black text-red-500 tracking-widest">{db?.numero_cuenta || 'S/N'}</p>
                             </div>
                           </div>
                         );
                       } catch (e) {
-                        return <p className="text-[10px] text-rose-500">Error en datos bancarios</p>;
+                        return <p className="text-[10px] text-red-500">Error en datos bancarios</p>;
                       }
                     })()}
                   </div>

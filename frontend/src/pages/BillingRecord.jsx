@@ -50,7 +50,7 @@ export default function BillingRecord() {
       <Layout>
         <Header title="Registro de facturación" />
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-          <div className="w-10 h-10 border-4 border-[#1a1f36] border-t-emerald-500 rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-gray-700 border-t-emerald-500 rounded-full animate-spin" />
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cargando registros...</p>
         </div>
       </Layout>
@@ -68,7 +68,7 @@ export default function BillingRecord() {
             <button
               onClick={() => setTab('ingresos')}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                tab === 'ingresos' ? 'bg-[#1a1f36] text-white shadow-lg' : 'text-gray-400'
+                tab === 'ingresos' ? 'bg-gray-700 text-white shadow-lg' : 'text-gray-400'
               }`}
             >
               <ArrowUpCircle size={14} />
@@ -77,7 +77,7 @@ export default function BillingRecord() {
             <button
               onClick={() => setTab('gastos')}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                tab === 'gastos' ? 'bg-[#1a1f36] text-white shadow-lg' : 'text-gray-400'
+                tab === 'gastos' ? 'bg-gray-700 text-white shadow-lg' : 'text-gray-400'
               }`}
             >
               <ArrowDownCircle size={14} />
@@ -98,13 +98,13 @@ export default function BillingRecord() {
                 <div key={i.id} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex justify-between items-center group hover:border-[#1a1f36]/20 transition-all">
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner border border-gray-50 ${
-                      i.tipo_visual === 'recarga' ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'
+                      i.tipo_visual === 'recarga' ? 'bg-emerald-50 text-emerald-500' : 'bg-red-50 text-red-500'
                     }`}>
                       {i.tipo_visual === 'recarga' ? <ArrowUpCircle size={24} /> : <ArrowDownCircle size={24} />}
                     </div>
                     <div>
                       <p className="text-[8px] text-gray-300 font-mono uppercase tracking-widest mb-1">REF: {i.id?.slice(0, 8).toUpperCase()}</p>
-                      <p className={`text-base font-black tracking-tighter ${i.monto_val < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                      <p className={`text-base font-black tracking-tighter ${i.monto_val < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                         {i.monto_val > 0 ? '+' : ''}{Number(i.monto_val).toFixed(2)} <span className="text-[10px] font-black">BOB</span>
                       </p>
                     </div>
