@@ -1,0 +1,31 @@
+{
+  "name": "BCB Global",
+  "short_name": "BCB Global",
+  "description": "BCB Global — Gestión de Activos Virtuales",
+  "start_url": "/?pwa=true",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0A0A0A",
+  "theme_color": "#DC2626",
+  "icons": [
+    {
+      "src": "/imag/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/imag/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/imag/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
