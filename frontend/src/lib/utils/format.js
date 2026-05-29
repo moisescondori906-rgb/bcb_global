@@ -1,5 +1,6 @@
 export function formatCurrency(amount, currency = 'BOB') {
-  return `${currency} ${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const actualCurrency = currency === 'S/' ? 'BS' : currency;
+  return `${actualCurrency} ${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export const formatDate = (date) => {
