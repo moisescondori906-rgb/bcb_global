@@ -1,14 +1,13 @@
 export const formatCurrency = (amount, currency = 'BOB') => {
   let actualCurrency = currency;
-  if (currency === 'S/' || currency === 'SOL') {
-    actualCurrency = 'BS';
+  if (currency === 'S/' || currency === 'SOL' || currency === 'BS') {
+    actualCurrency = 'Bs';
   }
   const formatted = new Intl.NumberFormat('es-BO', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
   return `${actualCurrency} ${formatted}`;
-};${formatted}` : formatted;
 };
 
 export const formatDate = (date) => {

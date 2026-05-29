@@ -1,7 +1,7 @@
 export function formatCurrency(amount, currency = 'BOB') {
   let actualCurrency = currency;
-  if (currency === 'S/' || currency === 'SOL') {
-    actualCurrency = 'BS';
+  if (currency === 'S/' || currency === 'SOL' || currency === 'BS') {
+    actualCurrency = 'Bs';
   }
   return `${actualCurrency} ${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
