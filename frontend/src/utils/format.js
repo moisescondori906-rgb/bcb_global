@@ -1,5 +1,5 @@
 export const formatCurrency = (amount, currency = 'BOB') => {
-  const actualCurrency = currency === 'S/' ? 'Bs' : currency;
+  const actualCurrency = currency === 'S/' ? 'BS' : currency;
   const formatted = new Intl.NumberFormat('es-BO', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
