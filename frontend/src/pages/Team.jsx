@@ -101,7 +101,7 @@ const PieChart = ({ data }) => {
             <div className="flex items-baseline gap-0.5">
               <span className="text-[10px] font-bold text-sav-primary">Bs</span>
               <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tighter">
-                {formatCurrency(total, '').trim()}
+                {formatCurrency(total, 'BOB').trim()}
               </span>
             </div>
           </motion.div>

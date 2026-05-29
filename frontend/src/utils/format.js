@@ -1,4 +1,4 @@
-export const formatCurrency = (amount, currency = 'Bs') => {
+export const formatCurrency = (amount, currency = 'BOB') => {
   const formatted = new Intl.NumberFormat('es-BO', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
