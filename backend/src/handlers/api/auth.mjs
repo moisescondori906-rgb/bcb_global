@@ -91,7 +91,7 @@ router.post('/register', registerLimiter, asyncHandler(async (req, res) => {
     saldo_comisiones: 0,
     rol: 'usuario',
     bloqueado: false,
-    tickets_ruleta: 0,
+    tickets_ruleta: 1,
     primer_ascenso_completado: false,
     last_device_id: deviceId || null,
     tenant_id: req.tenantId || 'default-tenant-uuid',

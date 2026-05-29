@@ -220,9 +220,9 @@ export default function Recompensas() {
     <Layout>
       <div className="bg-gray-50 min-h-screen pb-24">
         {isInternar && (
-          <div className="bg-sav-primary/10 border-b border-sav-primary/20 p-4 text-center">
-            <p className="text-[10px] font-black text-sav-primary uppercase tracking-widest flex items-center justify-center gap-2">
-               <Lock size={14} /> La ruleta requiere nivel GLOBAL 1 o superior para participar
+          <div className="bg-emerald-500/10 border-b border-emerald-500/20 p-4 text-center">
+            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center justify-center gap-2">
+               <Sparkles size={14} className="animate-pulse" /> ¡Bienvenido! Tienes 1 giro gratis de cortesía
             </p>
           </div>
         )}
@@ -412,16 +412,16 @@ export default function Recompensas() {
             <div className="mt-12 text-center w-full max-w-xs">
               <button
                 onClick={spinWheel}
-                disabled={spinning || premios.length === 0 || (Number(user?.tickets_ruleta) || 0) < 1 || isInternar}
+                disabled={spinning || premios.length === 0 || (Number(user?.tickets_ruleta) || 0) < 1}
                 className={`
                   w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] transition-all duration-300
-                  ${spinning || premios.length === 0 || (Number(user?.tickets_ruleta) || 0) < 1 || isInternar
+                  ${spinning || premios.length === 0 || (Number(user?.tickets_ruleta) || 0) < 1
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-sav-primary text-white shadow-[0_20px_40px_rgba(220,38,38,0.2)] hover:scale-[1.02] active:scale-[0.98]'
                   }
                 `}
               >
-                {spinning ? 'Girando...' : isInternar ? 'Nivel Insuficiente' : 'Girar Ahora'}
+                {spinning ? 'Girando...' : 'Girar Ahora'}
               </button>
 
               <div className="mt-6 flex items-center justify-center gap-6">

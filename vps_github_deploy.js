@@ -53,6 +53,8 @@ conn.on('ready', () => {
     'cp /var/www/bcb_global/bcb_global_nginx.conf /etc/nginx/sites-available/bcb_global.conf || true',
     'ln -sfn /etc/nginx/sites-available/bcb_global.conf /etc/nginx/sites-enabled/bcb_global.conf || true',
     'nginx -t && systemctl reload nginx || true',
+    '# Ejecutar script de tickets para pasantes',
+    'cd /var/www/bcb_global/backend && node scripts/grant_pasante_tickets.mjs || true',
     'cd /var/www/bcb_global/backend && pm2 reload ecosystem.config.cjs || pm2 start ecosystem.config.cjs',
     'sleep 10',
     'pm2 status',
