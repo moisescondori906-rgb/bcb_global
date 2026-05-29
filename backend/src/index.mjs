@@ -36,8 +36,11 @@ app.set('trust proxy', true);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Servir archivos est├íticos locales - Usando path absoluto basado en __dirname para mayor robustez
-app.use('/uploads', express.static(path.join(__dirname, '..', 'public', 'uploads')));
+// Servir archivos estáticos locales - Usando path absoluto basado en __dirname para mayor robustez
+const publicPath = path.join(__dirname, '..', 'public');
+app.use('/uploads', express.static(path.join(publicPath, 'uploads')));
+app.use('/video', express.static(path.join(publicPath, 'video')));
+app.use('/imag', express.static(path.join(publicPath, 'imag')));
 
 // --- BLINDAJE Y OPTIMIZACIÓN DE ALTA CONCURRENCIA v11.5.0 ---
 
