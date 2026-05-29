@@ -364,9 +364,8 @@ export default function Dashboard() {
                   <p className="text-[10px] sm:text-[11px] font-black text-white/90 uppercase tracking-[0.3em] drop-shadow-sm">Balance de Capital</p>
                   <div className="flex items-baseline gap-2 overflow-hidden">
                     <p className="text-4xl sm:text-6xl font-black text-white tracking-tighter truncate drop-shadow-lg">
-                      {formatCurrency(user?.saldo_principal || 0, 'BOB').trim()}
+                      {formatCurrency(user?.saldo_principal || 0, 'Bs').trim()}
                     </p>
-                    <span className="text-xs sm:text-sm font-black text-white uppercase tracking-widest shrink-0">Bs</span>
                   </div>
                 </div>
                 
@@ -408,13 +407,13 @@ export default function Dashboard() {
             <div className="space-y-1.5">
               <p className="text-[9px] sm:text-[10px] font-black text-slate-600 uppercase tracking-widest">Ingresos Hoy</p>
               <p className="text-2xl sm:text-3xl font-black text-emerald-700 tracking-tighter drop-shadow-sm">
-                +{formatCurrency(stats?.ingresos_hoy || 0, 'BOB').trim()}
+                +{formatCurrency(stats?.ingresos_hoy || 0, 'Bs').trim()}
               </p>
             </div>
             <div className="space-y-1.5 text-right">
               <p className="text-[9px] sm:text-[10px] font-black text-slate-600 uppercase tracking-widest">Total Acumulado</p>
               <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter drop-shadow-sm">
-                {formatCurrency(stats?.total_acumulado || 0, 'BOB').trim()}
+                {formatCurrency(stats?.total_acumulado || 0, 'Bs').trim()}
               </p>
             </div>
           </div>

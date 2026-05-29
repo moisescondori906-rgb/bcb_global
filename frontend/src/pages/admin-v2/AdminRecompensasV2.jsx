@@ -499,7 +499,7 @@ export default function AdminRecompensasV2() {
                     required
                   >
                     <option value="">-- Ninguno (Usar Probabilidad Base) --</option>
-                    {premios.map(p => <option key={p.id} value={p.id}>{p.nombre} ({formatCurrency(p.valor)} Bs)</option>)}
+                    {premios.map(p => <option key={p.id} value={p.id}>{p.nombre} ({formatCurrency(p.valor)})</option>)}
                   </select>
                 </div>
 

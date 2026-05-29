@@ -1,6 +1,6 @@
-export const formatCurrency = (amount, currency = 'BOB') => {
+export const formatCurrency = (amount, currency = 'Bs') => {
   let actualCurrency = currency;
-  if (currency === 'S/' || currency === 'SOL' || currency === 'BS') {
+  if (currency === 'S/' || currency === 'SOL' || currency === 'BS' || currency === 'BOB') {
     actualCurrency = 'Bs';
   }
   const formatted = new Intl.NumberFormat('es-BO', {

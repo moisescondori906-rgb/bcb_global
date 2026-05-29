@@ -99,9 +99,8 @@ const PieChart = ({ data }) => {
           >
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Total</p>
             <div className="flex items-baseline gap-0.5">
-              <span className="text-[10px] font-bold text-sav-primary">Bs</span>
               <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tighter">
-                {formatCurrency(total, 'BOB').trim()}
+                {formatCurrency(total, 'Bs').trim()}
               </span>
             </div>
           </motion.div>

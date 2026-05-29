@@ -268,7 +268,7 @@ export default function AdminNivelesV2() {
                           <div className="p-1.5 rounded-lg bg-admin-accent/10 text-admin-accent">
                             <TrendingUp size={16} />
                           </div>
-                          <p className="text-[11px] font-black text-white uppercase tracking-widest">{formatCurrency(nivel.deposito || nivel.costo || 0)} <span className="text-zinc-600 italic ml-1">Bs Investment</span></p>
+                          <p className="text-[11px] font-black text-white uppercase tracking-widest">{formatCurrency(nivel.deposito || nivel.costo || 0)} <span className="text-zinc-600 italic ml-1">Investment</span></p>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="p-1.5 rounded-lg bg-zinc-800 text-zinc-500">
@@ -280,7 +280,7 @@ export default function AdminNivelesV2() {
                           <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500">
                             <CheckCircle2 size={16} />
                           </div>
-                          <p className="text-[11px] font-black text-emerald-500 uppercase tracking-widest">{formatCurrency(nivel.ganancia_tarea)} <span className="text-zinc-600 italic ml-1">Bs Revenue/Task</span></p>
+                          <p className="text-[11px] font-black text-emerald-500 uppercase tracking-widest">{formatCurrency(nivel.ganancia_tarea)} <span className="text-zinc-600 italic ml-1">Revenue/Task</span></p>
                         </div>
                         {nivel.retiro_horario_habilitado && (
                           <div className="flex items-center gap-3 px-4 py-1.5 rounded-xl bg-amber-500/5 border border-amber-500/10 shadow-inner">

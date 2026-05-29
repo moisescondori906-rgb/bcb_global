@@ -1,6 +1,6 @@
-export function formatCurrency(amount, currency = 'BOB') {
+export function formatCurrency(amount, currency = 'Bs') {
   let actualCurrency = currency;
-  if (currency === 'S/' || currency === 'SOL' || currency === 'BS') {
+  if (currency === 'S/' || currency === 'SOL' || currency === 'BS' || currency === 'BOB') {
     actualCurrency = 'Bs';
   }
   return `${actualCurrency} ${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
