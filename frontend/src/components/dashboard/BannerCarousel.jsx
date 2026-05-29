@@ -36,11 +36,11 @@ export default function BannerCarousel({ banners = [] }) {
   );
 
   return (
-    <div className="relative h-60 w-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 group">
+    <div className="relative aspect-[2/1] w-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 group">
       <AnimatePresence mode='wait'>
         <motion.div
           key={slide}
-          initial={{ opacity: 0, scale: 1.1 }}
+          initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
@@ -49,16 +49,15 @@ export default function BannerCarousel({ banners = [] }) {
           <img
             src={api.getMediaUrl(validBanners[slide]?.imagen_url)}
             alt={validBanners[slide]?.titulo || 'Promoción'}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain bg-slate-900"
             onError={(e) => { 
               if (e.target.src !== '/imag/carrusel1.webp') {
                 e.target.src = '/imag/carrusel1.webp'; 
               }
             }}
           />
-          {/* Overlay gradiente más sofisticado y oscuro para legibilidad */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/40 via-transparent to-transparent" />
+          {/* Overlay gradiente simplificado para no tapar la imagen */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent pointer-events-none" />
           
           <div className="absolute bottom-8 left-8 right-8">
             <motion.div
