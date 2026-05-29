@@ -73,7 +73,7 @@ export default function Register() {
             className="inline-block mb-6 relative"
           >
             <div className="absolute inset-0 bg-sav-primary/20 blur-2xl rounded-full" />
-            <img src="/imag/logo-carrusel.png" alt="Logo" className="w-20 h-20 relative z-10" />
+            <img src="/imag/logo-carrusel.webp" alt="Logo" className="w-20 h-20 relative z-10" />
           </motion.div>
           <h1 className="text-3xl font-black tracking-tight text-white mb-2 uppercase">
             Únete a BCB

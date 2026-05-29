@@ -58,7 +58,7 @@ export default function Login() {
             animate={{ scale: 1 }}
             className="inline-block mb-6 p-4 bg-white/10 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-sav-primary/10 border border-white/5"
           >
-            <img src="/imag/logo.png" alt="Logo" className="w-20 h-20" />
+            <img src="/imag/logo.webp" alt="Logo" className="w-20 h-20" />
           </motion.div>
           <h1 className="text-4xl font-black tracking-tighter text-white mb-2 uppercase">
             Bienvenido

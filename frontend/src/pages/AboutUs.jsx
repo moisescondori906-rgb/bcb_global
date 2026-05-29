@@ -65,10 +65,10 @@ export default function AboutUs() {
   };
 
   const imagesByTab = {
-    empresa: "/imag/logo-carrusel.png",
-    inversion: "/imag/tabla_invercion.png",
-    referidos: "/imag/referidos.png",
-    retiros: "/imag/retiros.png"
+    empresa: "/imag/logo-carrusel.webp",
+    inversion: "/imag/tabla_invercion.webp",
+    referidos: "/imag/referidos.webp",
+    retiros: "/imag/retiros.webp"
   };
 
   return (

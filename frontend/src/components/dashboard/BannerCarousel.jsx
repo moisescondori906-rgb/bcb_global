@@ -6,10 +6,12 @@ import { api } from '../../lib/api';
 export default function BannerCarousel({ banners = [] }) {
   const [slide, setSlide] = useState(0);
 
-  // Fallback banners si no hay datos del API
+  // Fallback banners con las nuevas imágenes .webp
   const fallbackBanners = [
-    { id: 'f1', titulo: 'Bienvenido a BCB Global', imagen_url: '/imag/carrusel1.png' },
-    { id: 'f2', titulo: 'Gana comisiones diarias', imagen_url: '/imag/carrusel1.png' }
+    { id: 'f1', titulo: 'Bienvenido a BCB Global', imagen_url: '/imag/carrusel1.webp' },
+    { id: 'f2', titulo: 'Gana comisiones diarias', imagen_url: '/imag/carrusel2.webp' },
+    { id: 'f3', titulo: 'Invierte y Crece', imagen_url: '/imag/carrusel3.webp' },
+    { id: 'f4', titulo: 'Seguridad Institucional', imagen_url: '/imag/carrusel4.webp' }
   ];
 
   // Asegurar que banners sea un array válido y tenga contenido
@@ -49,8 +51,8 @@ export default function BannerCarousel({ banners = [] }) {
             alt={validBanners[slide]?.titulo || 'Promoción'}
             className="w-full h-full object-cover"
             onError={(e) => { 
-              if (e.target.src !== '/imag/carrusel1.png') {
-                e.target.src = '/imag/carrusel1.png'; 
+              if (e.target.src !== '/imag/carrusel1.webp') {
+                e.target.src = '/imag/carrusel1.webp'; 
               }
             }}
           />
