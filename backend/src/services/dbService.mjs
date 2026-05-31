@@ -137,12 +137,12 @@ export async function getDayStatus(dateStr = peruTime.todayStr()) {
     // Reglas Base (Si no hay registro en el calendario)
     const status = day || {
       fecha: dateStr,
-      tipo_dia: (dayOfWeek === 0 ? 'mantenimiento' : 'laboral'),
+      tipo_dia: 'laboral',
       es_feriado: 0,
-      tareas_habilitadas: (dayOfWeek === 0) ? 0 : 1, // Domingos bloqueados por defecto
+      tareas_habilitadas: 1, 
       retiros_habilitados: 1,
       recargas_habilitadas: 1,
-      motivo: (dayOfWeek === 0 ? 'Mantenimiento Dominical' : null),
+      motivo: null,
       reglas_niveles: {}
     };
 
@@ -242,14 +242,6 @@ export async function getUserTeamReport(userId) {
  */
 export async function canPerformTasks(userId, dateStr = peruTime.todayStr()) {
   try {
-    const today = peruTime.getDay();
-    if (today === 0) { // 0 = Domingo
-      return { 
-        ok: false, 
-        message: '¡Buen domingo! El sistema se encuentra en mantenimiento y descanso hoy. Retornamos el lunes con más energía.' 
-      };
-    }
-
     const status = await getDayStatus(dateStr);
     if (!status) return { ok: true }; 
 
