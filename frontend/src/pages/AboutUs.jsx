@@ -189,6 +189,13 @@ export default function AboutUs() {
                       src={imagesByTab[activeTab]} 
                       alt={content[activeTab].title} 
                       className="w-full h-auto object-contain" 
+                      onError={(e) => {
+                        // Si falla la imagen .webp, intentar buscarla en /imag/ (por si acaso hay un error de ruta)
+                        const currentSrc = e.target.src;
+                        if (currentSrc.includes('/images/')) {
+                          e.target.src = currentSrc.replace('/images/', '/imag/').replace('.png', '.webp');
+                        }
+                      }}
                     />
                   </div>
                 </div>

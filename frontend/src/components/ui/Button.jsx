@@ -10,29 +10,29 @@ export function Button({
   ...props 
 }) {
   const variants = {
-    primary: 'bg-sav-primary text-white shadow-accent-glow hover:bg-sav-primary/90 active:scale-[0.97]',
-    secondary: 'bg-sav-surface text-sav-text-main border border-black/[0.03] hover:bg-slate-200 active:scale-[0.97]',
-    ghost: 'bg-transparent hover:bg-sav-surface text-sav-muted hover:text-sav-text-main',
-    danger: 'bg-sav-error/10 text-sav-error border border-sav-error/20 hover:bg-sav-error/20 active:scale-[0.97]',
-    success: 'bg-sav-success text-white shadow-success-glow hover:bg-sav-success/90 active:scale-[0.97]'
+    primary: 'h-12 sm:h-14 w-full flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-sav-primary to-sav-accent-hot text-white font-bold text-sm sm:text-base transition-all shadow-lg shadow-sav-primary/30 hover:shadow-sav-primary/40 active:translate-y-0.5 shadow-sav-glow',
+    secondary: 'h-12 sm:h-14 w-full flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-slate-100 border-2 border-slate-200 text-slate-700 font-bold text-sm sm:text-base transition-all shadow-sm hover:bg-slate-200',
+    ghost: 'bg-transparent hover:bg-sav-primary/5 text-sav-primary font-black px-4 py-2 text-sm sm:text-base',
+    danger: 'h-12 sm:h-14 w-full flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-sav-error text-white shadow-lg shadow-sav-error/30 hover:brightness-110 font-black text-sm sm:text-base'
   };
 
   return (
     <button
       className={cn(
-        'h-12 sm:h-14 px-8 rounded-m3 flex items-center justify-center gap-3 font-bold text-[13px] sm:text-[14px] uppercase tracking-[0.12em] transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none group',
+        'relative overflow-hidden font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2',
         variants[variant],
-        loading && 'opacity-70',
+        loading && 'opacity-70 pointer-events-none',
+        disabled && 'opacity-50 pointer-events-none',
         className
       )}
       disabled={disabled || loading}
       {...props}
     >
       {loading ? (
-        <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-sav-primary/30 border-t-sav-primary rounded-full animate-spin" />
       ) : (
         <>
-          {Icon && <Icon size={18} className="transition-transform group-hover:scale-110 group-active:scale-95" strokeWidth={2.5} />}
+          {Icon && <Icon size={20} />}
           {children}
         </>
       )}

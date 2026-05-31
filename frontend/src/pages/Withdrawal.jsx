@@ -27,11 +27,7 @@ import {
   QrCode as QrCodeIcon,
   Lock as LockIcon,
   Plus as PlusIcon,
-  Building2 as BuildingIcon,
-  User,
-  Crown,
-  Zap,
-  Image as ImageIcon
+  Building2 as BuildingIcon
 } from 'lucide-react';
 import { isScheduleOpen, getperuNow as getBoliviaNow } from '../lib/schedule';
 import imageCompression from 'browser-image-compression';
@@ -62,6 +58,7 @@ export default function Withdrawal() {
   const [niveles, setNiveles] = useState([]);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [hasWithdrawalToday, setHasWithdrawalToday] = useState(false);
+  const [hasSignature, setHasSignature] = useState(true); // Ya viene por defecto
   
   // Security Status State
   const [securityStatus, setSecurityStatus] = useState({
@@ -94,6 +91,7 @@ export default function Withdrawal() {
       const status = await fetchSecurityStatus();
       
       if (status?.tiene_password_fondo && status?.tiene_cuenta_bancaria) {
+        // Cargar datos necesarios para el retiro solo si ya tiene seguridad configurada
         api.withdrawals.montos().then(data => {
           if (isMounted) setMontos(data || [25, 100, 500, 1500, 5000, 10000]);
         }).catch(() => {});
@@ -156,6 +154,7 @@ export default function Withdrawal() {
     try {
       await api.users.createBankAccount(bankAcc);
       await fetchSecurityStatus();
+      // Recargar tarjetas para el selector de retiro
       const list = await api.users.getBankAccounts();
       setTarjetas(list || []);
       if (list && list[0]) setTarjetaId(list[0].id);
@@ -219,355 +218,580 @@ export default function Withdrawal() {
   if (securityStatus.loading) {
     return (
       <Layout>
-        <div className="min-h-screen flex flex-col items-center justify-center bg-sav-bg space-y-6">
-          <div className="w-16 h-16 border-4 border-sav-surface border-t-sav-primary rounded-full animate-spin" />
-          <p className="text-[11px] font-extrabold text-sav-muted uppercase tracking-[0.3em] animate-pulse">Sincronizando Seguridad</p>
+        <div className="min-h-screen bg-sav-dark flex items-center justify-center">
+          <LoaderIcon className="text-sav-primary animate-spin" size={40} />
         </div>
       </Layout>
     );
   }
 
-  // --- RENDERS DE SEGURIDAD ---
-
-  if (!securityStatus.tiene_password_fondo) {
-    return (
-      <Layout>
-        <Header title="Seguridad de Fondos" />
-        <main className="px-6 py-12 space-y-10 max-w-lg mx-auto animate-in">
-          <div className="text-center space-y-6">
-            <div className="w-24 h-24 rounded-[2.5rem] bg-sav-primary/10 border border-sav-primary/20 flex items-center justify-center mx-auto text-sav-primary shadow-sm">
-              <LockIcon size={48} strokeWidth={1.5} />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-3xl font-black text-sav-text-main tracking-tight uppercase leading-none">Configura tu PIN</h2>
-              <p className="text-sm font-bold text-sav-text-dim/80 leading-relaxed max-w-xs mx-auto">Para proteger tu capital, es obligatorio establecer una contraseña exclusiva para transacciones.</p>
-            </div>
-          </div>
-
-          <Card variant="premium" className="p-10 space-y-8">
-            <form onSubmit={handleFundPasswordSubmit} className="space-y-8">
-              <Input 
-                label="Nueva Contraseña de Fondos" 
-                type="password" 
-                placeholder="6-12 caracteres"
-                value={fundPass.password_fondo}
-                onChange={e => setFundPass({ ...fundPass, password_fondo: e.target.value })}
-                icon={LockIcon}
-                showPasswordToggle
-              />
-              <Input 
-                label="Confirmar Contraseña" 
-                type="password" 
-                placeholder="Repite la contraseña"
-                value={fundPass.confirm_password_fondo}
-                onChange={e => setFundPass({ ...fundPass, confirm_password_fondo: e.target.value })}
-                icon={ShieldCheckIcon}
-                showPasswordToggle
-              />
-              {error && <p className="text-xs font-black text-sav-error uppercase tracking-widest text-center">{error}</p>}
-              <Button type="submit" loading={loading} variant="primary" className="w-full h-16 shadow-accent-glow uppercase tracking-[0.2em] text-[15px]">GUARDAR PIN DE SEGURIDAD</Button>
-            </form>
-          </Card>
-        </main>
-      </Layout>
-    );
+  const saldoPrincipal = user?.saldo_principal ?? 0;
+  const saldoComisiones = user?.saldo_comisiones ?? 0;
+  
+  let horarioRet;
+  let schedRet = { ok: true };
+  
+  if (userLevel && userLevel.retiro_horario_habilitado) {
+    const diasHabilitados = [];
+    let currentDay = userLevel.retiro_dia_inicio;
+    const endDay = userLevel.retiro_dia_fin;
+    if (currentDay <= endDay) {
+      for (let i = currentDay; i <= endDay; i++) diasHabilitados.push(i);
+    } else {
+      for (let i = currentDay; i <= 6; i++) diasHabilitados.push(i);
+      for (let i = 0; i <= endDay; i++) diasHabilitados.push(i);
+    }
+    horarioRet = {
+      enabled: true,
+      dias_semana: diasHabilitados,
+      hora_inicio: userLevel.retiro_hora_inicio?.substring(0, 5),
+      hora_fin: userLevel.retiro_hora_fin?.substring(0, 5)
+    };
+    schedRet = isScheduleOpen(horarioRet);
+  } else if (pc?.horario_retiro) {
+    horarioRet = pc.horario_retiro;
+    schedRet = isScheduleOpen(horarioRet);
   }
 
-  if (!securityStatus.tiene_cuenta_bancaria) {
-    return (
-      <Layout>
-        <Header title="Vinculación Bancaria" />
-        <main className="px-6 py-12 space-y-10 max-w-lg mx-auto animate-in">
-          <div className="text-center space-y-6">
-            <div className="w-24 h-24 rounded-[2.5rem] bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center mx-auto shadow-sm">
-              <BuildingIcon size={48} strokeWidth={1.5} />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-3xl font-black text-sav-text-main tracking-tight uppercase leading-none">Datos de Cobro</h2>
-              <p className="text-sm font-bold text-sav-text-dim/80 leading-relaxed max-w-xs mx-auto">Ingresa los datos de la cuenta donde recibirás tus transferencias institucionales.</p>
-            </div>
-          </div>
+  const fueraHorario = horarioRet?.enabled && !schedRet.ok;
+  const msgHorario = !schedRet.ok ? schedRet.message : '';
 
-          <Card variant="premium" className="p-10">
-            <form onSubmit={handleBankAccountSubmit} className="space-y-6">
-              <div className="space-y-2.5">
-                <label className="text-[11px] font-extrabold text-sav-muted uppercase tracking-[0.2em] ml-1.5">Entidad Bancaria</label>
-                <select 
-                  className="w-full h-14 px-6 rounded-m3 bg-sav-surface border border-black/[0.03] text-sav-text-main font-bold outline-none focus:border-sav-primary/50 transition-all shadow-sm"
-                  value={bankAcc.banco}
-                  onChange={e => setBankAcc({ ...bankAcc, banco: e.target.value })}
-                >
-                  <option value="bnb">BNB - Banco Nacional de Bolivia</option>
-                  <option value="union">Banco Unión</option>
-                  <option value="mercantil">Banco Mercantil Santa Cruz</option>
-                  <option value="bisa">Banco BISA</option>
-                  <option value="economico">Banco Económico</option>
-                  <option value="ganadero">Banco Ganadero</option>
-                  <option value="sol">Banco Sol</option>
-                  <option value="fassil">Banco Fassil (En intervención)</option>
-                  <option value="otro">Otras Entidades Financieras</option>
-                </select>
-              </div>
+  // --- VALIDACIÓN DE DÍAS (Sincronizado con Backend v12.0.0) ---
+  const boliviaNow = getBoliviaNow();
+  const today = boliviaNow.getDay(); // 0=Dom, 1=Lun, 2=Mar... 6=Sab
+  
+  // Reglas Globales desde Configuración (Lunes a Viernes: 1, 2, 3, 4, 5)
+  const globalSchedule = pc?.horario_retiro || { enabled: true, dias_semana: [1, 2, 3, 4, 5] };
+  const globalAllowedDays = Array.isArray(globalSchedule.dias_semana) ? globalSchedule.dias_semana : [1, 2, 3, 4, 5];
 
-              <Input 
-                label="Titular de la Cuenta" 
-                placeholder="Nombre completo"
-                value={bankAcc.titular}
-                onChange={e => setBankAcc({ ...bankAcc, titular: e.target.value })}
-                icon={User}
-              />
-
-              <Input 
-                label="Número de Cuenta" 
-                placeholder="000-000000"
-                value={bankAcc.numero_cuenta}
-                onChange={e => setBankAcc({ ...bankAcc, numero_cuenta: e.target.value })}
-                icon={CreditCardIcon}
-              />
-
-              <Input 
-                label="C.I. / NIT" 
-                placeholder="Cédula de Identidad"
-                value={bankAcc.ci_nit}
-                onChange={e => setBankAcc({ ...bankAcc, ci_nit: e.target.value })}
-                icon={ShieldCheckIcon}
-              />
-
-              {error && <p className="text-xs font-black text-sav-error uppercase tracking-widest text-center">{error}</p>}
-              
-              <Button type="submit" loading={loading} variant="primary" className="w-full h-16 shadow-accent-glow uppercase tracking-[0.2em] text-[15px]" icon={CheckCircleIcon}>
-                VINCULAR CUENTA AHORA
-              </Button>
-            </form>
-          </Card>
-        </main>
-      </Layout>
-    );
+  // Si el nivel tiene horario específico configurado, usamos ese rango
+  let isAllowedDay = false;
+  if (userLevel?.retiro_horario_habilitado) {
+    const start = Number(userLevel.retiro_dia_inicio);
+    const end = Number(userLevel.retiro_dia_fin);
+    if (start <= end) isAllowedDay = today >= start && today <= end;
+    else isAllowedDay = today >= start || today <= end;
+  } else {
+    // Usar la regla general (Martes a Jueves por defecto)
+    isAllowedDay = globalAllowedDays.includes(today);
   }
 
-  // --- RENDER PRINCIPAL DE RETIRO ---
+  const isInternar = userLevel?.codigo === 'internar' || userLevel?.codigo === 'pasantia';
+  const canWithdrawToday = isAllowedDay && !isInternar;
 
-  const sched = pc?.horario_retiro ? isScheduleOpen(pc.horario_retiro) : { ok: true };
+  const DAY_NAMES = { 0: 'Domingo', 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado' };
+  const globalAllowedNames = globalAllowedDays.map(d => DAY_NAMES[d]).join(', ');
 
   return (
     <Layout>
-      <div className="bg-sav-bg min-h-screen pb-32">
-        <Header title="Solicitud de Retiro" />
+      <div className="min-h-screen bg-sav-dark">
+        <Header 
+          title="Retiro de Fondos" 
+          rightAction={
+            <Link to="/ganancias" className="text-sav-primary text-[9px] font-black uppercase tracking-widest bg-sav-primary/10 px-4 py-2 rounded-xl border border-sav-primary/20">
+              Historial
+            </Link>
+          } 
+        />
         
-        <main className="px-6 py-8 space-y-10 max-w-lg mx-auto animate-in">
-          {/* Balance Cards */}
-          <section className="grid grid-cols-2 gap-5">
-            <Card className="p-6 bg-white border-black/[0.03] shadow-m3-1 group overflow-hidden relative">
-               <div className="w-10 h-10 rounded-xl bg-sav-primary/10 flex items-center justify-center text-sav-primary mb-3">
-                  <WalletIcon size={20} strokeWidth={2.5} />
-               </div>
-               <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest mb-1">Capital Principal</p>
-               <p className="text-xl font-black text-sav-text-main tracking-tight">
-                 {Number(user?.saldo_principal || 0).toLocaleString()} <span className="text-xs text-sav-primary">Bs</span>
-               </p>
-               <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-sav-primary/5 rounded-full blur-xl" />
-            </Card>
-            <Card className="p-6 bg-white border-black/[0.03] shadow-m3-1 group overflow-hidden relative">
-               <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 mb-3">
-                  <TrendingUpIcon size={20} strokeWidth={2.5} />
-               </div>
-               <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest mb-1">Ganancias</p>
-               <p className="text-xl font-black text-sav-text-main tracking-tight">
-                 {Number(user?.saldo_ingresos || 0).toLocaleString()} <span className="text-xs text-emerald-600">Bs</span>
-               </p>
-               <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-emerald-500/5 rounded-full blur-xl" />
-            </Card>
-          </section>
+        {/* Background Decor */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-sav-primary/5 to-transparent blur-[120px]" />
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-sav-accent/5 rounded-full blur-[100px]" />
+        </div>
 
-          {!sched.ok && (
-            <div className="p-5 rounded-3xl bg-rose-50 border border-rose-100 flex items-start gap-4 shadow-sm animate-pulse">
-               <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-500 shrink-0">
-                  <ClockIcon size={20} strokeWidth={2.5} />
-               </div>
-               <div>
-                  <h4 className="text-[12px] font-extrabold text-rose-600 uppercase tracking-widest mb-1">Sistema Fuera de Horario</h4>
-                  <p className="text-[11px] text-rose-500/80 font-bold leading-tight uppercase tracking-tight">{sched.message}</p>
-               </div>
+        <main className="px-4 sm:px-6 py-6 sm:py-8 space-y-8 sm:space-y-10 pb-32 animate-fade">
+          {/* Balance Card - Ultra Legibilidad */}
+          <Card variant="premium" className="relative overflow-hidden group bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900 p-6 sm:p-8 border-none shadow-2xl shadow-indigo-200">
+            <div className="absolute top-0 right-0 p-6 sm:p-8 opacity-10 group-hover:scale-110 transition-transform">
+              <WalletIcon size={60} className="text-white sm:w-[100px] sm:h-[100px]" />
+            </div>
+            <div className="relative z-10 space-y-1 sm:space-y-2">
+              <p className="text-[10px] font-black text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.3em] drop-shadow-sm">Capital Disponible</p>
+              <div className="flex items-baseline gap-2 sm:gap-3 overflow-hidden">
+                <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tighter truncate drop-shadow-lg">
+                  {(tipoBilletera === 'principal' ? saldoPrincipal : saldoComisiones).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </h2>
+                <span className="text-[10px] sm:text-xs font-black text-white uppercase tracking-widest shrink-0">Bs</span>
+              </div>
+            </div>
+          </Card>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <Card className="p-4 sm:p-5 bg-sav-error/10 border-sav-error/20 flex items-start sm:items-center gap-3 sm:gap-4 shadow-xl">
+                  <AlertCircleIcon size={18} className="text-sav-error shrink-0 mt-0.5 sm:mt-0" />
+                  <p className="text-[9px] sm:text-[10px] text-sav-error font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] leading-relaxed">{error}</p>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* FLUJO OBLIGATORIO */}
+          {!securityStatus.tiene_password_fondo ? (
+            /* PASO 1: CONTRASEÑA DE FONDOS */
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              <Card variant="flat" className="p-6 bg-indigo-50 border-2 border-indigo-100 rounded-[2rem]">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-900 border border-indigo-200">
+                    <ShieldCheckIcon size={24} strokeWidth={3} />
+                  </div>
+                  <div>
+                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest leading-none mb-1">Paso 1: Seguridad</h3>
+                    <p className="text-[10px] text-indigo-900 font-black uppercase tracking-tight">Configura tu contraseña de fondos</p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-700 font-black leading-relaxed">
+                  Para proteger tus retiros, debes configurar una contraseña especial (diferente a la de login).
+                </p>
+              </Card>
+
+              <form onSubmit={handleFundPasswordSubmit} className="space-y-6">
+                <Card variant="outline" className="p-6 space-y-5 bg-white/[0.02] border-white/5 rounded-[2.5rem]">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Nueva Contraseña de Fondos</label>
+                    <div className="relative">
+                      <Input
+                        type="password"
+                        value={fundPass.password_fondo}
+                        onChange={(e) => setFundPass({ ...fundPass, password_fondo: e.target.value })}
+                        className="w-full"
+                        required
+                        minLength={6}
+                        placeholder="Mínimo 6 caracteres"
+                        showPasswordToggle
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Confirmar Contraseña</label>
+                    <div className="relative">
+                      <Input
+                        type="password"
+                        value={fundPass.confirm_password_fondo}
+                        onChange={(e) => setFundPass({ ...fundPass, confirm_password_fondo: e.target.value })}
+                        className="w-full"
+                        required
+                        minLength={6}
+                        placeholder="Repite la contraseña"
+                        showPasswordToggle
+                      />
+                    </div>
+                  </div>
+                </Card>
+
+                <Button 
+                  type="submit" 
+                  loading={loading}
+                  className="w-full h-16 rounded-3xl text-xs font-black tracking-[0.2em]"
+                >
+                  GUARDAR CONTRASEÑA DE FONDOS
+                </Button>
+              </form>
+            </motion.div>
+          ) : !securityStatus.tiene_cuenta_bancaria ? (
+            /* PASO 2: CUENTA BANCARIA */
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              <Card variant="flat" className="p-6 bg-emerald-50 border-2 border-emerald-100 rounded-[2rem]">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-900 border border-emerald-200">
+                    <BuildingIcon size={24} strokeWidth={3} />
+                  </div>
+                  <div>
+                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest leading-none mb-1">Paso 2: Cuenta Bancaria</h3>
+                    <p className="text-[10px] text-emerald-900 font-black uppercase tracking-tight">Vincula tu cuenta de retiro</p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-700 font-black leading-relaxed">
+                  Registra los datos de tu cuenta bancaria o billetera digital para recibir tus fondos.
+                </p>
+              </Card>
+
+              <form onSubmit={handleBankAccountSubmit} className="space-y-6">
+                <Card variant="outline" className="p-6 space-y-5 bg-white/[0.02] border-white/5 rounded-[2.5rem]">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Banco o Plataforma</label>
+                    <select 
+                      value={bankAcc.banco}
+                      onChange={(e) => setBankAcc({ ...bankAcc, banco: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-2xl h-14 px-6 text-sm font-black text-slate-900 outline-none focus:border-sav-primary/30 transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="bnb" className="bg-white text-slate-900">BNB (Banco Nacional de Bolivia)</option>
+                      <option value="union" className="bg-white text-slate-900">Banco Unión</option>
+                      <option value="mercantil" className="bg-white text-slate-900">Banco Mercantil Santa Cruz</option>
+                      <option value="ganadero" className="bg-white text-slate-900">Banco Ganadero</option>
+                      <option value="economico" className="bg-white text-slate-900">Banco Económico</option>
+                      <option value="bisa" className="bg-white text-slate-900">Banco BISA</option>
+                      <option value="otro" className="bg-white text-slate-900">Otro Banco / QR</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Nombre del Titular</label>
+                    <Input
+                      value={bankAcc.titular}
+                      onChange={(e) => setBankAcc({ ...bankAcc, titular: e.target.value })}
+                      placeholder="Nombre completo"
+                      required
+                    />
+                  </div>
+
+                  {/* Account Number / Phone for QR */}
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Nro de Cuenta o Teléfono (QR)</label>
+                    <Input 
+                      placeholder="Nro de cuenta o celular" 
+                      value={bankAcc.numero_cuenta} 
+                      onChange={(e) => setBankAcc({ ...bankAcc, numero_cuenta: e.target.value })} 
+                      className="bg-[#161926] border-white/5 rounded-2xl h-14"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Tipo de Cuenta</label>
+                      <Input
+                        value={bankAcc.tipo_cuenta}
+                        onChange={(e) => setBankAcc({ ...bankAcc, tipo_cuenta: e.target.value })}
+                        placeholder="Caja de ahorro..."
+                      />
+                    </div>
+                    {/* CI Field */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-2">CI del Titular</label>
+                      <Input 
+                        placeholder="Ej: 70001234" 
+                        value={bankAcc.ci_nit} 
+                        onChange={(e) => setBankAcc({ ...bankAcc, ci_nit: e.target.value })} 
+                        className="bg-white border-slate-300 rounded-2xl h-14 font-black"
+                      />
+                    </div>
+                  </div>
+                </Card>
+
+                <Button 
+                  type="submit" 
+                  loading={loading}
+                  className="w-full h-16 rounded-3xl text-xs font-black tracking-[0.2em]"
+                >
+                  REGISTRAR CUENTA BANCARIA
+                </Button>
+              </form>
+            </motion.div>
+          ) : (
+            /* PASO 3: FORMULARIO DE RETIRO */
+            <div className="space-y-8 animate-fade">
+              {/* Alerta de Horario */}
+              {fueraHorario && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+                  <Card className="p-4 sm:p-5 bg-amber-500/10 border-amber-500/20 flex items-start sm:items-center gap-3 sm:gap-4">
+                    <ClockIcon size={18} className="text-amber-500 shrink-0 mt-0.5 sm:mt-0" />
+                    <p className="text-[9px] sm:text-[10px] text-amber-500 font-black uppercase tracking-widest">{msgHorario || 'Fuera de horario de retiro'}</p>
+                  </Card>
+                </motion.div>
+              )}
+
+              {hasWithdrawalToday && (
+                <Card className="p-4 sm:p-6 border-amber-500/20 bg-amber-500/5 flex items-start sm:items-center gap-3 sm:gap-4">
+                  <ClockIcon size={20} className="text-amber-500 shrink-0 mt-0.5 sm:mt-0" />
+                  <p className="text-[9px] sm:text-[10px] font-black text-amber-500 uppercase tracking-widest leading-relaxed">
+                    Solo puedes realizar 1 retiro por día.
+                  </p>
+                </Card>
+              )}
+
+              {/* Imagen al final y completa */}
+              <div className="w-full rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-white/5">
+                <img src="/imag/retiros.png" alt="Información de Retiros" className="w-full h-auto object-contain" />
+              </div>
+
+              {/* Formulario de Retiro */}
+              {!isAllowedDay && !isInternar && userLevel && (
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+                  <Card variant="flat" className="p-5 sm:p-6 border-amber-500/20 bg-amber-500/10 flex flex-col gap-5">
+                    <div className="flex items-center gap-2 sm:gap-3 text-amber-500">
+                      <ClockIcon size={18} />
+                      <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-widest">Días no permitidos</h3>
+                    </div>
+                    
+                    <div className="bg-white rounded-2xl p-4 border-2 border-amber-200 shadow-sm space-y-3">
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-[9px] font-black text-amber-700 uppercase tracking-widest">Cronograma Semanal</span>
+                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Bolivia Time</span>
+                      </div>
+                      <div className="grid grid-cols-7 gap-1.5">
+                        {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, i) => {
+                          let isAllowed = false;
+                          if (userLevel?.retiro_horario_habilitado) {
+                            const start = Number(userLevel.retiro_dia_inicio);
+                            const end = Number(userLevel.retiro_dia_fin);
+                            if (start <= end) isAllowed = today >= start && today <= end;
+                            else isAllowed = today >= start || today <= end;
+                          } else {
+                            isAllowed = globalAllowedDays.includes(i);
+                          }
+                          const isToday = today === i;
+                          return (
+                            <div key={i} className="flex flex-col items-center gap-1.5">
+                              <span className="text-[9px] font-black text-slate-600">{day}</span>
+                              <div className={cn(
+                                "w-full aspect-square rounded-lg flex items-center justify-center text-[10px] font-black transition-all border-2",
+                                isAllowed 
+                                  ? "bg-indigo-900 text-white border-indigo-900 shadow-md shadow-indigo-100" 
+                                  : "bg-slate-50 text-slate-400 border-slate-100",
+                                isToday && !isAllowed && "border-amber-500 bg-amber-50 text-amber-700"
+                              )}>
+                                {i === 0 ? 7 : i}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              )}
+
+              {isInternar && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                  <Card variant="premium" className="p-6 sm:p-8 border-sav-primary/20 bg-sav-primary/5 flex flex-col items-center gap-4 text-center">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-sav-primary/10 flex items-center justify-center text-sav-primary shadow-inner">
+                      <LockIcon size={28} className="sm:w-[32px] sm:h-[32px]" />
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <h3 className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest">Retiros Deshabilitados</h3>
+                      <p className="text-[9px] sm:text-[10px] font-bold text-sav-muted uppercase tracking-widest leading-relaxed">
+                        Los usuarios en etapa de Pasantía no tienen habilitados los retiros. Esta medida forma parte de nuestras políticas de privacidad y seguridad, para proteger los fondos de la empresa y evitar registros automatizados o usos indebidos. <br/>
+                        Para acceder a retiros, debes estar en un nivel global habilitado.
+                      </p>
+                    </div>
+                    <Button onClick={() => navigate('/vip')} variant="primary" className="mt-2 text-[10px] py-3 h-12 w-full max-w-[200px]">Ver Niveles VIP</Button>
+                  </Card>
+                </motion.div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-8 sm:space-y-10">
+                {/* Origen de Fondos */}
+                <section className="space-y-5 sm:space-y-6">
+                  <div className="flex items-center gap-2 sm:gap-3 px-1">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sav-primary/10 flex items-center justify-center text-sav-primary border border-sav-primary/20 shadow-lg">
+                      <WalletIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
+                    </div>
+                    <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">1. Origen de Fondos</h2>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                    {[
+                      { id: 'principal', label: 'Saldo Principal', val: saldoPrincipal, icon: BanknoteIcon },
+                      { id: 'comisiones', label: 'Billetera Comisiones', val: saldoComisiones, icon: TrendingUpIcon }
+                    ].map(b => {
+                      const Icon = b.icon;
+                      const active = tipoBilletera === b.id;
+                      return (
+                        <Card 
+                          key={b.id}
+                          variant={active ? 'premium' : 'flat'}
+                          className={cn(
+                            "p-4 sm:p-6 flex items-center justify-between cursor-pointer border transition-all duration-500",
+                            active ? "border-sav-primary/40 bg-sav-primary/10 scale-[1.01] sm:scale-[1.02] shadow-xl sm:shadow-2xl" : "border-black/5 bg-white shadow-sm hover:bg-black/5"
+                          )}
+                          onClick={() => setTipoBilletera(b.id)}
+                        >
+                          <div className="flex items-center gap-4 sm:gap-5 min-w-0">
+                            <div className={cn(
+                              "w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-inner shrink-0",
+                              active ? "bg-white/10 text-white" : "bg-sav-primary/5 text-sav-primary"
+                            )}>
+                              <Icon size={20} className="sm:w-[24px] sm:h-[24px]" />
+                            </div>
+                            <div className="space-y-0.5 sm:space-y-1 min-w-0">
+                              <p className={cn("text-[8px] sm:text-[9px] font-black uppercase tracking-widest truncate", active ? "text-white/60" : "text-sav-muted")}>{b.label}</p>
+                              <p className="text-xl sm:text-2xl font-black text-gray-900 tracking-tighter truncate">{b.val.toLocaleString()} <span className="text-[9px] text-gray-400 uppercase">Bs</span></p>
+                            </div>
+                          </div>
+                          <div className={cn(
+                            "w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0", 
+                            active ? "border-white bg-white text-sav-primary" : "border-black/10"
+                          )}>
+                            {active && <CheckIcon size={12} className="sm:w-[14px] sm:h-[14px]" strokeWidth={4} />}
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {/* Monto a Retirar */}
+                <section className="space-y-5 sm:space-y-6">
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sav-accent/10 flex items-center justify-center text-sav-accent border border-sav-accent/20 shadow-lg">
+                        <BanknoteIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
+                      </div>
+                      <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">2. Monto</h2>
+                    </div>
+                    <Badge variant="info" className="bg-slate-100 border-slate-200 text-slate-600 text-[9px] sm:text-[10px] font-black tracking-widest px-2 sm:px-3">Bs</Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                    {montos.map(m => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setMonto(m)}
+                        className={cn(
+                          "h-12 sm:h-16 rounded-xl sm:rounded-[1.5rem] border text-[10px] sm:text-[11px] font-black uppercase tracking-widest transition-all duration-300",
+                          monto === m 
+                            ? "bg-sav-primary border-sav-primary text-white shadow-lg sm:shadow-[0_15px_30px_rgba(220,38,38,0.2)] scale-[1.05]" 
+                            : "bg-white border-black/5 text-sav-muted hover:bg-black/5 shadow-sm"
+                        )}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Selección de Cuenta */}
+                <section className="space-y-5 sm:space-y-6">
+                  <div className="flex items-center gap-2 sm:gap-3 px-1">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20 shadow-lg">
+                      <CreditCardIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
+                    </div>
+                    <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">3. Cuenta Bancaria</h2>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {tarjetas.map(t => {
+                      const active = tarjetaId === t.id;
+                      return (
+                        <Card 
+                          key={t.id}
+                          variant={active ? 'premium' : 'flat'}
+                          className={cn(
+                            "p-4 flex items-center justify-between cursor-pointer border transition-all duration-300",
+                            active ? "border-blue-500/40 bg-blue-500/10" : "bg-white border-black/5 shadow-sm"
+                          )}
+                          onClick={() => setTarjetaId(t.id)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", active ? "bg-white/10 text-white" : "bg-blue-500/10 text-blue-500")}>
+                              <BuildingIcon size={20} />
+                            </div>
+                            <div>
+                              <p className={cn("text-[9px] font-black uppercase tracking-widest", active ? "text-white/60" : "text-sav-muted")}>{t.banco}</p>
+                              <p className="text-sm font-black text-gray-900">{t.numero_cuenta}</p>
+                            </div>
+                          </div>
+                          <div className={cn(
+                            "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all", 
+                            active ? "border-white bg-white text-blue-500" : "border-black/10"
+                          )}>
+                            {active && <CheckIcon size={12} strokeWidth={4} />}
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {/* Comprobante / Imagen */}
+                <section className="space-y-5 sm:space-y-6">
+                  <div className="flex items-center gap-2 sm:gap-3 px-1">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-lg">
+                      <UploadIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
+                    </div>
+                    <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">4. Comprobante</h2>
+                  </div>
+                  
+                  <Card 
+                    variant="outline" 
+                    className={cn(
+                      "p-8 sm:p-10 border-2 border-dashed flex flex-col items-center justify-center text-center gap-4 sm:gap-5 relative overflow-hidden group transition-all duration-500 cursor-pointer",
+                      comprobantePreview ? "border-emerald-500/40 bg-emerald-500/5" : "border-black/10 bg-white hover:border-sav-primary/40 hover:bg-sav-primary/5 shadow-sm"
+                    )}
+                    onClick={() => fileRef.current?.click()}
+                  >
+                    <input type="file" ref={fileRef} className="hidden" onChange={handleFile} accept="image/*" />
+                    {comprobantePreview ? (
+                      <>
+                        <img src={comprobantePreview} className="absolute inset-0 w-full h-full object-cover opacity-20 blur-[2px]" />
+                        <div className="relative z-10 w-24 h-24 rounded-3xl overflow-hidden border-2 border-emerald-500 shadow-2xl">
+                          <img src={comprobantePreview} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="relative z-10 space-y-1">
+                          <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Imagen Cargada</p>
+                          <p className="text-[8px] text-emerald-600 font-bold uppercase tracking-[0.2em] bg-emerald-500/10 px-4 py-1 rounded-full">Cambiar Imagen</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-slate-50 flex items-center justify-center text-sav-muted group-hover:bg-sav-primary group-hover:text-white transition-all duration-500 border border-black/5 shadow-inner">
+                          {isOptimizing ? <LoaderIcon size={28} className="animate-spin" /> : <UploadIcon size={28} />}
+                        </div>
+                        <div className="space-y-1.5 sm:space-y-2">
+                          <p className="text-[10px] sm:text-xs font-black text-sav-muted uppercase tracking-[0.2em] group-hover:text-sav-primary transition-colors">Sube un comprobante</p>
+                          <p className="text-[8px] sm:text-[9px] text-gray-300 font-bold uppercase tracking-[0.3em]">Requisito obligatorio para retiro</p>
+                        </div>
+                      </>
+                    )}
+                  </Card>
+                </section>
+
+                {/* Seguridad Final */}
+                <section className="space-y-5 sm:space-y-6">
+                  <div className="flex items-center gap-2 sm:gap-3 px-1">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-lg">
+                      <LockIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
+                    </div>
+                    <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">5. Confirmación</h2>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <Input
+                      type="password"
+                      placeholder="Contraseña de fondos"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      showPasswordToggle
+                      icon={ShieldCheckIcon}
+                      className="h-14 sm:h-16 rounded-xl sm:rounded-2xl bg-white border-black/5 shadow-sm"
+                    />
+
+                    <div className="px-1 flex items-start gap-3 group cursor-pointer" onClick={() => setHasSignature(!hasSignature)}>
+                      <div className={cn(
+                        "w-5 h-5 rounded border-2 flex items-center justify-center transition-all mt-0.5 shrink-0",
+                        hasSignature ? "bg-sav-primary border-sav-primary text-white" : "border-black/10 bg-white"
+                      )}>
+                        {hasSignature && <CheckIcon size={12} strokeWidth={4} />}
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] sm:text-[10px] font-black text-gray-900 uppercase tracking-widest group-hover:text-sav-primary transition-colors">Autorización de Transacción</p>
+                        <p className="text-[7px] sm:text-[8px] text-sav-muted font-medium uppercase tracking-widest leading-relaxed">Confirmo que los datos son correctos y autorizo el procesamiento.</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <div className="pt-2 sm:pt-4">
+                  <Button 
+                    type="submit" 
+                    loading={loading} 
+                    disabled={!canWithdrawToday || fueraHorario || hasWithdrawalToday || !comprobanteFile || !password || !hasSignature}
+                    className="h-16 sm:h-20 w-full rounded-2xl sm:rounded-[2rem] text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em] shadow-xl active:scale-95 transition-all uppercase font-black"
+                  >
+                    {!canWithdrawToday 
+                      ? 'FUERA DE DÍA ASIGNADO' 
+                      : 'SOLICITAR RETIRO'
+                    }
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
-
-          {hasWithdrawalToday && (
-             <div className="p-5 rounded-3xl bg-amber-50 border border-amber-100 flex items-start gap-4 shadow-sm">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-500 shrink-0">
-                   <AlertCircleIcon size={20} strokeWidth={2.5} />
-                </div>
-                <div>
-                   <h4 className="text-[12px] font-extrabold text-amber-600 uppercase tracking-widest mb-1">Operación Diaria Completa</h4>
-                   <p className="text-[11px] text-amber-500/80 font-bold leading-tight uppercase tracking-tight">Ya has realizado un retiro el día de hoy. El sistema permite una transacción cada 24 horas.</p>
-                </div>
-             </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-10 pb-12">
-            {/* Amount Selection */}
-            <section className="space-y-5">
-              <div className="flex items-center gap-2 px-1">
-                <div className="w-1.5 h-4 bg-sav-primary rounded-full" />
-                <h3 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em]">Monto a Retirar</h3>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                {montos.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setMonto(m)}
-                    className={cn(
-                      "h-14 rounded-2xl font-black text-[15px] transition-all duration-300 shadow-sm",
-                      monto === m 
-                        ? "bg-sav-primary text-white shadow-accent-glow -translate-y-1" 
-                        : "bg-white text-sav-text-main border border-black/[0.03] hover:bg-sav-surface"
-                    )}
-                  >
-                    {m} Bs
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* Wallet Type */}
-            <section className="space-y-5">
-               <div className="flex items-center gap-2 px-1">
-                  <div className="w-1.5 h-4 bg-sav-primary rounded-full" />
-                  <h3 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em]">Origen de Fondos</h3>
-               </div>
-               <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setTipoBilletera('principal')}
-                    className={cn(
-                      "p-5 rounded-3xl border-2 transition-all duration-300 text-left relative overflow-hidden group shadow-sm",
-                      tipoBilletera === 'principal' ? "bg-white border-sav-primary" : "bg-white border-black/[0.03]"
-                    )}
-                  >
-                    <WalletIcon size={20} className={cn("mb-2 transition-colors", tipoBilletera === 'principal' ? "text-sav-primary" : "text-sav-muted")} strokeWidth={2.5} />
-                    <p className="text-[11px] font-extrabold text-sav-text-main uppercase tracking-widest">Capital Principal</p>
-                    {tipoBilletera === 'principal' && <div className="absolute top-2 right-2 w-2 h-2 bg-sav-primary rounded-full" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTipoBilletera('ingresos')}
-                    className={cn(
-                      "p-5 rounded-3xl border-2 transition-all duration-300 text-left relative overflow-hidden group shadow-sm",
-                      tipoBilletera === 'ingresos' ? "bg-white border-emerald-500" : "bg-white border-black/[0.03]"
-                    )}
-                  >
-                    <TrendingUpIcon size={20} className={cn("mb-2 transition-colors", tipoBilletera === 'ingresos' ? "text-emerald-500" : "text-sav-muted")} strokeWidth={2.5} />
-                    <p className="text-[11px] font-extrabold text-sav-text-main uppercase tracking-widest">Billetera Ganancias</p>
-                    {tipoBilletera === 'ingresos' && <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full" />}
-                  </button>
-               </div>
-            </section>
-
-            {/* Account Selection */}
-            <section className="space-y-5">
-               <div className="flex items-center gap-2 px-1">
-                  <div className="w-1.5 h-4 bg-sav-primary rounded-full" />
-                  <h3 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em]">Cuenta de Destino</h3>
-               </div>
-               <div className="space-y-3">
-                 {tarjetas.map((t) => (
-                   <button
-                     key={t.id}
-                     type="button"
-                     onClick={() => setTarjetaId(t.id)}
-                     className={cn(
-                       "w-full p-6 rounded-3xl border-2 flex items-center justify-between transition-all duration-300 shadow-sm",
-                       tarjetaId === t.id ? "bg-white border-sav-primary" : "bg-white border-black/[0.03] hover:bg-sav-surface"
-                     )}
-                   >
-                     <div className="flex items-center gap-4">
-                       <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shadow-sm", tarjetaId === t.id ? "bg-sav-primary text-white" : "bg-sav-surface text-sav-muted")}>
-                          <BuildingIcon size={24} strokeWidth={2} />
-                       </div>
-                       <div className="text-left">
-                         <p className="text-[12px] font-black text-sav-text-main uppercase tracking-tight">{t.nombre_banco || 'BANCO VINCULADO'}</p>
-                         <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest mt-0.5">****{t.numero_masked}</p>
-                       </div>
-                     </div>
-                     {tarjetaId === t.id && <CheckCircleIcon size={20} className="text-sav-primary" strokeWidth={3} />}
-                   </button>
-                 ))}
-               </div>
-            </section>
-
-            {/* Proof Upload */}
-            <section className="space-y-5">
-               <div className="flex items-center gap-2 px-1">
-                  <div className="w-1.5 h-4 bg-sav-primary rounded-full" />
-                  <h3 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em]">Comprobante Institucional</h3>
-               </div>
-               
-               <div 
-                 onClick={() => fileRef.current?.click()}
-                 className={cn(
-                   "relative w-full aspect-[2/1] rounded-[2.5rem] border-2 border-dashed flex flex-col items-center justify-center transition-all duration-500 cursor-pointer overflow-hidden group",
-                   comprobantePreview ? "border-sav-primary" : "border-black/[0.05] bg-sav-surface/50 hover:bg-white hover:border-black/[0.1]"
-                 )}
-               >
-                 {comprobantePreview ? (
-                   <>
-                     <img src={comprobantePreview} className="w-full h-full object-cover" alt="Comprobante" />
-                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <p className="text-[10px] font-black text-white uppercase tracking-widest">Cambiar Imagen</p>
-                     </div>
-                   </>
-                 ) : (
-                   <>
-                     <div className="w-16 h-16 rounded-2xl bg-white shadow-m3-1 flex items-center justify-center text-sav-muted group-hover:text-sav-primary transition-colors mb-4">
-                        <ImageIcon size={32} strokeWidth={1.5} />
-                     </div>
-                     <p className="text-[11px] font-extrabold text-sav-text-main uppercase tracking-widest">Adjuntar Captura</p>
-                     <p className="text-[9px] font-bold text-sav-muted uppercase tracking-tight mt-1">Formato JPG, PNG (Máx 2MB)</p>
-                   </>
-                 )}
-                 {isOptimizing && (
-                   <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-                      <LoaderIcon className="animate-spin text-sav-primary" size={32} />
-                   </div>
-                 )}
-               </div>
-               <input type="file" ref={fileRef} onChange={handleFile} accept="image/*" className="hidden" />
-            </section>
-
-            {/* Security PIN */}
-            <section className="space-y-5">
-               <div className="flex items-center gap-2 px-1">
-                  <div className="w-1.5 h-4 bg-sav-primary rounded-full" />
-                  <h3 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em]">Validación Final</h3>
-               </div>
-               <Input 
-                 label="PIN de Seguridad de Fondos"
-                 type="password"
-                 placeholder="Ingresa tu código de 6 dígitos"
-                 value={password}
-                 onChange={e => setPassword(e.target.value)}
-                 icon={LockIcon}
-                 showPasswordToggle
-               />
-            </section>
-
-            {error && (
-              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-widest text-center">
-                {error}
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              disabled={loading || !sched.ok || hasWithdrawalToday || !comprobanteFile}
-              loading={loading}
-              variant="primary"
-              className="w-full h-18 text-[16px] shadow-accent-glow"
-              icon={ArrowRightIcon}
-            >
-              PROCESAR RETIRO AHORA
-            </Button>
-          </form>
         </main>
       </div>
     </Layout>

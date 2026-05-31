@@ -10,18 +10,17 @@ export function Card({
   ...props 
 }) {
   const variants = {
-    default: 'bg-sav-card border border-black/[0.03] rounded-m3 p-6 sm:p-8 shadow-m3-1 hover:shadow-m3-2 transition-all duration-500',
-    flat: 'bg-sav-surface rounded-m3 p-6 sm:p-8',
-    outline: 'bg-transparent border border-black/[0.05] rounded-m3 p-6 sm:p-8 hover:bg-sav-card transition-colors',
-    premium: 'bg-white rounded-m3-lg p-8 sm:p-10 shadow-m3-3 relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-1.5 before:h-full before:bg-gradient-to-b before:from-sav-primary before:to-sav-accent',
-    glass: 'bg-white/60 backdrop-blur-xl border border-white/40 rounded-m3 p-6 sm:p-8 shadow-m3-2'
+    default: 'bg-white border-2 border-slate-200 rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-xl shadow-slate-200/60',
+    flat: 'bg-slate-50 border-2 border-slate-300 rounded-[1.2rem] sm:rounded-[2rem] p-4 sm:p-6',
+    outline: 'bg-transparent border-2 border-slate-300 rounded-[1.2rem] sm:rounded-[2rem] p-4 sm:p-6',
+    premium: 'bg-white border-2 border-slate-200 rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-xl shadow-slate-200/60 border-t-sav-primary/80'
   };
 
   const Component = animate ? motion.div : 'div';
   const animProps = animate ? {
-    initial: { opacity: 0, y: 12 },
+    initial: { opacity: 0, y: 15 },
     animate: { opacity: 1, y: 0 },
-    transition: { delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+    transition: { delay, duration: 0.4 }
   } : {};
 
   return (
