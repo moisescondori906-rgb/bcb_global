@@ -111,7 +111,7 @@ export default function VIP() {
                       </div>
                       <div className="space-y-0.5">
                         <h3 className="text-base font-black text-sav-primary uppercase tracking-tight">{nivel.nombre}</h3>
-                        <p className="text="[9px] font-black text-sav-muted uppercase tracking-widest">Inversión: {formatBs(nivel.deposito)} Bs</p>
+                        <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Inversión: {formatBs(nivel.deposito)} Bs</p>
                       </div>
                     </div>
                     {esActual && (
