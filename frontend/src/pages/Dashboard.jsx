@@ -475,8 +475,9 @@ export default function Dashboard() {
         </div>
 
         {/* Footer Brand */}
-        <div className="pt-6 pb-4 space-y-4">
-          <img src="/images/institutional-security.png" alt="Seguridad Institucional Garantizada" className="mx-auto w-full h-full object-contain opacity-70" />
+        <div className="h-40 w-full rounded-[2.5rem] bg-slate-950/50 border border-white/5 p-8 flex items-center justify-center relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-sav-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <img src="/imag/logo.webp" alt="Seguridad Institucional Garantizada" className="mx-auto w-full h-full object-contain opacity-70" />
         </div>
       </main>
 

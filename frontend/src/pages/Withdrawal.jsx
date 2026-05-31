@@ -505,7 +505,7 @@ export default function Withdrawal() {
 
               {/* Imagen al final y completa */}
               <div className="w-full rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-white/5">
-                <img src="/imag/retiros.png" alt="Información de Retiros" className="w-full h-auto object-contain" />
+                <img src="/imag/retiros.webp" alt="Información de Retiros" className="w-full h-auto object-contain" />
               </div>
 
               {/* Formulario de Retiro */}

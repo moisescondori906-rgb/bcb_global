@@ -67,7 +67,7 @@ export default function VIP() {
                 {displayLevelCode(user?.nivel_codigo || 'Internar')}
               </h2>
               <div className="w-full mt-6 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-lg bg-white p-2">
-                <img src="/imag/tabla_invercion.png" alt="Tabla de Inversión" className="w-full h-auto object-contain contrast-125 rounded-xl" />
+                <img src="/imag/tabla_invercion.webp" alt="Tabla de Inversión" className="w-full h-auto object-contain contrast-125 rounded-xl" />
               </div>
             </div>
           </Card>
