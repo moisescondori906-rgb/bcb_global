@@ -9,7 +9,6 @@ export const initSocket = (userId) => {
 
   socket = io(SOCKET_URL, {
     query: { userId },
-    transports: ['websocket'],
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
   });

@@ -10,11 +10,19 @@ let io = null;
 export function initSocket(server) {
   io = new Server(server, {
     cors: {
-      origin: "*", // En producción, limitar a los dominios permitidos
-      methods: ["GET", "POST"]
+      origin: (origin, callback) => {
+        // En producción, permitir orígenes específicos o "*"
+        // socket.io v4 con credentials: true requiere un origen específico
+        callback(null, true);
+      },
+      methods: ["GET", "POST"],
+      credentials: true
     },
+    transports: ['polling', 'websocket'], // Asegurar ambos para compatibilidad
+    allowEIO3: true, // Compatibilidad con versiones anteriores si es necesario
     pingTimeout: 60000,
-    pingInterval: 25000
+    pingInterval: 25000,
+    connectTimeout: 45000
   });
 
   io.on('connection', (socket) => {
