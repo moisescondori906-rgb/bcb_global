@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+const isProd = import.meta.env.PROD;
+const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || (isProd ? window.location.origin : 'http://localhost:4000');
 
 let socket = null;
 

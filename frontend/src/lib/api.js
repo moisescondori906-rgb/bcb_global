@@ -6,22 +6,18 @@ const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 // Validación de seguridad en producción: No permitir fallbacks accidentales a localhost
 if (isProd) {
   if (!VITE_API_URL) {
-    const errorMsg = '❌ ERROR CRÍTICO: VITE_API_URL no está configurada en el entorno de producción.';
-    console.error(errorMsg);
-    throw new Error(errorMsg);
+    console.warn('⚠️ VITE_API_URL no está configurada. Usando fallback al origen actual.');
   }
   if (!VITE_BACKEND_URL) {
-    const errorMsg = '❌ ERROR CRÍTICO: VITE_BACKEND_URL no está configurada en el entorno de producción.';
-    console.error(errorMsg);
-    throw new Error(errorMsg);
+    console.warn('⚠️ VITE_BACKEND_URL no está configurada. Usando fallback al origen actual.');
   }
 }
 
-// URL base del API - SOLO permite fallback a localhost en desarrollo
-const API = isProd ? VITE_API_URL : (VITE_API_URL || 'http://localhost:4000/api');
+// URL base del API - Fallback inteligente al origen actual si faltan variables
+const API = VITE_API_URL || (isProd ? `${window.location.origin}/api` : 'http://localhost:4000/api');
 
-// Dominio base del backend para medios (videos/imágenes) - SOLO permite fallback a localhost en desarrollo
-const BACKEND_URL = isProd ? VITE_BACKEND_URL : (VITE_BACKEND_URL || 'http://localhost:4000');
+// Dominio base del backend para medios (videos/imágenes) - Fallback inteligente
+const BACKEND_URL = VITE_BACKEND_URL || (isProd ? window.location.origin : 'http://localhost:4000');
 
 function getToken() {
   return localStorage.getItem('token');
