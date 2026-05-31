@@ -1,42 +1,50 @@
 @import "tailwindcss";
 
 @theme {
-  /* Flutter / Fintech Modern Theme - Material 3 Inspired */
-  --color-sav-primary: #1A237E; /* Indigo 900 - Corporativo Profundo */
-  --color-sav-accent: #C62828;  /* Red 800 - Acento Serio */
-  --color-sav-dark: #F5F7FA;    /* Fondo Limpio App */
-  --color-sav-card: #FFFFFF;    
-  --color-sav-surface: #E8EAF6; /* Indigo 50 */
-  --color-sav-muted: #546E7A;   /* Blue Grey 600 - Texto Secundario */
-  --color-sav-success: #2E7D32; /* Green 800 */
-  --color-sav-error: #D32F2F;   /* Red 700 */
-  --color-sav-border: #D1D9E6;  /* Soft Border */
+  /* 2026 Future Vision - Premium Fintech Theme */
+  --color-sav-primary: #0A0A0B;    /* Obsidian Deep */
+  --color-sav-accent: #3B82F6;     /* Electric Blue */
+  --color-sav-secondary: #8B5CF6;  /* Royal Violet */
+  --color-sav-dark: #000000;       /* Pure Black */
+  --color-sav-card: #121214;       /* Zinc Dark */
+  --color-sav-surface: #1C1C1E;    /* Elevated Surface */
+  --color-sav-muted: #A1A1AA;      /* Zinc 400 */
+  --color-sav-success: #10B981;    /* Emerald 500 */
+  --color-sav-error: #EF4444;      /* Red 500 */
+  --color-sav-border: rgba(255, 255, 255, 0.08);
   
-  /* Radios Discretos Material 3 / Flutter */
-  --radius-m3-sm: 8px;
-  --radius-m3: 12px;
-  --radius-m3-lg: 16px;
+  /* Futuristic Radii */
+  --radius-m3-sm: 10px;
+  --radius-m3: 16px;
+  --radius-m3-lg: 24px;
 
-  /* Sombras Material Design 3 */
-  --shadow-m3-1: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-m3-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-m3-3: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  /* Premium Shadows */
+  --shadow-m3-1: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+  --shadow-m3-2: 0 12px 24px -4px rgba(0, 0, 0, 0.5);
+  --shadow-m3-3: 0 20px 40px -8px rgba(0, 0, 0, 0.6);
+  --shadow-accent-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+  --shadow-violet-glow: 0 0 20px rgba(139, 92, 246, 0.3);
 
-  /* Admin Theme - Premium Dark (Sin cambios solicitados) */
-  --color-admin-bg: #030303;
-  --color-admin-card: #09090b;
-  --color-admin-border: rgba(255, 255, 255, 0.06);
-  --color-admin-accent: #6366f1; /* Indigo 500 */
-  --color-admin-accent-glow: rgba(99, 102, 241, 0.15);
-  --color-admin-text: #fafafa;
-  --color-admin-muted: #71717a;
+  /* Gradients */
+  --bg-gradient-premium: linear-gradient(135deg, #0A0A0B 0%, #121214 100%);
+  --bg-gradient-accent: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+  --bg-gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+
+  /* Admin Theme - Kept for consistency but upgraded */
+  --color-admin-bg: #000000;
+  --color-admin-card: #0A0A0B;
+  --color-admin-border: rgba(255, 255, 255, 0.1);
+  --color-admin-accent: #3B82F6;
+  --color-admin-accent-glow: rgba(59, 130, 246, 0.2);
+  --color-admin-text: #FFFFFF;
+  --color-admin-muted: #71717A;
   --color-admin-surface: #121214;
 
-  --shadow-admin-glow: 0 0 20px rgba(99, 102, 241, 0.1);
-  --shadow-admin-glow-strong: 0 0 40px rgba(99, 102, 241, 0.2);
+  --shadow-admin-glow: 0 0 30px rgba(59, 130, 246, 0.15);
+  --shadow-admin-glow-strong: 0 0 50px rgba(59, 130, 246, 0.25);
   
-  --radius-admin: 1rem;
-  --radius-admin-lg: 1.5rem;
+  --radius-admin: 1.25rem;
+  --radius-admin-lg: 2rem;
 
   --animate-marquee-slow: marquee 40s linear infinite;
   --animate-pulse-subtle: pulse-subtle 3s ease-in-out infinite;
@@ -54,10 +62,52 @@
 
 @layer base {
   html, body {
-    @apply w-full overflow-x-hidden bg-sav-dark;
+    @apply w-full overflow-x-hidden bg-sav-dark text-white;
     height: -webkit-fill-available;
-    color-scheme: light;
+    color-scheme: dark;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
+
+  #root {
+    @apply min-h-screen bg-sav-dark;
+  }
+
+  /* Custom Scrollbar for Modern Feel */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-m3-2;
+  }
+  
+  .premium-gradient {
+    background: var(--bg-gradient-premium);
+  }
+  
+  .accent-gradient {
+    background: var(--bg-gradient-accent);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-sav-accent to-sav-secondary;
+  }
+
+  .btn-premium {
+    @apply relative overflow-hidden px-6 py-3 rounded-m3 font-semibold transition-all duration-300
+           hover:scale-[1.02] active:scale-[0.98] shadow-accent-glow;
+    background: var(--bg-gradient-accent);
+  }
+}
 
   /* Si estamos en el layout de admin, cambiar el color-scheme y forzar texto blanco */
   .admin-layout {

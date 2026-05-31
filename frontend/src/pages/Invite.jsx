@@ -4,21 +4,22 @@ import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { CONFIG } from '../config';
-import { Share2, Copy, Check, Users, Gift, Star, ShieldCheck, Zap, Lock, Info, TrendingUp, AlertCircle, ArrowRight, Trash2 } from 'lucide-react';
+import { Share2, Copy, Check, Users, Gift, Star, ShieldCheck, Zap, Lock, Info, TrendingUp, AlertCircle, ArrowRight, Trash2, User, Loader2 as LoaderIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { displayLevelCode } from '../lib/displayLevel.js';
 import { Card } from '../components/ui/Card.jsx';
 import { Button } from '../components/ui/Button.jsx';
+import { Badge } from '../components/ui/Badge.jsx';
 import { cn } from '../lib/utils/cn';
 
 const GlobalLoader = () => (
   <div className="min-h-screen flex flex-col items-center justify-center bg-sav-dark space-y-6">
     <div className="relative">
-      <div className="w-16 h-16 border-4 border-white/5 border-t-sav-primary rounded-full animate-spin"></div>
-      <div className="absolute inset-0 bg-sav-primary/10 blur-xl rounded-full animate-pulse"></div>
+      <div className="w-16 h-16 border-4 border-white/5 border-t-sav-accent rounded-full animate-spin"></div>
+      <div className="absolute inset-0 bg-sav-accent/10 blur-xl rounded-full animate-pulse"></div>
     </div>
     <div className="text-center">
-      <p className="text-white font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Cargando BCB Global</p>
+      <p className="text-white font-bold uppercase tracking-[0.4em] text-[10px] animate-pulse">Cargando BCB Global</p>
       <p className="text-sav-muted text-[8px] uppercase tracking-widest mt-2">Institutional Grade Platform</p>
     </div>
   </div>
@@ -36,7 +37,6 @@ export default function Invite() {
   const [deletingId, setDeletingId] = useState(null);
 
   const fetchReferrals = async () => {
-    // v12.7.2: Solo mostrar loading si la lista está vacía para evitar parpadeos
     if (referrals.length === 0) setReferralsLoading(true);
     try {
       const res = await api.get(`/users/my-referrals?nivel=${selectedNivel}`);
@@ -50,7 +50,6 @@ export default function Invite() {
 
   useEffect(() => {
     fetchReferrals();
-    // v12.7.1: Actualización silenciosa cada 5 segundos
     const interval = setInterval(fetchReferrals, 5000);
     return () => clearInterval(interval);
   }, [selectedNivel]);
@@ -61,7 +60,7 @@ export default function Invite() {
     setDeletingId(referralId);
     try {
       await api.delete(`/users/my-referrals/${referralId}`);
-      fetchReferrals(); // Recargar lista
+      fetchReferrals();
     } catch (err) {
       alert(err.response?.data?.error || 'Error al eliminar referido');
     } finally {
@@ -79,7 +78,6 @@ export default function Invite() {
     if (!user?.codigo_invitacion) return;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        // [UPDATE] Ahora copia el enlace completo incluso al hacer clic en el código
         await navigator.clipboard.writeText(inviteLink);
         setCopiedCode(true);
         setTimeout(() => setCopiedCode(false), 2000);
@@ -112,28 +110,26 @@ export default function Invite() {
       <Layout>
         <Header title="Invitación Bloqueada" />
         <div className="p-8 text-center space-y-8 flex flex-col items-center justify-center min-h-[70vh] animate-fade">
-          <div className="w-24 h-24 bg-sav-error/5 text-sav-error rounded-[2.5rem] flex items-center justify-center shadow-lg border border-sav-error/10 animate-pulse">
+          <div className="w-24 h-24 bg-sav-error/10 text-sav-error rounded-[2.5rem] flex items-center justify-center shadow-lg border border-sav-error/20 animate-pulse">
             <AlertCircle size={48} strokeWidth={1.5} />
           </div>
-          <div className="space-y-3">
-            <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Acceso Restringido</h2>
-            <p className="text-sm text-slate-500 font-bold leading-relaxed max-w-xs mx-auto">
-              Tu acceso a invitaciones ha sido <span className="text-sav-error uppercase">bloqueado temporalmente</span> como sanción por incumplimiento de tareas obligatorias.
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-white uppercase tracking-tight">Acceso Restringido</h2>
+            <p className="text-sm text-zinc-400 font-medium leading-relaxed max-w-xs mx-auto">
+              Tu acceso a invitaciones ha sido <span className="text-sav-error uppercase">bloqueado temporalmente</span> como sanción por incumplimiento.
             </p>
           </div>
-          <Card className="p-6 bg-amber-50 border-amber-100 text-left w-full shadow-sm">
-            <div className="flex items-center gap-2 mb-3 text-amber-600">
+          <Card className="p-6 bg-amber-500/5 border-amber-500/20 text-left w-full">
+            <div className="flex items-center gap-2 mb-3 text-amber-500">
               <Info size={16} />
-              <p className="text-[10px] font-black uppercase tracking-[0.2em]">Nota Importante</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Nota Importante</p>
             </div>
-            <p className="text-xs text-amber-700/80 leading-relaxed font-bold uppercase tracking-wider">
-              Asegúrate de completar todas tus tareas y cuestionarios diariamente para restaurar tus privilegios de socio.
+            <p className="text-xs text-zinc-500 leading-relaxed font-bold uppercase tracking-wider">
+              Asegúrate de completar todas tus tareas y cuestionarios diariamente para restaurar tus privilegios.
             </p>
           </Card>
           <Link to="/" className="w-full">
-            <Button variant="secondary" className="w-full h-14 rounded-2xl text-[10px] font-black tracking-widest bg-white border-slate-200 text-slate-900 shadow-sm">
-              VOLVER AL PANEL
-            </Button>
+            <Button variant="secondary" className="w-full h-14">VOLVER AL PANEL</Button>
           </Link>
         </div>
       </Layout>
@@ -144,44 +140,44 @@ export default function Invite() {
 
   return (
     <Layout>
-      <Header title="Código de invitación" />
+      <Header title="Programa de Referidos" />
       
-      <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-32 animate-fade">
-        {/* Banner Principal Hero - Tema Claro */}
-        <Card className="relative overflow-hidden p-6 sm:p-10 text-center border-slate-100 bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] sm:rounded-[3rem]">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-sav-primary/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
-          <div className="relative z-10 flex flex-col items-center space-y-4 sm:space-y-6">
-            <div className="relative">
-              <div className="absolute -inset-2 bg-sav-primary/5 blur-md rounded-full animate-pulse" />
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-slate-50 rounded-2xl sm:rounded-[2rem] flex items-center justify-center shadow-sm border border-slate-100">
-                <Users size={28} className="text-sav-primary sm:w-[32px] sm:h-[32px]" />
+      <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-8 pb-32 animate-in">
+        {/* Banner Principal Hero - Premium Style */}
+        <div className="relative group">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-sav-accent to-sav-secondary rounded-m3-lg blur opacity-20 transition duration-1000 group-hover:opacity-40"></div>
+          <Card className="relative p-10 text-center bg-zinc-950/60 backdrop-blur-3xl border border-white/10 rounded-m3-lg overflow-hidden shadow-m3-3">
+            <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-sav-accent/20 rounded-full blur-[60px]" />
+            <div className="relative z-10 flex flex-col items-center space-y-6">
+              <div className="w-20 h-20 rounded-[2.5rem] bg-gradient-to-tr from-sav-accent to-sav-secondary flex items-center justify-center text-white shadow-accent-glow">
+                <Users size={36} strokeWidth={2} />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold uppercase tracking-tight text-white leading-none">¡Invita y Gana!</h2>
+                <div className="h-1 w-12 bg-gradient-to-r from-sav-accent to-sav-secondary rounded-full mx-auto" />
+                <p className="text-[10px] text-sav-muted font-bold uppercase tracking-[0.4em] mt-3">Construye tu red global</p>
               </div>
             </div>
-            <div className="space-y-1 sm:space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter text-slate-900 leading-none">¡Invita y Gana!</h2>
-              <div className="h-1 w-10 sm:w-12 bg-sav-primary/20 rounded-full mx-auto" />
-              <p className="text-[8px] sm:text-[10px] text-slate-400 font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] mt-2">Construye tu equipo hoy</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
 
-        {/* Card de Información de Invitación - Tema Claro */}
-        <Card className="p-6 sm:p-8 space-y-6 sm:space-y-8 bg-white border-2 border-slate-100 shadow-2xl shadow-slate-300/50 rounded-[1.5rem] sm:rounded-[2.5rem]">
-          <div className="space-y-6 sm:space-y-8">
+        {/* Card de Información de Invitación - Glassmorphism */}
+        <Card className="p-8 space-y-8 bg-white/[0.03] border-white/10 shadow-m3-3 rounded-m3-lg">
+          <div className="space-y-8">
             {/* Código de Invitación */}
-            <div className="flex flex-col items-center space-y-3 sm:space-y-4">
-              <span className="text-[10px] sm:text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] sm:tracking-[0.3em]">Copia tu enlace de invitación</span>
-              <div className="flex items-center gap-3 sm:gap-4 w-full">
-                <div className="flex-1 bg-slate-50 py-4 sm:py-5 rounded-xl sm:rounded-[1.5rem] border-2 border-slate-100 text-center shadow-inner group hover:border-sav-primary/30 transition-all min-w-0">
-                  <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-[0.2em] sm:tracking-[0.3em] truncate block px-2">
+            <div className="flex flex-col items-center space-y-4">
+              <span className="text-[11px] font-bold text-sav-muted uppercase tracking-[0.3em]">Tu Código Institucional</span>
+              <div className="flex items-center gap-4 w-full">
+                <div className="flex-1 bg-white/[0.03] py-5 rounded-2xl border border-white/10 text-center shadow-inner group hover:border-sav-accent/30 transition-all min-w-0">
+                  <span className="text-4xl font-bold text-white tracking-[0.3em] truncate block px-2 uppercase">
                     {user?.codigo_invitacion || '------'}
                   </span>
                 </div>
                 <button 
                   onClick={handleCopyCode}
                   className={cn(
-                    "w-14 h-14 sm:w-18 sm:h-18 rounded-2xl sm:rounded-[1.5rem] transition-all duration-300 flex items-center justify-center shadow-lg active:scale-90 shrink-0",
-                    copiedCode ? "bg-emerald-600 text-white shadow-emerald-500/20" : "bg-sav-primary text-white shadow-sav-primary/20"
+                    "w-16 h-16 rounded-2xl transition-all duration-500 flex items-center justify-center shadow-lg active:scale-90 shrink-0",
+                    copiedCode ? "bg-emerald-500 text-white shadow-emerald-500/30" : "bg-sav-accent text-white shadow-accent-glow"
                   )}
                 >
                   {copiedCode ? <Check size={28} /> : <Copy size={28} />}
@@ -189,22 +185,22 @@ export default function Invite() {
               </div>
             </div>
 
-            <div className="h-0.5 bg-slate-100 w-full rounded-full" />
+            <div className="h-px bg-white/5 w-full rounded-full" />
 
             {/* Enlace de Invitación */}
-            <div className="flex flex-col items-center space-y-3 sm:space-y-4">
-              <span className="text-[10px] sm:text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] sm:tracking-[0.3em]">Enlace de acceso directo</span>
-              <div className="flex items-center gap-2 sm:gap-3 w-full bg-slate-50 p-2.5 rounded-xl sm:rounded-2xl border-2 border-slate-100 shadow-inner min-w-0">
-                <div className="flex-1 truncate px-3 sm:px-4">
-                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 tracking-tight truncate block">
+            <div className="flex flex-col items-center space-y-4">
+              <span className="text-[11px] font-bold text-sav-muted uppercase tracking-[0.3em]">Enlace Directo</span>
+              <div className="flex items-center gap-3 w-full bg-white/[0.02] p-3 rounded-2xl border border-white/5 shadow-inner min-w-0">
+                <div className="flex-1 truncate px-4">
+                  <span className="text-[11px] font-bold text-zinc-500 tracking-tight truncate block">
                     {inviteLink}
                   </span>
                 </div>
                 <button 
                   onClick={handleCopyLink}
                   className={cn(
-                    "px-5 sm:px-8 h-11 sm:h-12 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-widest transition-all active:scale-95 shrink-0",
-                    copiedLink ? "bg-emerald-600 text-white shadow-md" : "bg-sav-primary text-white shadow-md hover:brightness-110"
+                    "px-8 h-12 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all active:scale-95 shrink-0 shadow-lg",
+                    copiedLink ? "bg-emerald-500 text-white" : "bg-sav-accent text-white hover:brightness-110"
                   )}
                 >
                   {copiedLink ? 'Copiado' : 'Copiar'}
@@ -212,33 +208,33 @@ export default function Invite() {
               </div>
             </div>
             
-            {/* Imagen al final y completa */}
             <div className="pt-4">
-              <div className="w-full rounded-3xl overflow-hidden border border-slate-100 shadow-sm bg-slate-50">
-                <img src="/imag/referidos.png" alt="Programa de Referidos" className="w-full h-auto object-contain" />
+              <div className="w-full rounded-3xl overflow-hidden border border-white/10 shadow-m3-1 bg-black/40">
+                <img src="/imag/referidos.png" alt="Programa de Referidos" className="w-full h-auto object-contain opacity-80" />
               </div>
             </div>
           </div>
         </Card>
 
         {/* Beneficios - Premium List */}
-        <div className="space-y-4 sm:space-y-5">
-          <h3 className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] sm:tracking-[0.3em] px-1 flex items-center gap-2">
-            <Zap size={14} className="text-sav-primary" /> Beneficios de Red
-          </h3>
-          <div className="grid grid-cols-1 gap-3 sm:gap-4">
+        <div className="space-y-5">
+          <div className="flex items-center gap-2 px-1">
+            <Zap size={16} className="text-sav-accent" />
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">Bonificaciones de Red</h3>
+          </div>
+          <div className="grid grid-cols-1 gap-4">
             {[
-              { icon: Gift, title: 'Bono Invitación (10%)', desc: '10% de la inversión de tus directos.', color: 'text-sav-primary', bg: 'bg-sav-primary/5' },
-              { icon: TrendingUp, title: 'Crecimiento de Red', desc: '3% y 1% por referidos indirectos.', color: 'text-blue-500', bg: 'bg-blue-500/5' },
-              { icon: ShieldCheck, title: 'Seguridad Total', desc: 'Sistema transparente y garantizado.', color: 'text-emerald-500', bg: 'bg-emerald-500/5' }
+              { icon: Gift, title: 'Bono Directo (10%)', desc: 'Comisión inmediata por cada inversión directa.', color: 'text-sav-accent', bg: 'bg-sav-accent/10' },
+              { icon: TrendingUp, title: 'Rendimiento de Equipo', desc: 'Hasta 3% por referidos indirectos.', color: 'text-sav-secondary', bg: 'bg-sav-secondary/10' },
+              { icon: ShieldCheck, title: 'Estatus Verificado', desc: 'Sistema de liquidación instantánea.', color: 'text-emerald-400', bg: 'bg-emerald-500/10' }
             ].map((b, i) => (
-              <Card key={i} className="flex items-center gap-4 sm:gap-5 p-4 sm:p-5 bg-white border-slate-200 group hover:border-sav-primary/20 transition-all duration-500 shadow-xl shadow-slate-200/50 rounded-2xl sm:rounded-[2rem]">
-                <div className={cn("w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 shadow-inner border border-slate-100 transition-transform group-hover:scale-110", b.bg, b.color)}>
-                  <b.icon size={24} className="sm:w-[28px] sm:h-[28px]" />
+              <Card key={i} className="flex items-center gap-5 p-5 bg-white/[0.02] border-white/5 group hover:border-white/10 transition-all duration-500 shadow-m3-2 rounded-[2rem]">
+                <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner border border-white/5 transition-transform group-hover:scale-110", b.bg, b.color)}>
+                  <b.icon size={28} />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-[11px] sm:text-sm font-black text-slate-900 uppercase tracking-wider truncate">{b.title}</h4>
-                  <p className="text-[8px] sm:text-[10px] text-slate-500 font-bold leading-relaxed mt-0.5 sm:mt-1 uppercase tracking-wide truncate sm:whitespace-normal">{b.desc}</p>
+                  <h4 className="text-[12px] font-bold text-white uppercase tracking-wider truncate">{b.title}</h4>
+                  <p className="text-[10px] text-sav-muted font-bold leading-relaxed mt-1 uppercase tracking-wide truncate">{b.desc}</p>
                 </div>
               </Card>
             ))}
@@ -246,124 +242,90 @@ export default function Invite() {
         </div>
 
         {isPasante && (
-          <Card className="p-6 bg-sav-primary/10 border-sav-primary/20 shadow-xl shadow-sav-primary/5 rounded-[2rem] animate-pulse">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-sav-primary/20 flex items-center justify-center text-sav-primary shrink-0">
-                <Star size={24} fill="currentColor" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest">Aviso para Pasantes</h4>
-                <p className="text-[10px] text-sav-muted font-bold uppercase tracking-widest leading-relaxed">
-                  Puedes invitar amigos ahora, pero <span className="text-sav-primary">no recibirás comisiones</span> hasta que subas a un nivel VIP. ¡Sube de nivel para empezar a ganar!
+          <Card className="p-6 bg-sav-accent/10 border-sav-accent/20 shadow-accent-glow rounded-[2rem] animate-pulse">
+            <div className="flex items-start gap-4 text-sav-accent">
+              <Info size={24} className="shrink-0" />
+              <div className="space-y-1">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest">Nivel de Usuario: Pasante</h4>
+                <p className="text-[10px] font-medium leading-relaxed uppercase tracking-tight">
+                  Como Pasante, tus invitaciones son limitadas. Actualiza a un nivel VIP GLOBAL para desbloquear el potencial ilimitado de tu red.
                 </p>
-                <Link to="/vip" className="inline-block pt-2">
-                  <Button variant="outline" className="h-8 px-4 rounded-lg text-[8px] font-black tracking-widest uppercase border-sav-primary/30 text-sav-primary hover:bg-sav-primary hover:text-white transition-all">
-                    SUBIR A VIP AHORA
-                  </Button>
-                </Link>
               </div>
             </div>
           </Card>
         )}
 
-        {/* Sección de Usuarios Registrados */}
-        <div className="space-y-4 sm:space-y-5">
-          <div className="flex flex-col gap-1 px-1">
-            <h3 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em] flex items-center gap-2">
-              <Users size={14} className="text-sav-primary" /> Usuarios registrados
-            </h3>
-            <p className="text-[8px] sm:text-[9px] text-sav-muted font-bold uppercase tracking-widest">
-              Selecciona el nivel de red para ver tus invitados.
-            </p>
+        {/* Sección de Referidos */}
+        <section className="space-y-6 pt-4">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <Users size={16} className="text-sav-accent" />
+              <h3 className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">Mi Equipo de Red</h3>
+            </div>
+            <div className="flex bg-white/[0.03] p-1 rounded-xl border border-white/10">
+              {['A', 'B', 'C'].map(n => (
+                <button
+                  key={n}
+                  onClick={() => setSelectedNivel(n)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all",
+                    selectedNivel === n ? "bg-sav-accent text-white shadow-lg" : "text-zinc-600 hover:text-white"
+                  )}
+                >
+                  NIVEL {n}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Selector de Niveles B y C */}
-          <div className="flex gap-2 px-1">
-            {['A', 'B', 'C'].map((nivel) => (
-              <button
-                key={nivel}
-                onClick={() => setSelectedNivel(nivel)}
-                className={cn(
-                  "flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
-                  selectedNivel === nivel 
-                    ? "bg-sav-primary text-white border-sav-primary shadow-lg shadow-sav-primary/20" 
-                    : "bg-white text-sav-muted border-black/5 hover:border-sav-primary/20"
-                )}
-              >
-                Nivel {nivel}
-              </button>
-            ))}
-          </div>
-
-          <Card className="bg-white border-black/5 shadow-xl shadow-black/5 rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden">
+          <div className="space-y-3">
             {referralsLoading ? (
-              <div className="p-12 flex flex-col items-center justify-center space-y-4">
-                <div className="w-8 h-8 border-4 border-black/5 border-t-sav-primary rounded-full animate-spin"></div>
-                <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest">Cargando invitados...</p>
+              <div className="py-10 flex flex-col items-center justify-center gap-3">
+                <LoaderIcon className="animate-spin text-sav-accent" />
+                <p className="text-[9px] font-bold text-sav-muted uppercase tracking-[0.2em]">Sincronizando red...</p>
               </div>
             ) : referrals.length > 0 ? (
-              <div className="divide-y divide-slate-50 max-h-[400px] overflow-y-auto custom-scrollbar">
-                {referrals.map((ref, idx) => (
-                  <div key={ref.id} className="p-4 sm:p-5 flex items-center justify-between group hover:bg-slate-50/50 transition-all">
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-50 flex items-center justify-center text-sav-primary font-black text-[10px] sm:text-xs shadow-inner group-hover:bg-white transition-all">
-                        {idx + 1}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[11px] sm:text-sm font-black text-gray-900 uppercase tracking-wide truncate max-w-[120px] sm:max-w-none">
-                          {ref.nombre_usuario}
-                        </p>
-                        <p className="text-[9px] sm:text-[10px] font-bold text-sav-primary tracking-widest">
-                          {ref.telefono_masked}
-                        </p>
-                      </div>
+              referrals.map((ref) => (
+                <Card key={ref.id} className="p-5 flex items-center justify-between bg-white/[0.02] border-white/5 hover:bg-white/[0.04] transition-all group">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-zinc-500 group-hover:text-sav-accent transition-colors">
+                      <User size={24} />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-right space-y-1">
-                        <div className="inline-block px-2 py-1 rounded-lg bg-sav-primary/10 border border-sav-primary/20">
-                          <p className="text-[8px] sm:text-[9px] font-black text-sav-primary uppercase tracking-widest">
-                            {ref.nivel}
-                          </p>
-                        </div>
-                        <p className="text-[7px] sm:text-[8px] font-bold text-sav-muted uppercase tracking-tighter">
-                          {new Date(ref.created_at).toLocaleDateString('es-BO', { day: '2-digit', month: '2-digit', year: '2-digit' })}
-                        </p>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h4 className="text-[12px] font-bold text-white uppercase tracking-tight truncate">{ref.nombre_usuario}</h4>
+                        <Badge variant="info" className="text-[8px] py-0 px-1.5">{displayLevelCode(ref.nivel_codigo)}</Badge>
                       </div>
-                      
-                      {selectedNivel === 'A' && ref.nivel_codigo === 'internar' && (
-                        <button
-                          onClick={() => handleDeleteReferral(ref.id)}
-                          disabled={deletingId === ref.id}
-                          className="p-2 text-sav-error hover:bg-sav-error/10 rounded-lg transition-colors disabled:opacity-50"
-                          title="Eliminar usuario Pasante"
-                        >
-                          {deletingId === ref.id ? (
-                            <div className="w-4 h-4 border-2 border-sav-error/20 border-t-sav-error rounded-full animate-spin" />
-                          ) : (
-                            <Trash2 size={16} />
-                          )}
-                        </button>
-                      )}
+                      <p className="text-[10px] font-bold text-sav-muted tracking-widest">{ref.telefono}</p>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="text-right flex items-center gap-3">
+                    <div className="hidden sm:block">
+                      <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest mb-0.5">F. Registro</p>
+                      <p className="text-[10px] font-bold text-white uppercase">{new Date(ref.created_at).toLocaleDateString()}</p>
+                    </div>
+                    {ref.nivel_codigo === 'internar' && (
+                      <button
+                        onClick={() => handleDeleteReferral(ref.id)}
+                        disabled={deletingId === ref.id}
+                        className="p-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all active:scale-90"
+                      >
+                        {deletingId === ref.id ? <LoaderIcon className="animate-spin" size={16} /> : <Trash2 size={16} />}
+                      </button>
+                    )}
+                  </div>
+                </Card>
+              ))
             ) : (
-              <div className="p-12 flex flex-col items-center justify-center text-center space-y-4">
-                <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 flex items-center justify-center text-slate-200">
+              <div className="py-16 text-center space-y-4">
+                <div className="w-16 h-16 rounded-[2rem] bg-white/[0.02] border border-white/5 flex items-center justify-center mx-auto text-zinc-800">
                   <Users size={32} />
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Sin invitados</p>
-                  <p className="text-[8px] font-bold text-sav-muted uppercase tracking-widest leading-relaxed">
-                    Aún no tienes usuarios registrados <br/> con tu código de invitación.
-                  </p>
-                </div>
+                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">No tienes socios en el Nivel {selectedNivel}</p>
               </div>
             )}
-          </Card>
-        </div>
+          </div>
+        </section>
       </div>
     </Layout>
   );
-}

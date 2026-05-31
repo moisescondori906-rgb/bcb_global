@@ -129,8 +129,8 @@ export default function TaskRoom() {
     return (
       <Layout>
         <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] space-y-6">
-          <div className="w-16 h-16 border-4 border-sav-primary/10 border-t-sav-primary rounded-full animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-sav-muted animate-pulse">Sincronizando BCB</p>
+          <div className="w-16 h-16 border-4 border-white/5 border-t-sav-accent rounded-full animate-spin" />
+          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-sav-muted animate-pulse">Sincronizando Sistema</p>
         </div>
       </Layout>
     );
@@ -139,11 +139,10 @@ export default function TaskRoom() {
   if ((error || data?.bloqueado) && !activeTask) {
     const isLevelBlocked = data && !data.tareas_restantes && data.num_tareas_diarias === 0;
     
-    // Determinar el título basado en el mensaje del backend
     let displayTitle = isLevelBlocked ? 'Sube de Nivel' : 'Acceso Restringido';
     let displayMessage = error || data?.mensaje || (isLevelBlocked ? 'Tu nivel actual no tiene tareas disponibles. Adquiere un nivel GLOBAL para comenzar.' : 'Las tareas no están disponibles en este momento.');
     let Icon = ShieldCheck;
-    let iconColor = "bg-amber-500/10 text-amber-500";
+    let iconColor = "bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]";
     let isSunday = false;
 
     const msg = (error || data?.mensaje || '').toLowerCase();
@@ -153,57 +152,41 @@ export default function TaskRoom() {
       displayTitle = 'DOMINGO DE DESCANSO';
       displayMessage = 'Hoy no hay tareas disponibles. En BCB Global también valoramos el descanso. Aprovecha este día para compartir con tu familia, relajarte y disfrutar de un lindo domingo. Las tareas volverán a estar disponibles mañana.';
       Icon = Heart;
-      iconColor = "bg-sav-primary/10 text-sav-primary";
-    } else if (msg.includes('feriado')) {
-      displayTitle = 'Tareas suspendidas';
-    } else if (msg.includes('mantenimiento')) {
-      displayTitle = 'Sistema en mantenimiento';
+      iconColor = "bg-sav-accent/10 text-sav-accent border-sav-accent/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]";
     }
 
     return (
       <Layout>
         <div className="p-6 flex flex-col items-center justify-center min-h-[70vh] text-center space-y-8">
-          <Card variant="premium" className="w-full flex flex-col items-center p-10 space-y-6">
+          <Card className="w-full flex flex-col items-center p-10 space-y-8 bg-zinc-950/60 backdrop-blur-3xl border border-white/10">
             <div className={cn(
-              "w-20 h-20 rounded-3xl flex items-center justify-center shadow-2xl",
+              "w-20 h-20 rounded-[2rem] flex items-center justify-center border transition-all duration-700",
               iconColor
             )}>
-              <Icon size={48} />
+              <Icon size={40} />
             </div>
             <div className="space-y-4">
-              <h2 className={cn(
-                "text-2xl font-black uppercase tracking-tight leading-none",
-                isSunday ? "text-sav-primary" : "text-gray-900"
-              )}>
+              <h2 className="text-2xl font-bold uppercase tracking-tight text-white">
                 {displayTitle}
               </h2>
-              <div className="space-y-4">
-                {isSunday ? (
-                  <>
-                    <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">
-                      Hoy no hay tareas disponibles
-                    </p>
-                    <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest leading-relaxed max-w-[280px] mx-auto">
-                      En BCB Global también valoramos el descanso. Aprovecha este día para compartir con tu familia, relajarte y disfrutar de un lindo domingo.
-                    </p>
-                    <p className="text-[9px] font-black text-sav-primary uppercase tracking-[0.2em]">
-                      Las tareas volverán a estar disponibles mañana.
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest leading-relaxed max-w-[250px]">
-                    {displayMessage}
+              <div className="space-y-4 px-2">
+                <p className="text-sm font-medium text-zinc-400 leading-relaxed">
+                  {displayMessage}
+                </p>
+                {isSunday && (
+                  <p className="text-[10px] font-bold text-sav-accent uppercase tracking-[0.2em] pt-2">
+                    PRÓXIMA ACTUALIZACIÓN: MAÑANA LUNES
                   </p>
                 )}
               </div>
             </div>
-            <Button onClick={() => navigate('/')} variant="outline" className="border-black/5 text-[10px] h-12 uppercase tracking-widest">Volver al Inicio</Button>
+            <Button onClick={() => navigate('/')} variant="secondary" className="w-full h-12 uppercase tracking-widest">Volver al Inicio</Button>
           </Card>
           
           {(data?.bloqueado || isLevelBlocked) && !isSunday && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full">
               <Link to="/vip" className="w-full">
-                <Button variant="primary" className="shadow-sav-glow text-[10px] h-14 uppercase tracking-widest">Mejorar a VIP ahora</Button>
+                <Button variant="primary" className="w-full h-14 shadow-accent-glow uppercase tracking-widest">Adquirir Nivel VIP</Button>
               </Link>
             </motion.div>
           )}
@@ -215,21 +198,21 @@ export default function TaskRoom() {
   if (activeTask) {
     return (
       <Layout>
-        <div className="min-h-screen bg-sav-dark flex flex-col animate-fade pb-10">
-          <header className="px-6 py-6 flex items-center justify-between sticky top-0 z-50 nav-blur">
-            <button onClick={() => setActiveTask(null)} className="p-2 bg-white rounded-xl border border-sav-border text-gray-900">
+        <div className="min-h-screen bg-sav-dark flex flex-col animate-in fade-in duration-500 pb-10">
+          <header className="px-6 py-6 flex items-center justify-between sticky top-0 z-50 bg-sav-dark/40 backdrop-blur-xl border-b border-white/5">
+            <button onClick={() => setActiveTask(null)} className="p-2.5 bg-white/5 rounded-xl border border-white/10 text-white hover:bg-white/10 transition-all">
               <X size={20} />
             </button>
             <div className="text-center">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-sav-muted leading-none mb-1">Campaña Activa</h2>
-              <p className="text-xs font-black text-gray-900 uppercase tracking-tight">{activeTask.nombre}</p>
+              <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-sav-muted leading-none mb-1">Campaña Activa</h2>
+              <p className="text-xs font-bold text-white uppercase tracking-tight">{activeTask.nombre}</p>
             </div>
             <div className="w-10" />
           </header>
 
           <main className="px-5 py-6 space-y-6 flex-1 max-w-[430px] mx-auto w-full">
-            {/* Video Card */}
-            <div className="relative aspect-video rounded-3xl overflow-hidden border border-sav-border bg-black shadow-2xl">
+            {/* Video Card - Premium Look */}
+            <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/10 bg-black shadow-[0_20px_50px_rgba(0,0,0,0.6)] group">
               <video 
                 ref={videoRef}
                 src={api.getMediaUrl(activeTask.video_url)}
@@ -239,67 +222,98 @@ export default function TaskRoom() {
                 autoPlay
               />
               {!surveyVisible && !showResult && (
-                <div className="absolute top-4 right-4 px-3 py-1.5 bg-sav-dark/60 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-sav-primary rounded-full animate-ping" />
-                  <span className="text-xs font-black text-white">{timer}s</span>
+                <div className="absolute top-4 right-4 px-4 py-2 bg-black/60 backdrop-blur-xl rounded-2xl border border-white/10 flex items-center gap-2.5 shadow-xl">
+                  <div className="w-2 h-2 bg-sav-accent rounded-full animate-ping" />
+                  <span className="text-sm font-bold text-white tracking-tighter">{timer}s</span>
+                </div>
+              )}
+              {/* Subtle glass overlay when video finished */}
+              {videoFinished && !surveyVisible && !showResult && (
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-sav-accent text-white flex items-center justify-center animate-bounce shadow-accent-glow">
+                    <Check size={32} strokeWidth={3} />
+                  </div>
                 </div>
               )}
             </div>
 
             <AnimatePresence mode="wait">
               {showResult ? (
-                <Card variant="premium" className="text-center p-10 space-y-6 animate-in">
-                  <div className={cn(
-                    "w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-lg",
-                    isCorrect ? "bg-sav-success/20 text-sav-success" : "bg-sav-error/20 text-sav-error"
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="space-y-6 text-center"
+                >
+                  <Card className={cn(
+                    "p-8 border-none overflow-hidden relative",
+                    isCorrect ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-red-500/10 border border-red-500/20"
                   )}>
-                    {isCorrect ? <Trophy size={40} /> : <AlertCircle size={40} />}
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-black uppercase tracking-tight text-gray-900">
-                      {isCorrect ? '¡Felicidades!' : 'Reintenta'}
-                    </h3>
-                    <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">
-                      {isCorrect ? `Has ganado ${earnedAmount} Bs` : errorMessage}
-                    </p>
-                  </div>
-                  <Button onClick={() => { setActiveTask(null); fetchTasks(); }}>Continuar</Button>
-                </Card>
-              ) : surveyVisible ? (
-                <Card className="p-8 space-y-8 animate-in text-center">
-                  <div className="space-y-4">
-                    <div className="w-16 h-16 bg-sav-success/10 rounded-3xl flex items-center justify-center text-sav-success mx-auto shadow-lg">
-                      <Sparkles size={32} />
+                    <div className={cn(
+                      "w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border transition-all duration-700",
+                      isCorrect ? "bg-emerald-500 text-white shadow-emerald-500/40 border-emerald-400" : "bg-red-500 text-white shadow-red-500/40 border-red-400"
+                    )}>
+                      {isCorrect ? <Trophy size={40} /> : <AlertCircle size={40} />}
                     </div>
+                    
                     <div className="space-y-2">
-                      <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight leading-tight">
-                        Tarea Finalizada
+                      <h3 className="text-2xl font-bold text-white tracking-tight uppercase">
+                        {isCorrect ? '¡Excelente Trabajo!' : 'Ups, algo salió mal'}
                       </h3>
-                      <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">
-                        ¡Has visualizado el contenido con éxito!
+                      <p className="text-sm font-medium text-zinc-400">
+                        {isCorrect ? `Has completado la campaña y generado un beneficio de:` : errorMessage}
                       </p>
+                      {isCorrect && (
+                        <div className="py-4">
+                          <span className="text-4xl font-bold text-emerald-400 tracking-tighter">
+                            +{formatBs(earnedAmount)} Bs
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  </Card>
                   
                   <Button 
-                    onClick={onConfirmResponse} 
-                    loading={isSubmitting} 
-                    className="h-16 shadow-sav-glow text-xs"
+                    onClick={() => { setActiveTask(null); setTimer(10); setSurveyVisible(false); setShowResult(false); }} 
+                    variant="primary" 
+                    className="w-full h-14 uppercase tracking-widest shadow-accent-glow"
                   >
-                    Reclamar Premio
+                    CONTINUAR TAREAS
                   </Button>
-                </Card>
-              ) : (
-                <Card variant="flat" className="p-6 flex items-center gap-4 animate-in">
-                  <div className="w-12 h-12 bg-sav-primary/10 rounded-2xl flex items-center justify-center text-sav-primary animate-pulse">
-                    <Clock size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[10px] font-black text-sav-muted uppercase tracking-widest">Analizando contenido...</p>
-                    <p className="text-xs font-black text-gray-900 uppercase tracking-tight mt-1">Espera {timer} segundos</p>
-                  </div>
-                </Card>
-              )}
+                </motion.div>
+              ) : surveyVisible ? (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-6"
+                >
+                  <Card className="p-8 bg-zinc-900/60 backdrop-blur-3xl border border-white/10 space-y-8">
+                    <div className="text-center space-y-2">
+                      <h3 className="text-xl font-bold text-white tracking-tight uppercase">Confirmar Campaña</h3>
+                      <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest">BCB Global Verification System</p>
+                    </div>
+
+                    <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.05] text-center space-y-4">
+                      <p className="text-sm font-medium text-white leading-relaxed">
+                        ¿Has visualizado correctamente el contenido publicitario de esta campaña para proceder con el cobro de tu comisión?
+                      </p>
+                      <div className="flex items-center justify-center gap-2 text-sav-accent">
+                        <ShieldCheck size={18} />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Verificación Biométrica</span>
+                      </div>
+                    </div>
+
+                    <Button 
+                      loading={isSubmitting}
+                      onClick={onConfirmResponse}
+                      variant="primary"
+                      className="w-full h-14 uppercase tracking-widest shadow-accent-glow"
+                      icon={Check}
+                    >
+                      CONFIRMAR COBRO
+                    </Button>
+                  </Card>
+                </motion.div>
+              ) : null}
             </AnimatePresence>
           </main>
         </div>
@@ -307,111 +321,95 @@ export default function TaskRoom() {
     );
   }
 
-  const currentLevel = niveles.find(n => String(n.id) === String(user?.nivel_id));
-  const taskReward = Number(data?.ganancia_tarea || currentLevel?.ganancia_tarea || 0);
-  const tareasCompletadas = Number(data?.tareas_completadas || 0);
-  const tareasRestantes = Number(data?.tareas_restantes || 0);
-  const totalDiarias = Number(data?.num_tareas_diarias || currentLevel?.num_tareas_diarias || (tareasCompletadas + tareasRestantes));
-  const progress = totalDiarias > 0 ? (tareasCompletadas / totalDiarias) * 100 : 0;
-
-  if (!data && !loading) {
-    return (
-      <Layout>
-        <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] text-center space-y-4">
-          <AlertCircle size={48} className="text-sav-muted" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-sav-muted">No se pudo cargar la información de tareas</p>
-          <Button onClick={fetchTasks} variant="outline" size="sm">Reintentar</Button>
-        </div>
-      </Layout>
-    );
-  }
+  const formatBs = (val) => Number(val || 0).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <Layout>
-      <header className="px-6 py-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-black text-sav-primary uppercase tracking-tighter leading-none">Tareas</h1>
-          <div className="px-3 py-1.5 rounded-m3-sm bg-sav-surface border border-sav-border text-sav-primary text-[10px] font-black uppercase tracking-widest">
-            {data?.nivel || 'Cargando...'}
+      <div className="min-h-screen pb-32">
+        <header className="px-6 py-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-white tracking-tight uppercase">Sala de <span className="text-gradient">Tareas</span></h1>
+            <Badge variant="info" className="py-1">LIVE</Badge>
           </div>
-        </div>
-        
-        <Card className="p-6 space-y-4 bg-white border-sav-border shadow-m3-2">
-          <div className="flex justify-between items-end">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black text-sav-muted uppercase tracking-widest">Progreso Diario</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-sav-primary tracking-tighter">{tareasCompletadas}</span>
-                <span className="text-xs font-bold text-sav-muted uppercase tracking-widest">/ {totalDiarias}</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-[10px] font-black text-sav-primary uppercase tracking-[0.2em]">{Math.round(progress)}%</span>
-            </div>
-          </div>
-          <div className="h-2.5 bg-sav-surface rounded-full overflow-hidden border border-sav-border/50">
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              className="h-full bg-sav-primary shadow-sm" 
-            />
-          </div>
-        </Card>
-      </header>
 
-      <main className="px-5 space-y-4 pb-12">
-        <div className="flex items-center gap-2 px-1 mb-2">
-          <Target size={16} className="text-sav-primary" />
-          <h2 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em]">Tareas Disponibles</h2>
-        </div>
+          {/* Metrics Summary - Modern Style */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/[0.02] border border-white/[0.05] rounded-m3 p-5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <ClipboardList size={40} className="text-sav-accent" />
+              </div>
+              <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.2em] mb-1">Restantes</p>
+              <p className="text-2xl font-bold text-white tracking-tight">
+                {data?.tareas_restantes || 0}
+              </p>
+            </div>
+            <div className="bg-white/[0.02] border border-white/[0.05] rounded-m3 p-5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <TrendingUp size={40} className="text-emerald-500" />
+              </div>
+              <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.2em] mb-1">Comisión Hoy</p>
+              <p className="text-2xl font-bold text-emerald-400 tracking-tight">
+                +{formatBs(data?.ganancia_hoy || 0)}
+              </p>
+            </div>
+          </div>
+        </header>
 
-        <div className="grid grid-cols-1 gap-4">
-          {data?.tareas?.map((t, i) => (
-            <Card 
-              key={`${t.id}-${i}`}
-              className={cn(
-                "p-4 flex items-center gap-5 bg-white border-sav-border shadow-m3-1 active:scale-[0.98] transition-all cursor-pointer group",
-                data.tareas_restantes <= 0 && "opacity-60 grayscale"
-              )}
-              onClick={() => startTask(t)}
-            >
-              <div className="relative w-16 h-16 rounded-m3 overflow-hidden border border-sav-border shrink-0 bg-sav-primary/10">
-                <video 
-                  src={`${api.getMediaUrl(t.video_url)}#t=0.1`} 
-                  className="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-700"
-                  muted
-                  playsInline
-                  preload="metadata"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Play size={20} className="text-white fill-white shadow-sm" />
+        <main className="px-5 space-y-6">
+          <div className="flex items-center gap-2 px-1">
+            <Sparkles size={16} className="text-sav-accent" />
+            <h2 className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">Campañas Disponibles</h2>
+          </div>
+
+          <div className="grid gap-6">
+            {data?.tareas?.map((task) => (
+              <Card 
+                key={task.id} 
+                className="p-6 bg-white/[0.03] border-white/10 hover:border-white/20 transition-all duration-300 group overflow-hidden relative"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-sav-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-2xl bg-black border border-white/10 overflow-hidden relative shrink-0">
+                    <img src={api.getMediaUrl(task.video_url)} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all" />
+                    <div className="absolute inset-0 flex items-center justify-center text-white/40 group-hover:text-sav-accent transition-colors">
+                      <Play size={20} fill="currentColor" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="muted" className="text-[8px] py-0.5">VIP GLOBAL</Badge>
+                      <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">+{formatBs(task.comision || data?.ganancia_tarea)} Bs</span>
+                    </div>
+                    <h3 className="text-sm font-bold text-white truncate uppercase tracking-wide group-hover:text-sav-accent transition-colors">
+                      {task.nombre}
+                    </h3>
+                    <p className="text-[10px] text-zinc-500 truncate mt-0.5">Campaña Publicitaria 2026</p>
+                  </div>
+                  
+                  <Button 
+                    onClick={() => startTask(task)}
+                    variant="primary" 
+                    className="w-12 h-12 rounded-xl p-0 shrink-0 shadow-accent-glow"
+                  >
+                    <ArrowRight size={20} />
+                  </Button>
                 </div>
-              </div>
-              
-              <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[9px] font-black text-sav-primary uppercase tracking-widest bg-sav-surface px-2 py-0.5 rounded-m3-sm border border-sav-primary/10">Video AD</span>
-                  <span className="text-sm font-black text-sav-success">+{ (taskReward || 0).toFixed(2) } Bs</span>
-                </div>
-                <h3 className="text-[13px] font-black text-sav-primary uppercase tracking-tight truncate">{t.nombre}</h3>
-                <div className="flex items-center gap-3">
-                   <p className="text-[9px] text-sav-muted font-bold uppercase tracking-widest flex items-center gap-1">
-                    <Clock size={10} /> 10s
-                  </p>
-                </div>
-              </div>
-              <ChevronRight size={18} className="text-sav-border group-hover:text-sav-primary transition-colors" />
-            </Card>
-          ))}
+              </Card>
+            ))}
+          </div>
           
           {(!data?.tareas || data.tareas.length === 0) && (
-            <div className="py-20 flex flex-col items-center justify-center text-center space-y-4 opacity-50">
-              <ClipboardList size={48} className="text-sav-muted" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-sav-muted">No hay tareas pendientes por hoy</p>
+            <div className="py-20 text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto text-zinc-700">
+                <Target size={32} />
+              </div>
+              <p className="text-xs font-medium text-zinc-500 uppercase tracking-[0.2em]">No hay más tareas por hoy</p>
             </div>
           )}
-        </div>
-      </main>
+        </main>
+      </div>
     </Layout>
   );
 

@@ -10,29 +10,28 @@ export function Button({
   ...props 
 }) {
   const variants = {
-    primary: 'h-12 sm:h-13 w-full flex items-center justify-center gap-2.5 rounded-m3 bg-sav-primary text-white font-black text-[13px] sm:text-[14px] uppercase tracking-[0.08em] transition-all shadow-m3-2 hover:shadow-m3-3 active:translate-y-0.5 hover:brightness-110',
-    secondary: 'h-12 sm:h-13 w-full flex items-center justify-center gap-2.5 rounded-m3 bg-white border-2 border-sav-border text-sav-primary font-black text-[13px] sm:text-[14px] uppercase tracking-[0.08em] transition-all shadow-m3-1 hover:bg-sav-surface',
-    ghost: 'bg-transparent hover:bg-sav-primary/10 text-sav-primary font-black px-5 py-2.5 text-[13px] sm:text-[14px] uppercase tracking-[0.1em] rounded-m3-sm',
-    danger: 'h-12 sm:h-13 w-full flex items-center justify-center gap-2.5 rounded-m3 bg-sav-error text-white font-black text-[13px] sm:text-[14px] uppercase tracking-[0.08em] shadow-m3-2 hover:brightness-110'
+    primary: 'bg-gradient-to-r from-sav-accent to-sav-secondary text-white shadow-accent-glow hover:shadow-[0_0_30px_rgba(59,130,246,0.4)]',
+    secondary: 'bg-white/5 border border-white/10 text-white hover:bg-white/10 backdrop-blur-md',
+    ghost: 'bg-transparent hover:bg-white/5 text-sav-muted hover:text-white',
+    danger: 'bg-gradient-to-r from-sav-error to-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]'
   };
 
   return (
     <button
       className={cn(
-        'relative overflow-hidden font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2',
+        'h-12 sm:h-13 px-6 rounded-m3 flex items-center justify-center gap-2.5 font-bold text-[13px] sm:text-[14px] uppercase tracking-[0.1em] transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none',
         variants[variant],
-        loading && 'opacity-70 pointer-events-none',
-        disabled && 'opacity-50 pointer-events-none',
+        loading && 'opacity-70',
         className
       )}
       disabled={disabled || loading}
       {...props}
     >
       {loading ? (
-        <div className="w-5 h-5 border-2 border-sav-primary/30 border-t-sav-primary rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
       ) : (
         <>
-          {Icon && <Icon size={20} />}
+          {Icon && <Icon size={18} className="transition-transform group-hover:scale-110" />}
           {children}
         </>
       )}

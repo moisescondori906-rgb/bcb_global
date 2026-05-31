@@ -19,23 +19,23 @@ export default function Header({ title, rightAction, backTo, transparent = false
 
   return (
     <header className={cn(
-      "sticky top-0 z-50 flex items-center justify-between px-6 py-5 transition-all duration-300",
-      transparent ? "bg-transparent" : "bg-sav-dark/80 backdrop-blur-2xl border-b border-white/5 shadow-2xl shadow-black/50"
+      "sticky top-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300",
+      transparent ? "bg-transparent" : "bg-sav-dark/40 backdrop-blur-xl border-b border-white/[0.05]"
     )}>
       <div className="flex items-center gap-4 min-w-0 flex-1">
         <button
           type="button"
           onClick={handleBack}
-          className="group flex items-center justify-center w-10 h-10 rounded-2xl bg-white/5 border border-white/5 text-sav-primary active:scale-90 transition-all hover:bg-sav-primary/20 hover:border-sav-primary/30 shadow-lg"
+          className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white active:scale-90 transition-all hover:bg-white/10 shadow-m3-1"
         >
-          <ChevronLeft size={22} className="group-hover:-translate-x-0.5 transition-transform" />
+          <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
         </button>
         
         <div className="flex flex-col min-w-0">
-          <h1 className="font-black text-slate-900 text-sm uppercase tracking-[0.2em] truncate drop-shadow-sm">
+          <h1 className="font-bold text-white text-[13px] uppercase tracking-[0.2em] truncate">
             {title}
           </h1>
-          <div className="h-0.5 w-6 bg-sav-primary/50 rounded-full mt-1" />
+          <div className="h-1 w-8 bg-gradient-to-r from-sav-accent to-sav-secondary rounded-full mt-1 opacity-80" />
         </div>
       </div>
       

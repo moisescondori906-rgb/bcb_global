@@ -82,17 +82,17 @@ export default function Movimientos() {
 
   const getStatusBadge = (estado) => {
     const e = String(estado || '').toLowerCase();
-    if (['aprobada', 'aprobado', 'completado', 'pagado'].includes(e)) return <Badge variant="success" icon={CheckCircle2}>COMPLETADO</Badge>;
-    if (['rechazada', 'rechazado', 'error'].includes(e)) return <Badge variant="error" icon={XCircle}>RECHAZADO</Badge>;
-    return <Badge variant="warning" icon={Loader2} className="animate-pulse">PENDIENTE</Badge>;
+    if (['aprobada', 'aprobado', 'completado', 'pagado'].includes(e)) return <Badge variant="success">COMPLETADO</Badge>;
+    if (['rechazada', 'rechazado', 'error'].includes(e)) return <Badge variant="error">RECHAZADO</Badge>;
+    return <Badge variant="warning" className="animate-pulse">PENDIENTE</Badge>;
   };
 
   if (loading && combinedItems.length === 0) {
     return (
       <Layout>
         <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] space-y-6">
-          <div className="w-16 h-16 border-4 border-sav-primary/10 border-t-sav-primary rounded-full animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-sav-muted animate-pulse">Cargando Historial</p>
+          <div className="w-16 h-16 border-4 border-white/5 border-t-sav-accent rounded-full animate-spin" />
+          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-sav-muted animate-pulse">Cargando Historial</p>
         </div>
       </Layout>
     );
@@ -100,15 +100,13 @@ export default function Movimientos() {
 
   return (
     <Layout>
-      <header className="px-6 py-8 space-y-6">
+      <header className="px-6 py-8 space-y-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-black text-sav-primary uppercase tracking-tighter leading-none">Movimientos</h1>
-          <div className="px-2 py-1 rounded-m3-sm bg-sav-surface border border-sav-border text-sav-primary text-[9px] font-black uppercase tracking-widest">
-            HISTORIAL
-          </div>
+          <h1 className="text-2xl font-bold text-white tracking-tight uppercase">Historial de <span className="text-gradient">Movimientos</span></h1>
+          <Badge variant="info">TRANSACCIONAL</Badge>
         </div>
 
-        <div className="flex bg-white p-1.5 rounded-m3 border border-sav-border shadow-m3-1">
+        <div className="flex p-1.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl gap-2">
           {[
             { id: 'todo', label: 'Todos', icon: History },
             { id: 'recargas', label: 'Recargas', icon: ArrowUpCircle },
@@ -118,75 +116,80 @@ export default function Movimientos() {
               key={t.id}
               onClick={() => setTab(t.id)}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-m3 text-[9px] font-black uppercase tracking-widest transition-all",
+                "flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300",
                 tab === t.id 
-                  ? "bg-sav-primary text-white shadow-m3-2 scale-[1.02]" 
-                  : "text-sav-muted hover:bg-sav-surface"
+                  ? "bg-white/[0.07] border border-white/10 shadow-lg text-white" 
+                  : "text-zinc-500 hover:text-white"
               )}
             >
-              <t.icon size={16} />
+              <t.icon size={18} />
               <span>{t.label}</span>
             </button>
           ))}
         </div>
       </header>
 
-      <main className="px-5 space-y-4 pb-12">
+      <main className="px-5 space-y-4 pb-32">
         <AnimatePresence mode="popLayout">
           {filteredItems.map((item, i) => {
             const isRecarga = item.tipo_visual === 'recarga';
             return (
-              <Card 
-                key={item.id} 
-                className="p-5 flex items-center gap-5 bg-white border-sav-border shadow-m3-1 group"
+              <motion.div
+                layout
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
               >
-                <div className={cn(
-                  "w-12 h-12 rounded-m3 flex items-center justify-center border shadow-m3-1 shrink-0",
-                  isRecarga ? "bg-emerald-50 border-emerald-100 text-emerald-600" : "bg-sav-surface border-sav-border text-sav-primary"
-                )}>
-                  {isRecarga ? <ArrowUpCircle size={24} /> : <ArrowDownCircle size={24} />}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="min-w-0">
-                      <h4 className="text-[12px] font-black text-sav-primary uppercase tracking-tight truncate leading-none mb-1">
-                        {isRecarga ? 'Recarga de Saldo' : 'Retiro de Capital'}
-                      </h4>
-                      <p className="text-[9px] text-sav-muted font-bold tracking-widest uppercase">
-                        Ref: {item.id?.slice(0, 8).toUpperCase()}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className={cn(
-                        "text-lg font-black tracking-tight leading-none mb-1",
-                        isRecarga ? "text-emerald-600" : "text-sav-primary"
-                      )}>
-                        {isRecarga ? '+' : '-'}{Number(item.monto).toLocaleString()}
-                      </p>
-                      <span className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Bs</span>
-                    </div>
+                <Card className="p-5 flex items-center gap-5 bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all group">
+                  <div className={cn(
+                    "w-14 h-14 rounded-2xl flex items-center justify-center border shadow-m3-1 shrink-0 transition-colors",
+                    isRecarga ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-sav-accent/10 border-sav-accent/20 text-sav-accent"
+                  )}>
+                    {isRecarga ? <ArrowUpCircle size={28} /> : <ArrowDownCircle size={28} />}
                   </div>
 
-                  <div className="flex justify-between items-center pt-3 border-t border-sav-border/30">
-                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-sav-muted uppercase tracking-widest">
-                      <Clock size={12} />
-                      {formatDate(item.created_at)}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="min-w-0">
+                        <h4 className="text-[13px] font-bold text-white uppercase tracking-tight truncate mb-1">
+                          {isRecarga ? 'Recarga de Saldo' : 'Retiro de Capital'}
+                        </h4>
+                        <p className="text-[9px] text-zinc-600 font-bold tracking-widest uppercase">
+                          Ref: {item.id?.slice(0, 8).toUpperCase()}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={cn(
+                          "text-xl font-bold tracking-tighter mb-1",
+                          isRecarga ? "text-emerald-400" : "text-white"
+                        )}>
+                          {isRecarga ? '+' : '-'}{Number(item.monto).toLocaleString()}
+                        </p>
+                        <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Bs</span>
+                      </div>
                     </div>
-                    {getStatusBadge(item.estado)}
+
+                    <div className="flex justify-between items-center pt-4 border-t border-white/5">
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                        <Clock size={12} className="text-zinc-600" />
+                        {formatDate(item.created_at)}
+                      </div>
+                      {getStatusBadge(item.estado)}
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             );
           })}
         </AnimatePresence>
 
         {filteredItems.length === 0 && !loading && (
-          <div className="py-24 flex flex-col items-center justify-center text-center space-y-4 opacity-50">
-            <div className="w-16 h-16 rounded-full bg-sav-surface flex items-center justify-center text-sav-muted">
-              <FileText size={32} />
+          <div className="py-24 flex flex-col items-center justify-center text-center space-y-6 opacity-40">
+            <div className="w-20 h-20 rounded-[2.5rem] bg-white/[0.02] border border-white/5 flex items-center justify-center text-zinc-800">
+              <FileText size={40} />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-sav-muted">No se encontraron movimientos</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-600">No se encontraron movimientos</p>
           </div>
         )}
       </main>

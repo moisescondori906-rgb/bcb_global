@@ -10,10 +10,10 @@ const toastIcons = {
 };
 
 const toastStyles = {
-  success: 'bg-[#060606]/80 backdrop-blur-xl text-emerald-500 border-emerald-500/20 shadow-emerald-500/5',
-  error: 'bg-[#060606]/80 backdrop-blur-xl text-rose-500 border-rose-500/20 shadow-rose-500/5',
-  warning: 'bg-[#060606]/80 backdrop-blur-xl text-amber-500 border-amber-500/20 shadow-amber-500/5',
-  info: 'bg-[#060606]/80 backdrop-blur-xl text-admin-accent border-admin-accent/20 shadow-admin-accent/5',
+  success: 'bg-zinc-950/80 backdrop-blur-2xl text-emerald-400 border-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.15)]',
+  error: 'bg-zinc-950/80 backdrop-blur-2xl text-rose-400 border-rose-500/20 shadow-[0_0_40px_rgba(244,63,94,0.15)]',
+  warning: 'bg-zinc-950/80 backdrop-blur-2xl text-amber-400 border-amber-500/20 shadow-[0_0_40px_rgba(245,158,11,0.15)]',
+  info: 'bg-zinc-950/80 backdrop-blur-2xl text-sav-accent border-sav-accent/20 shadow-[0_0_40px_rgba(59,130,246,0.15)]',
 };
 
 export function ToastProvider({ children }) {
@@ -44,26 +44,26 @@ export function ToastProvider({ children }) {
             <div
               key={toast.id}
               className={cn(
-                "flex items-center gap-4 px-6 py-5 rounded-[2rem] border shadow-2xl min-w-[320px] max-w-[450px] pointer-events-auto",
+                "flex items-center gap-4 px-6 py-4 rounded-[1.5rem] border shadow-2xl min-w-[320px] max-w-[450px] pointer-events-auto",
                 "animate-in slide-in-from-right-5 fade-in duration-500",
                 toastStyles[toast.type]
               )}
             >
               <div className={cn(
-                "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border",
+                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border",
                 toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20' :
                 toast.type === 'error' ? 'bg-rose-500/10 border-rose-500/20' :
                 toast.type === 'warning' ? 'bg-amber-500/10 border-amber-500/20' :
-                'bg-admin-accent/10 border-admin-accent/20'
+                'bg-sav-accent/10 border-sav-accent/20'
               )}>
                 <Icon size={20} strokeWidth={2.5} />
               </div>
-              <p className="flex-1 text-[11px] font-black uppercase tracking-widest leading-relaxed">{toast.message}</p>
+              <p className="flex-1 text-[12px] font-bold tracking-wide leading-relaxed">{toast.message}</p>
               <button
                 onClick={() => removeToast(toast.id)}
-                className="p-2 hover:bg-white/5 rounded-xl transition-colors text-zinc-500 hover:text-white"
+                className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-500 hover:text-white"
               >
-                <X size={16} strokeWidth={3} />
+                <X size={16} strokeWidth={2.5} />
               </button>
             </div>
           );

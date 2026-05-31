@@ -15,30 +15,36 @@ export default function GlobalLoader() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-sav-dark space-y-6 p-6 text-center">
-      <div className="relative">
-        <div className="w-16 h-16 border-4 border-white/5 border-t-sav-primary rounded-full animate-spin"></div>
-        <div className="absolute inset-0 bg-sav-primary/20 blur-xl rounded-full animate-pulse"></div>
-      </div>
-      <div className="text-center space-y-4">
-        <div>
-          <p className="text-white font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Cargando BCB Global</p>
-          <p className="text-sav-muted text-[8px] uppercase tracking-widest mt-2">Institutional Grade Platform</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-sav-dark space-y-8 p-6 text-center relative overflow-hidden">
+      {/* Premium Ambient Background */}
+      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-sav-accent/10 rounded-full blur-[120px]" />
+      
+      <div className="relative z-10">
+        <div className="relative mb-8">
+          <div className="w-20 h-20 border-4 border-white/5 border-t-sav-accent rounded-full animate-spin"></div>
+          <div className="absolute inset-0 bg-sav-accent/20 blur-2xl rounded-full animate-pulse"></div>
         </div>
         
-        {showError && (
-          <div className="animate-fade-in space-y-4 max-w-xs mx-auto pt-4">
-            <p className="text-rose-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">
-              El servidor está tardando más de lo esperado en responder.
-            </p>
-            <button 
-              onClick={handleRetry}
-              className="px-6 py-3 rounded-xl bg-white/10 text-white text-[9px] font-black uppercase tracking-[0.2em] border border-white/10 active:scale-95 transition-all hover:bg-white/20"
-            >
-              Reintentar Conexión
-            </button>
+        <div className="space-y-4">
+          <div>
+            <p className="text-white font-bold uppercase tracking-[0.4em] text-[11px] animate-pulse">Sincronizando Sistema</p>
+            <p className="text-sav-muted text-[9px] font-medium uppercase tracking-[0.2em] mt-2 opacity-60">BCB Global Tech 2026</p>
           </div>
-        )}
+          
+          {showError && (
+            <div className="animate-in fade-in slide-in-from-top-2 space-y-4 max-w-xs mx-auto pt-6">
+              <p className="text-red-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed px-4">
+                La conexión está tardando más de lo habitual. Por favor, verifica tu red.
+              </p>
+              <button 
+                onClick={handleRetry}
+                className="px-8 py-3.5 rounded-xl bg-white/5 text-white text-[10px] font-bold uppercase tracking-[0.2em] border border-white/10 active:scale-95 transition-all hover:bg-white/10 shadow-lg"
+              >
+                REINTENTAR ACCESO
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

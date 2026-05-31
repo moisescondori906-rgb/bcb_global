@@ -160,78 +160,99 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <main className="px-4 sm:px-6 space-y-6 pb-12 pt-6 animate-in">
-        {/* Header Section - Modern & Clean */}
-        <header className="flex items-center justify-between py-2 px-1">
+      <main className="px-4 sm:px-6 space-y-8 pb-12 pt-6 animate-in">
+        {/* Header Section - Ultra Modern */}
+        <header className="flex items-center justify-between py-2">
           <div className="flex flex-col">
-            <p className="text-[10px] font-black text-sav-muted uppercase tracking-[0.15em] leading-none mb-1">Bienvenido de nuevo</p>
-            <h1 className="text-2xl font-black text-sav-primary uppercase tracking-tight leading-none">
-              {user?.nombre_usuario || 'BCB GLOBAL'}
+            <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.2em] mb-1">Status Actual</p>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Hola, <span className="text-gradient">{user?.nombre_usuario || 'BCB GLOBAL'}</span>
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/mensajes" className="relative p-2.5 rounded-m3 bg-white border border-sav-border shadow-m3-1 hover:bg-sav-surface transition-colors">
-              <BellIcon size={22} className="text-sav-primary" />
-              <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-sav-accent rounded-full border-2 border-white shadow-sm" />
+            <Link to="/mensajes" className="relative w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all shadow-m3-1">
+              <BellIcon size={20} className="text-white" />
+              <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-sav-accent rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
             </Link>
           </div>
         </header>
 
         {/* Banner Section */}
-        <div className="rounded-m3-lg overflow-hidden shadow-m3-2 border border-sav-border/30">
+        <div className="rounded-m3-lg overflow-hidden shadow-m3-3 border border-white/5">
           <BannerCarousel banners={pc?.banners || []} />
         </div>
 
-        {/* Main Wallet Card - Flutter Fintech Style */}
-        <Card className="bg-sav-primary border-none p-6 sm:p-8 relative overflow-hidden group shadow-m3-3">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12 blur-xl" />
-          
-          <div className="relative z-10 space-y-6">
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <p className="text-[11px] font-black text-white/70 uppercase tracking-[0.2em]">Balance de Capital</p>
-                <p className="text-4xl sm:text-5xl font-black text-white tracking-tighter">
-                  {formatCurrency(user?.saldo_principal || 0, 'Bs').trim()}
-                </p>
+        {/* Main Wallet Card - Premium 2026 Style */}
+        <div className="relative group perspective-1000">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-sav-accent to-sav-secondary rounded-m3-lg blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+          <Card className="relative bg-zinc-950/60 backdrop-blur-3xl border border-white/10 p-7 sm:p-9 overflow-hidden shadow-m3-3">
+            {/* Animated background elements */}
+            <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-sav-accent/20 rounded-full blur-[80px] animate-pulse" />
+            <div className="absolute bottom-[-20%] left-[-10%] w-48 h-48 bg-sav-secondary/20 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1.5s' }} />
+            
+            <div className="relative z-10 space-y-8">
+              <div className="flex justify-between items-start">
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-bold text-sav-muted uppercase tracking-[0.25em]">Capital Total</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl sm:text-5xl font-bold text-white tracking-tighter">
+                      {formatCurrency(user?.saldo_principal || 0, 'Bs').replace('Bs', '').trim()}
+                    </span>
+                    <span className="text-xl font-bold text-sav-accent">Bs</span>
+                  </div>
+                </div>
+                <div className="px-3 py-1.5 rounded-m3-sm bg-white/5 border border-white/10 backdrop-blur-md">
+                   <p className="text-[10px] font-black text-white uppercase tracking-widest">{displayLevelCode(user?.nivel_codigo)}</p>
+                </div>
               </div>
-              <div className="px-3 py-1.5 rounded-m3-sm bg-white/10 backdrop-blur-md border border-white/20">
-                <p className="text-[10px] font-black text-white uppercase tracking-widest">{displayLevelCode(user?.nivel_codigo)}</p>
+
+              <div className="flex gap-4">
+                <Link to="/recargar" className="flex-1">
+                  <Button variant="primary" className="w-full h-13 shadow-accent-glow" icon={PlusIcon}>RECARGAR</Button>
+                </Link>
+                <Link to="/retiro" className="flex-1">
+                  <Button variant="secondary" className="w-full h-13" icon={ArrowDownCircleIcon}>RETIRAR</Button>
+                </Link>
               </div>
             </div>
-
-            <div className="flex gap-3">
-              <Link to="/recargar" className="flex-1">
-                <Button variant="secondary" className="bg-white text-sav-primary border-none hover:bg-white/90 h-12 text-[11px]" icon={PlusIcon}>RECARGAR</Button>
-              </Link>
-              <Link to="/retiro" className="flex-1">
-                <Button variant="secondary" className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-12 text-[11px]" icon={ArrowDownCircleIcon}>RETIRAR</Button>
-              </Link>
-            </div>
-          </div>
-        </Card>
-
-        {/* Financial Summary - Metric Cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="p-5 border-l-4 border-l-emerald-500">
-            <p className="text-[10px] font-black text-sav-muted uppercase tracking-widest mb-1">Hoy</p>
-            <p className="text-xl font-black text-emerald-600 tracking-tighter">
-              +{formatCurrency(stats?.ingresos_hoy || 0, 'Bs').trim()}
-            </p>
-          </Card>
-          <Card className="p-5 border-l-4 border-l-sav-primary">
-            <p className="text-[10px] font-black text-sav-muted uppercase tracking-widest mb-1">Acumulado</p>
-            <p className="text-xl font-black text-sav-primary tracking-tighter">
-              {formatCurrency(stats?.total_acumulado || 0, 'Bs').trim()}
-            </p>
           </Card>
         </div>
+
+        {/* Financial Summary - Glass Metrics */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white/[0.02] border border-white/[0.05] rounded-m3 p-5 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+              <TrendingUpIcon size={40} className="text-emerald-500" />
+            </div>
+            <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.2em] mb-1">Ganancia Hoy</p>
+            <p className="text-xl font-bold text-emerald-400 tracking-tight">
+              +{formatCurrency(stats?.ingresos_hoy || 0, 'Bs').trim()}
+            </p>
+          </div>
+          <div className="bg-white/[0.02] border border-white/[0.05] rounded-m3 p-5 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+              <TargetIcon size={40} className="text-sav-accent" />
+            </div>
+            <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.2em] mb-1">Acumulado</p>
+            <p className="text-xl font-bold text-white tracking-tight">
+              {formatCurrency(stats?.total_acumulado || 0, 'Bs').trim()}
+            </p>
+          </div>
+        </div>
+
+        {/* Quick Actions Grid */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">Servicios Premium</h3>
+          </div>
+          <ActionGrid items={actionItems} />
+        </section>
 
         {/* Investment Opportunities - Horizontal Scroll */}
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-[12px] font-black text-sav-primary uppercase tracking-[0.2em]">Planes VIP GLOBAL</h3>
-            <Link to="/vip" className="text-[10px] font-black text-sav-muted uppercase tracking-widest flex items-center gap-1 hover:text-sav-primary transition-colors">
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">Oportunidades VIP</h3>
+            <Link to="/vip" className="text-[11px] font-bold text-sav-accent uppercase tracking-widest flex items-center gap-1 hover:brightness-125 transition-all">
               Ver Todo <ChevronRightIcon size={14} />
             </Link>
           </div>
@@ -244,18 +265,30 @@ export default function Dashboard() {
                   key={n.id} 
                   to="/vip"
                   className={cn(
-                    "min-w-[150px] p-5 rounded-m3 border transition-all snap-start relative shadow-m3-1",
-                    esActual ? "bg-sav-surface border-sav-primary/30 ring-1 ring-sav-primary/10" : "bg-white border-sav-border"
+                    "min-w-[160px] p-5 rounded-m3 border transition-all duration-500 snap-start relative group overflow-hidden",
+                    esActual ? "bg-gradient-to-br from-sav-accent/20 to-sav-secondary/20 border-sav-accent/40 shadow-accent-glow" : "bg-white/[0.03] border-white/10 hover:border-white/20"
                   )}
                 >
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-black text-sav-primary uppercase">{n.nombre}</span>
-                      {esActual && <div className="w-2 h-2 rounded-full bg-sav-success shadow-[0_0_8px_rgba(46,125,50,0.5)]" />}
+                  {esActual && (
+                    <div className="absolute -top-1 -right-1">
+                      <div className="bg-sav-accent text-[8px] font-bold text-white px-2 py-1 rounded-bl-lg uppercase tracking-widest">ACTUAL</div>
                     </div>
-                    <div className="pt-2 border-t border-sav-border/50">
-                      <p className="text-[9px] font-bold text-sav-muted uppercase tracking-tighter">Inversión</p>
-                      <p className="text-base font-black text-sav-primary">{formatCurrency(n.deposito)}</p>
+                  )}
+                  <div className="space-y-3 relative z-10">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 duration-500",
+                      esActual ? "bg-sav-accent text-white" : "bg-white/5 text-sav-muted"
+                    )}>
+                      <TrophyIcon size={20} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest mb-0.5">{n.nombre}</p>
+                      <p className="text-lg font-bold text-white tracking-tight">{formatCurrency(n.deposito || n.costo, 'Bs').trim()}</p>
+                    </div>
+                    <div className="pt-2 border-t border-white/5">
+                      <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">
+                        Renta: {formatCurrency(n.ingreso_diario, 'Bs').trim()}/día
+                      </p>
                     </div>
                   </div>
                 </Link>
@@ -264,70 +297,54 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* Action Grid - Custom Component */}
-        <ActionGrid items={actionItems} />
-
-        {/* Announcements - If any */}
-        {comunicados.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="text-[12px] font-black text-sav-primary uppercase tracking-[0.2em] px-1">Comunicados Oficiales</h3>
-            <div className="space-y-3">
-              {comunicados.map(item => (
-                <Card key={item.id} className="p-0 overflow-hidden shadow-m3-2 border-sav-border/30">
-                  {item.imagen_url && (
-                    <img src={api.getMediaUrl(item.imagen_url)} className="w-full h-40 object-cover" alt={item.titulo} />
-                  )}
-                  <div className="p-5 space-y-2">
-                    <h4 className="text-sm font-black text-sav-primary uppercase tracking-tight">{item.titulo}</h4>
-                    <p className="text-[11px] font-medium text-sav-muted leading-relaxed line-clamp-2">{item.mensaje}</p>
-                    <p className="text-[9px] font-black text-sav-muted/50 uppercase tracking-widest pt-2">{formatDate(item.created_at)}</p>
-                  </div>
-                </Card>
-              ))}
-            </div>
+        {/* Official Guides */}
+        <GuideSection guides={pc?.guias || []} />
+        
+        {/* Help/Support Section */}
+        <section className="bg-gradient-to-r from-zinc-900 to-black rounded-m3-lg p-6 border border-white/5 flex items-center justify-between group cursor-pointer hover:border-sav-accent/30 transition-all duration-500">
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider">Centro de Ayuda</h4>
+            <p className="text-[11px] text-sav-muted">¿Necesitas asistencia técnica?</p>
           </div>
-        )}
-
-        {/* Footer Security Brand */}
-        <div className="pt-8 pb-4">
-          <img src="/images/institutional-security.webp" alt="Seguridad Institucional" className="mx-auto h-12 object-contain grayscale opacity-30" />
-          <p className="text-center text-[8px] font-black text-sav-muted uppercase tracking-[0.3em] mt-4">BCB Global Institutional Bolivia</p>
-        </div>
+          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-sav-accent group-hover:bg-sav-accent group-hover:text-white transition-all duration-500">
+            <HelpCircleIcon size={24} />
+          </div>
+        </section>
       </main>
 
       <FloatingQuestionnaire />
       
-      {/* Support Floating Menu - Simplified */}
-      <div className="fixed bottom-[calc(90px+env(safe-area-inset-bottom))] right-5 z-[60]">
-         <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setShowSupportMenu(!showSupportMenu)}
-          className={cn(
-            "w-14 h-14 rounded-m3-lg flex items-center justify-center text-white transition-all duration-300 shadow-m3-3",
-            showSupportMenu ? "bg-white text-sav-primary rotate-45 border border-sav-border" : "bg-sav-primary"
-          )}
-        >
-          {showSupportMenu ? <CloseIcon size={24} /> : <MessageIcon size={24} />}
-        </motion.button>
-        
-        <AnimatePresence>
-          {showSupportMenu && (
+      {/* Sunday Modal - Upgraded */}
+      <AnimatePresence>
+        {isSunday && showSundayModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/90 backdrop-blur-md"
+              onClick={() => setShowSundayModal(false)}
+            />
             <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 20 }}
-              className="absolute bottom-16 right-0 flex flex-col gap-3 mb-2"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative z-10 w-full max-w-sm bg-zinc-900 border border-white/10 rounded-m3-lg p-8 shadow-m3-3 text-center space-y-6"
             >
-              <a href={pc?.soporte_gerente_url} target="_blank" className="whitespace-nowrap bg-white border border-sav-border px-4 py-3 rounded-m3 shadow-m3-2 text-[10px] font-black text-sav-primary uppercase tracking-widest flex items-center gap-2">
-                <MessageIcon size={16} /> Soporte VIP
-              </a>
-              <a href={pc?.soporte_canal_url} target="_blank" className="whitespace-nowrap bg-white border border-sav-border px-4 py-3 rounded-m3 shadow-m3-2 text-[10px] font-black text-sav-primary uppercase tracking-widest flex items-center gap-2">
-                <UsersIcon size={16} /> Canal Oficial
-              </a>
+              <div className="w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-500">
+                <ShieldAlertIcon size={40} />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-white uppercase tracking-tight">Mantenimiento de Red</h3>
+                <p className="text-sm text-sav-muted leading-relaxed">
+                  Hoy es domingo. El sistema de retiros se encuentra en mantenimiento semanal. Los retiros se reanudarán mañana lunes.
+                </p>
+              </div>
+              <Button variant="primary" onClick={() => setShowSundayModal(false)} className="w-full">ENTENDIDO</Button>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          </div>
+        )}
+      </AnimatePresence>
     </Layout>
   );
 }

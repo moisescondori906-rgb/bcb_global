@@ -47,101 +47,106 @@ export default function Profile() {
   };
 
   const menuItems = [
-    { to: '/ganancias', icon: Wallet, label: 'Mi Billetera', color: 'text-sav-success', bg: 'bg-emerald-50' },
-    { to: '/vip', icon: TrendingUp, label: 'Membresía VIP', color: 'text-sav-primary', bg: 'bg-sav-primary/5' },
-    { to: '/premios', icon: Gift, label: 'Premios y Regalos', color: 'text-amber-500', bg: 'bg-amber-50' },
-    { to: '/seguridad', icon: Settings, label: 'Seguridad y Cuenta', color: 'text-slate-500', bg: 'bg-slate-50' },
-    { to: '/ayuda', icon: HelpCircle, label: 'Centro de Ayuda', color: 'text-blue-500', bg: 'bg-blue-50' },
+    { to: '/ganancias', icon: Wallet, label: 'Mi Billetera', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { to: '/vip', icon: TrendingUp, label: 'Membresía VIP', color: 'text-sav-accent', bg: 'bg-sav-accent/10' },
+    { to: '/premios', icon: Gift, label: 'Premios y Regalos', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    { to: '/seguridad', icon: Settings, label: 'Seguridad y Cuenta', color: 'text-zinc-400', bg: 'bg-zinc-500/10' },
+    { to: '/ayuda', icon: HelpCircle, label: 'Centro de Ayuda', color: 'text-blue-400', bg: 'bg-blue-500/10' },
   ];
 
   return (
     <Layout>
-      <Header title="Mi Perfil" />
+      <Header title="Perfil Premium" />
       
-      <main className="px-4 sm:px-6 py-6 space-y-6 pb-32 animate-in">
-        {/* User Identity Card - Flutter Style */}
+      <main className="px-4 sm:px-6 py-6 space-y-8 pb-32 animate-in">
+        {/* User Identity Card - Ultra Modern */}
         <section>
-          <Card className="p-6 bg-white border-sav-border shadow-m3-2 rounded-m3-lg relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-sav-primary/5 rounded-full -mr-16 -mt-16 blur-2xl" />
-            
-            <div className="flex items-center gap-5 relative z-10">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-m3 bg-sav-surface flex items-center justify-center border border-sav-border shadow-m3-1">
-                  <User size={32} className="text-sav-primary" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-sav-success rounded-full border-2 border-white flex items-center justify-center shadow-sm">
-                  <ShieldCheck size={12} className="text-white" strokeWidth={3} />
-                </div>
-              </div>
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-sav-accent to-sav-secondary rounded-m3-lg blur opacity-20 transition duration-1000 group-hover:opacity-40"></div>
+            <Card className="relative p-7 bg-zinc-950/60 backdrop-blur-3xl border border-white/10 rounded-m3-lg overflow-hidden shadow-m3-3">
+              <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-sav-accent/20 rounded-full blur-[60px]" />
               
-              <div className="space-y-1 min-w-0">
-                <h2 className="text-xl font-black tracking-tight truncate uppercase text-sav-primary">{user?.nombre_usuario || 'Usuario'}</h2>
-                <div className="flex items-center gap-2">
-                  <div className="px-2.5 py-1 rounded-m3-sm bg-sav-primary text-white text-[9px] font-black uppercase tracking-widest">
-                    {user?.nivel_nombre || 'Pasante'}
+              <div className="flex items-center gap-6 relative z-10">
+                <div className="relative">
+                  <div className="w-18 h-18 rounded-2xl bg-gradient-to-tr from-white/10 to-white/[0.02] border border-white/10 flex items-center justify-center shadow-xl">
+                    <User size={36} className="text-white" />
                   </div>
-                  <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">{user?.telefono}</p>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-sav-accent rounded-full border-2 border-zinc-950 flex items-center justify-center shadow-accent-glow">
+                    <ShieldCheck size={14} className="text-white" strokeWidth={3} />
+                  </div>
+                </div>
+                
+                <div className="space-y-1.5 min-w-0">
+                  <h2 className="text-2xl font-bold tracking-tight truncate text-white uppercase">{user?.nombre_usuario || 'Usuario'}</h2>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="info" className="py-0.5 px-2">
+                      {user?.nivel_nombre || 'Pasante'}
+                    </Badge>
+                    <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">{user?.telefono}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </section>
 
-        {/* Financial Summary - Rediseñado Fintech Flutter */}
+        {/* Financial Summary - Rediseñado Fintech 2026 */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
-            <TrendingUp size={14} className="text-sav-primary" />
-            <h3 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em]">Resumen de Ganancias</h3>
+            <TrendingUp size={16} className="text-sav-accent" />
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">Rendimiento Financiero</h3>
           </div>
 
-          <Card className="p-6 bg-white border-sav-border shadow-m3-2 space-y-8">
+          <Card className="p-7 bg-white/[0.02] border-white/10 shadow-m3-2 space-y-8">
             {/* Grid Hoy / Ayer */}
             <div className="grid grid-cols-2 gap-8">
-              <div className="space-y-1">
-                <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Hoy</p>
-                <p className="text-2xl font-black text-sav-primary tracking-tighter">
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.2em]">Ingresos Hoy</p>
+                <p className="text-3xl font-bold text-emerald-400 tracking-tighter">
                   { (stats?.ingresos_hoy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 }) }
-                  <span className="text-[10px] font-bold text-sav-muted ml-1">Bs</span>
+                  <span className="text-xs font-bold text-sav-muted ml-1.5 uppercase">Bs</span>
                 </p>
               </div>
-              <div className="space-y-1 text-right border-l border-sav-border/50 pl-8">
-                <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Ayer</p>
-                <p className="text-2xl font-black text-sav-muted tracking-tighter">
+              <div className="space-y-1.5 text-right border-l border-white/5 pl-8">
+                <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.2em]">Ayer</p>
+                <p className="text-3xl font-bold text-zinc-500 tracking-tighter">
                   { (stats?.ingresos_ayer || 0).toLocaleString(undefined, { minimumFractionDigits: 2 }) }
-                  <span className="text-[10px] font-bold text-sav-muted ml-1">Bs</span>
+                  <span className="text-xs font-bold text-zinc-700 ml-1.5 uppercase">Bs</span>
                 </p>
               </div>
             </div>
 
-            {/* Total Balance Banner */}
-            <div className="bg-sav-primary p-5 rounded-m3 shadow-m3-3 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 blur-xl" />
+            {/* Total Balance Banner - Glassmorphism */}
+            <div className="relative p-6 rounded-m3 overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-r from-sav-accent to-sav-secondary opacity-80 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-16 -mt-16 blur-2xl" />
+              
               <div className="relative z-10 flex justify-between items-center">
-                <div className="space-y-0.5">
-                  <p className="text-[9px] font-black text-white/60 uppercase tracking-widest">Saldo Institucional</p>
-                  <p className="text-2xl font-black text-white tracking-tight">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em]">Saldo Institucional</p>
+                  <p className="text-3xl font-bold text-white tracking-tight">
                     { (stats?.saldo_total_actual || 0).toLocaleString(undefined, { minimumFractionDigits: 2 }) }
-                    <span className="text-xs font-bold ml-1 opacity-50">Bs</span>
+                    <span className="text-xs font-bold ml-1.5 opacity-60">Bs</span>
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[9px] font-black text-white/60 uppercase tracking-widest">Tareas</p>
-                  <p className="text-2xl font-black text-emerald-400">+{stats?.total_completadas || 0}</p>
+                  <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em]">Cargas</p>
+                  <p className="text-3xl font-bold text-white drop-shadow-md">+{stats?.total_completadas || 0}</p>
                 </div>
               </div>
             </div>
 
             {/* Grid Semana / Mes */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-m3 bg-sav-surface border border-sav-border/50">
-                <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest mb-1">Esta Semana</p>
-                <p className="text-sm font-black text-sav-primary">
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.05] transition-colors">
+                <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest mb-1.5">Semana Actual</p>
+                <p className="text-lg font-bold text-white tracking-tight">
                   { (stats?.ingresos_semana || 0).toLocaleString(undefined, { minimumFractionDigits: 2 }) } Bs
                 </p>
               </div>
-              <div className="p-4 rounded-m3 bg-sav-surface border border-sav-border/50">
-                <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest mb-1">Este Mes</p>
-                <p className="text-sm font-black text-sav-primary">
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.05] transition-colors">
+                <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest mb-1.5">Mes Actual</p>
+                <p className="text-lg font-bold text-white tracking-tight">
                   { (stats?.ingresos_mes || 0).toLocaleString(undefined, { minimumFractionDigits: 2 }) } Bs
                 </p>
               </div>
@@ -149,22 +154,22 @@ export default function Profile() {
           </Card>
         </section>
 
-        {/* Menu Items - Clean Material List */}
-        <section className="bg-white rounded-m3-lg border border-sav-border shadow-m3-1 overflow-hidden">
-          <div className="divide-y divide-sav-border/30">
+        {/* Menu Items - Premium Glass List */}
+        <section className="bg-white/[0.02] rounded-m3-lg border border-white/10 overflow-hidden shadow-m3-2">
+          <div className="divide-y divide-white/5">
             {menuItems.map((item, idx) => (
               <Link 
                 key={idx} 
                 to={item.to}
-                className="flex items-center justify-between p-5 hover:bg-sav-surface transition-colors group"
+                className="flex items-center justify-between p-5 hover:bg-white/[0.05] transition-all group"
               >
                 <div className="flex items-center gap-4">
-                  <div className={cn("w-10 h-10 rounded-m3 flex items-center justify-center transition-transform group-hover:scale-110", item.bg)}>
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110", item.bg)}>
                     <item.icon size={20} className={item.color} />
                   </div>
-                  <span className="text-[11px] font-black text-sav-primary uppercase tracking-widest">{item.label}</span>
+                  <span className="text-[12px] font-bold text-white uppercase tracking-wider group-hover:translate-x-1 transition-transform">{item.label}</span>
                 </div>
-                <ChevronRight size={16} className="text-sav-border group-hover:text-sav-primary transition-colors" />
+                <ChevronRight size={18} className="text-zinc-600 group-hover:text-white transition-colors" />
               </Link>
             ))}
           </div>
@@ -173,10 +178,10 @@ export default function Profile() {
         {/* Logout Button */}
         <button 
           onClick={handleLogout}
-          className="w-full h-14 rounded-m3 bg-white border border-sav-error/20 text-sav-error flex items-center justify-center gap-3 hover:bg-sav-error/5 transition-all shadow-m3-1 active:scale-[0.98]"
+          className="w-full h-14 rounded-m3 bg-red-500/5 border border-red-500/10 text-red-500 flex items-center justify-center gap-3 hover:bg-red-500/10 transition-all shadow-m3-1 active:scale-[0.98] group"
         >
-          <LogOut size={18} />
-          <span className="text-[11px] font-black uppercase tracking-[0.15em]">Cerrar Sesión</span>
+          <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
+          <span className="text-[12px] font-bold uppercase tracking-[0.2em]">Cerrar Sesión</span>
         </button>
       </main>
     </Layout>

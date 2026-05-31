@@ -27,7 +27,9 @@ import {
   QrCode as QrCodeIcon,
   Lock as LockIcon,
   Plus as PlusIcon,
-  Building2 as BuildingIcon
+  Building2 as BuildingIcon,
+  User,
+  Crown
 } from 'lucide-react';
 import { isScheduleOpen, getperuNow as getBoliviaNow } from '../lib/schedule';
 import imageCompression from 'browser-image-compression';
@@ -58,7 +60,6 @@ export default function Withdrawal() {
   const [niveles, setNiveles] = useState([]);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [hasWithdrawalToday, setHasWithdrawalToday] = useState(false);
-  const [hasSignature, setHasSignature] = useState(true); // Ya viene por defecto
   
   // Security Status State
   const [securityStatus, setSecurityStatus] = useState({
@@ -91,7 +92,6 @@ export default function Withdrawal() {
       const status = await fetchSecurityStatus();
       
       if (status?.tiene_password_fondo && status?.tiene_cuenta_bancaria) {
-        // Cargar datos necesarios para el retiro solo si ya tiene seguridad configurada
         api.withdrawals.montos().then(data => {
           if (isMounted) setMontos(data || [25, 100, 500, 1500, 5000, 10000]);
         }).catch(() => {});
@@ -154,7 +154,6 @@ export default function Withdrawal() {
     try {
       await api.users.createBankAccount(bankAcc);
       await fetchSecurityStatus();
-      // Recargar tarjetas para el selector de retiro
       const list = await api.users.getBankAccounts();
       setTarjetas(list || []);
       if (list && list[0]) setTarjetaId(list[0].id);
@@ -218,9 +217,106 @@ export default function Withdrawal() {
   if (securityStatus.loading) {
     return (
       <Layout>
-        <div className="min-h-screen bg-sav-dark flex items-center justify-center">
-          <LoaderIcon className="text-sav-primary animate-spin" size={40} />
+        <div className="min-h-screen flex items-center justify-center">
+          <LoaderIcon className="text-sav-accent animate-spin" size={40} />
         </div>
+      </Layout>
+    );
+  }
+
+  // --- RENDERS DE SEGURIDAD ---
+
+  if (!securityStatus.tiene_password_fondo) {
+    return (
+      <Layout>
+        <Header title="Seguridad de Fondos" />
+        <main className="px-6 py-10 space-y-8 animate-in">
+          <div className="text-center space-y-4">
+            <div className="w-20 h-20 rounded-[2rem] bg-sav-accent/10 border border-sav-accent/20 flex items-center justify-center mx-auto text-sav-accent shadow-accent-glow">
+              <LockIcon size={40} />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-white tracking-tight uppercase">Configura tu PIN</h2>
+              <p className="text-sm font-medium text-zinc-400 leading-relaxed px-4">Para proteger tu capital, es obligatorio establecer una contraseña exclusiva para retiros.</p>
+            </div>
+          </div>
+
+          <Card className="p-8 bg-zinc-950/60 backdrop-blur-3xl border border-white/10 space-y-6">
+            <form onSubmit={handleFundPasswordSubmit} className="space-y-6">
+              <Input 
+                label="Nueva Contraseña de Fondos" 
+                type="password" 
+                placeholder="6-12 caracteres"
+                value={fundPass.password_fondo}
+                onChange={e => setFundPass({ ...fundPass, password_fondo: e.target.value })}
+                icon={LockIcon}
+              />
+              <Input 
+                label="Confirmar Contraseña" 
+                type="password" 
+                placeholder="Repite la contraseña"
+                value={fundPass.confirm_password_fondo}
+                onChange={e => setFundPass({ ...fundPass, confirm_password_fondo: e.target.value })}
+                icon={ShieldCheckIcon}
+              />
+              {error && <p className="text-xs font-bold text-red-400 uppercase tracking-widest text-center">{error}</p>}
+              <Button type="submit" loading={loading} variant="primary" className="w-full h-14 shadow-accent-glow uppercase tracking-widest">GUARDAR SEGURIDAD</Button>
+            </form>
+          </Card>
+        </main>
+      </Layout>
+    );
+  }
+
+  if (!securityStatus.tiene_cuenta_bancaria) {
+    return (
+      <Layout>
+        <Header title="Vinculación Bancaria" />
+        <main className="px-6 py-8 space-y-8 animate-in">
+          <div className="text-center space-y-4">
+            <div className="w-20 h-20 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+              <BuildingIcon size={40} />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-white tracking-tight uppercase">Datos de Cobro</h2>
+              <p className="text-sm font-medium text-zinc-400 leading-relaxed px-4">Ingresa los datos de la cuenta donde recibirás tus transferencias institucionales.</p>
+            </div>
+          </div>
+
+          <Card className="p-8 bg-zinc-950/60 backdrop-blur-3xl border border-white/10 space-y-6">
+            <form onSubmit={handleBankAccountSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-sav-muted uppercase tracking-[0.15em] ml-1">Entidad Bancaria</label>
+                <select 
+                  className="w-full h-13 px-5 rounded-m3 bg-white/[0.03] border border-white/[0.08] text-white outline-none focus:border-sav-accent/50 transition-all"
+                  value={bankAcc.banco}
+                  onChange={e => setBankAcc({ ...bankAcc, banco: e.target.value })}
+                >
+                  <option value="bnb">BNB - Banco Nacional de Bolivia</option>
+                  <option value="union">Banco Unión</option>
+                  <option value="mercantil">Banco Mercantil Santa Cruz</option>
+                  <option value="bisa">Banco BISA</option>
+                  <option value="economico">Banco Económico</option>
+                  <option value="ganadero">Banco Ganadero</option>
+                  <option value="fassil">Banco Fassil (Intervención)</option>
+                  <option value="bcp">Banco BCP de Bolivia</option>
+                  <option value="fie">Banco FIE</option>
+                  <option value="sol">Banco Sol</option>
+                  <option value="comunidad">Banco Comunidad</option>
+                  <option value="prodem">Banco Prodem</option>
+                  <option value="otro">Otras Entidades / Cooperativas</option>
+                </select>
+              </div>
+
+              <Input label="Titular de la Cuenta" value={bankAcc.titular} onChange={e => setBankAcc({ ...bankAcc, titular: e.target.value })} icon={User} />
+              <Input label="Número de Cuenta" value={bankAcc.numero_cuenta} onChange={e => setBankAcc({ ...bankAcc, numero_cuenta: e.target.value })} icon={CreditCardIcon} />
+              <Input label="CI / NIT" value={bankAcc.ci_nit} onChange={e => setBankAcc({ ...bankAcc, ci_nit: e.target.value })} icon={ShieldCheckIcon} />
+
+              {error && <p className="text-xs font-bold text-red-400 uppercase tracking-widest text-center">{error}</p>}
+              <Button type="submit" loading={loading} variant="primary" className="w-full h-14 shadow-accent-glow uppercase tracking-widest">VINCULAR CUENTA</Button>
+            </form>
+          </Card>
+        </main>
       </Layout>
     );
   }
@@ -253,302 +349,174 @@ export default function Withdrawal() {
     schedRet = isScheduleOpen(horarioRet);
   }
 
-  const fueraHorario = horarioRet?.enabled && !schedRet.ok;
-  const msgHorario = !schedRet.ok ? schedRet.message : '';
-
-  // --- VALIDACIÓN DE DÍAS (Sincronizado con Backend v12.0.0) ---
-  const boliviaNow = getBoliviaNow();
-  const today = boliviaNow.getDay(); // 0=Dom, 1=Lun, 2=Mar... 6=Sab
-  
-  // Reglas Globales desde Configuración (Lunes a Viernes: 1, 2, 3, 4, 5)
-  const globalSchedule = pc?.horario_retiro || { enabled: true, dias_semana: [1, 2, 3, 4, 5] };
-  const globalAllowedDays = Array.isArray(globalSchedule.dias_semana) ? globalSchedule.dias_semana : [1, 2, 3, 4, 5];
-
-  // Si el nivel tiene horario específico configurado, usamos ese rango
-  let isAllowedDay = false;
-  if (userLevel?.retiro_horario_habilitado) {
-    const start = Number(userLevel.retiro_dia_inicio);
-    const end = Number(userLevel.retiro_dia_fin);
-    if (start <= end) isAllowedDay = today >= start && today <= end;
-    else isAllowedDay = today >= start || today <= end;
-  } else {
-    // Usar la regla general (Martes a Jueves por defecto)
-    isAllowedDay = globalAllowedDays.includes(today);
-  }
-
   const isInternar = userLevel?.codigo === 'internar' || userLevel?.codigo === 'pasantia';
-  const canWithdrawToday = isAllowedDay && !isInternar;
-
-  const DAY_NAMES = { 0: 'Domingo', 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado' };
-  const globalAllowedNames = globalAllowedDays.map(d => DAY_NAMES[d]).join(', ');
 
   return (
     <Layout>
       <div className="min-h-screen pb-32">
         <Header 
-          title="Retiro" 
+          title="Retiro de Capital" 
           rightAction={
-            <Link to="/ganancias" className="text-sav-primary text-[9px] font-black uppercase tracking-widest bg-sav-surface px-4 py-2 rounded-m3 border border-sav-border shadow-m3-1">
+            <Link to="/ganancias" className="text-[9px] font-bold text-white uppercase tracking-widest bg-white/5 px-4 py-2 rounded-xl border border-white/10 shadow-m3-1">
               Historial
             </Link>
           } 
         />
         
-        <main className="px-4 sm:px-6 py-6 space-y-6 animate-in">
-          {/* Balance Card - Flutter Style */}
-          <Card className="p-6 bg-sav-primary border-none shadow-m3-3 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
-            <div className="relative z-10 space-y-1">
-              <p className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">Capital Disponible</p>
-              <div className="flex items-baseline gap-2 overflow-hidden">
-                <h2 className="text-3xl font-black text-white tracking-tighter truncate">
-                  {(tipoBilletera === 'principal' ? saldoPrincipal : saldoComisiones).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </h2>
-                <span className="text-xs font-bold text-white/50 uppercase tracking-widest">Bs</span>
-              </div>
-            </div>
-          </Card>
-
-          <AnimatePresence mode='wait'>
-            {error && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <div className="p-4 rounded-m3 bg-sav-error/5 border border-sav-error/20 flex items-center gap-3">
-                  <AlertCircleIcon size={18} className="text-sav-error shrink-0" />
-                  <p className="text-[10px] text-sav-error font-bold uppercase tracking-tight">{error}</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {!securityStatus.tiene_password_fondo ? (
-            /* PASO 1: CONTRASEÑA DE FONDOS */
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-              <Card className="p-6 bg-white border-sav-border shadow-m3-2 space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-m3 bg-sav-surface flex items-center justify-center text-sav-primary border border-sav-border shadow-m3-1">
-                    <ShieldCheckIcon size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-[13px] font-black text-sav-primary uppercase tracking-tight">Seguridad de Fondos</h3>
-                    <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">Paso 1 de 2</p>
-                  </div>
-                </div>
-                <p className="text-[11px] text-sav-muted font-medium leading-relaxed">Configura una contraseña de 6 dígitos para autorizar tus retiros.</p>
-              </Card>
-
-              <form onSubmit={handleFundPasswordSubmit} className="space-y-6">
-                <Card className="p-8 space-y-5 bg-white border-sav-border shadow-m3-3">
-                  <Input
-                    type="password"
-                    label="Nueva Contraseña"
-                    value={fundPass.password_fondo}
-                    onChange={(e) => setFundPass({ ...fundPass, password_fondo: e.target.value })}
-                    required
-                    maxLength={6}
-                    placeholder="6 dígitos"
-                    icon={LockIcon}
-                    showPasswordToggle
-                  />
-                  <Input
-                    type="password"
-                    label="Confirmar Contraseña"
-                    value={fundPass.confirm_password_fondo}
-                    onChange={(e) => setFundPass({ ...fundPass, confirm_password_fondo: e.target.value })}
-                    required
-                    maxLength={6}
-                    placeholder="Repite los 6 dígitos"
-                    icon={LockIcon}
-                    showPasswordToggle
-                  />
-                  <Button type="submit" loading={loading} className="h-13 shadow-m3-2">GUARDAR SEGURIDAD</Button>
-                </Card>
-              </form>
-            </motion.div>
-          ) : !securityStatus.tiene_cuenta_bancaria ? (
-            /* PASO 2: CUENTA BANCARIA */
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-               <Card className="p-6 bg-white border-sav-border shadow-m3-2 space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-m3 bg-sav-surface flex items-center justify-center text-sav-primary border border-sav-border shadow-m3-1">
-                    <BuildingIcon size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-[13px] font-black text-sav-primary uppercase tracking-tight">Cuenta de Destino</h3>
-                    <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">Paso 2 de 2</p>
-                  </div>
-                </div>
-                <p className="text-[11px] text-sav-muted font-medium leading-relaxed">Vincula la cuenta donde recibirás tus transferencias.</p>
-              </Card>
-
-              <form onSubmit={handleBankAccountSubmit} className="space-y-6">
-                <Card className="p-8 space-y-5 bg-white border-sav-border shadow-m3-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-sav-primary uppercase tracking-widest ml-1">Banco / Plataforma</label>
-                    <select 
-                      value={bankAcc.banco}
-                      onChange={(e) => setBankAcc({ ...bankAcc, banco: e.target.value })}
-                      className="w-full bg-sav-surface border border-sav-border rounded-m3 h-12 px-4 text-sm font-bold text-slate-900 outline-none focus:border-sav-primary transition-all"
-                    >
-                      <option value="bnb">BNB - Banco Nacional</option>
-                      <option value="union">Banco Unión</option>
-                      <option value="mercantil">Banco Mercantil</option>
-                      <option value="ganadero">Banco Ganadero</option>
-                      <option value="economico">Banco Económico</option>
-                      <option value="bisa">Banco BISA</option>
-                      <option value="otro">Otro Banco / QR</option>
-                    </select>
-                  </div>
-
-                  <Input label="Titular" value={bankAcc.titular} onChange={(e) => setBankAcc({ ...bankAcc, titular: e.target.value })} placeholder="Nombre completo" icon={ShieldCheckIcon} required />
-                  <Input label="Nro Cuenta / Celular" value={bankAcc.numero_cuenta} onChange={(e) => setBankAcc({ ...bankAcc, numero_cuenta: e.target.value })} placeholder="Nro de cuenta o celular" icon={CreditCardIcon} required />
-                  <Input label="CI / NIT" value={bankAcc.ci_nit} onChange={(e) => setBankAcc({ ...bankAcc, ci_nit: e.target.value })} placeholder="Cédula de identidad" icon={ShieldCheckIcon} required />
-                  
-                  <Button type="submit" loading={loading} className="h-13 shadow-m3-2">VINCULAR CUENTA</Button>
-                </Card>
-              </form>
-            </motion.div>
-          ) : (
-            /* PASO 3: FORMULARIO DE RETIRO */
-            <div className="space-y-6">
-              {/* Wallet Selector */}
-              <div className="flex bg-white p-1.5 rounded-m3 border border-sav-border shadow-m3-1">
-                <button onClick={() => setTipoBilletera('principal')} className={cn("flex-1 py-3 rounded-m3 text-[10px] font-black uppercase tracking-widest transition-all", tipoBilletera === 'principal' ? "bg-sav-primary text-white shadow-m3-2" : "text-sav-muted")}>Capital</button>
-                <button onClick={() => setTipoBilletera('comisiones')} className={cn("flex-1 py-3 rounded-m3 text-[10px] font-black uppercase tracking-widest transition-all", tipoBilletera === 'comisiones' ? "bg-sav-primary text-white shadow-m3-2" : "text-sav-muted")}>Comisiones</button>
-              </div>
-
-              {/* Schedule Info */}
-              {!schedRet.ok && (
-                <div className="p-4 rounded-m3 bg-sav-error/5 border border-sav-error/20 flex items-start gap-3 shadow-m3-1">
-                  <ClockIcon size={18} className="text-sav-error shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-sav-error font-bold uppercase tracking-tight leading-relaxed">{schedRet.message}</p>
-                </div>
+        <main className="px-5 py-6 space-y-8 animate-in">
+          {/* Wallet Selector - Premium Tabs */}
+          <div className="flex p-1.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl gap-2">
+            <button 
+              onClick={() => setTipoBilletera('principal')}
+              className={cn(
+                "flex-1 flex flex-col items-center py-4 rounded-xl transition-all duration-300 gap-1",
+                tipoBilletera === 'principal' ? "bg-white/[0.07] border border-white/10 shadow-lg" : "opacity-40"
               )}
+            >
+              <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Saldo Principal</p>
+              <p className={cn("text-xl font-bold tracking-tight", tipoBilletera === 'principal' ? "text-white" : "text-zinc-500")}>
+                {saldoPrincipal.toLocaleString()} <span className="text-[10px] text-sav-accent">Bs</span>
+              </p>
+            </button>
+            <button 
+              onClick={() => setTipoBilletera('comisiones')}
+              className={cn(
+                "flex-1 flex flex-col items-center py-4 rounded-xl transition-all duration-300 gap-1",
+                tipoBilletera === 'comisiones' ? "bg-white/[0.07] border border-white/10 shadow-lg" : "opacity-40"
+              )}
+            >
+              <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Comisiones</p>
+              <p className={cn("text-xl font-bold tracking-tight", tipoBilletera === 'comisiones' ? "text-white" : "text-zinc-500")}>
+                {saldoComisiones.toLocaleString()} <span className="text-[10px] text-sav-accent">Bs</span>
+              </p>
+            </button>
+          </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <section className="space-y-4">
-                  <h3 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em] px-1">Selecciona Monto</h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    {montos.map(m => (
-                      <button 
-                        key={m} 
-                        type="button" 
-                        onClick={() => setMonto(m)}
-                        className={cn(
-                          "py-3.5 rounded-m3 border text-sm font-black transition-all shadow-m3-1",
-                          monto === m ? "bg-sav-surface border-sav-primary text-sav-primary ring-1 ring-sav-primary/30" : "bg-white border-sav-border text-sav-muted"
-                        )}
-                      >
-                        {m}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="space-y-4">
-                   <h3 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em] px-1">Validación y Envío</h3>
-                   <Card className="p-8 space-y-6 bg-white border-sav-border shadow-m3-3">
-                     <Input 
-                        type="password" 
-                        label="Pin de Seguridad"
-                        placeholder="6 dígitos de fondos" 
-                        maxLength={6} 
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        icon={LockIcon}
-                        required 
-                      />
-
-                      <div className="space-y-3">
-                        <p className="text-[10px] font-black text-sav-primary uppercase tracking-widest px-1">Comprobante / Selfie</p>
-                        <button 
-                          type="button" 
-                          onClick={() => fileRef.current?.click()}
-                          className={cn(
-                            "w-full aspect-video rounded-m3 border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-all relative overflow-hidden",
-                            comprobantePreview ? "border-sav-primary bg-sav-surface/50" : "border-sav-border bg-sav-surface hover:bg-sav-surface/80"
-                          )}
-                        >
-                          {comprobantePreview ? (
-                            <img src={comprobantePreview} className="w-full h-full object-cover" alt="Preview" />
-                          ) : (
-                            <>
-                              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-sav-primary shadow-m3-1">
-                                {isOptimizing ? <LoaderIcon className="animate-spin" /> : <UploadIcon size={20} />}
-                              </div>
-                              <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Capturar imagen</p>
-                            </>
-                          )}
-                          <input type="file" ref={fileRef} onChange={handleFile} accept="image/*" className="hidden" />
-                        </button>
-                      </div>
-
-                      <Button 
-                        type="submit" 
-                        loading={loading || isOptimizing} 
-                        disabled={!schedRet.ok || hasWithdrawalToday || isInternar}
-                        className="h-14 shadow-m3-3"
-                        icon={ArrowRightIcon}
-                      >
-                        {isInternar ? 'NIVEL INSUFICIENTE' : 'ENVIAR SOLICITUD'}
-                      </Button>
-                   </Card>
-              </form>
-
-              {/* Info Image */}
-              <div className="rounded-m3-lg overflow-hidden border border-sav-border shadow-m3-2 bg-white p-2">
-                <img src="/imag/retiros.webp" alt="Info Retiros" className="w-full h-auto object-contain rounded-m3" />
+          {!schedRet.ok && (
+            <div className="p-5 rounded-2xl bg-red-500/5 border border-red-500/20 flex items-start gap-4 shadow-m3-1">
+              <ClockIcon size={20} className="text-red-400 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-[11px] font-bold text-red-400 uppercase tracking-widest mb-1">Fuera de Horario</h4>
+                <p className="text-sm font-medium text-zinc-400 leading-relaxed">{schedRet.message}</p>
               </div>
             </div>
           )}
-        </main>
-      </div>
-    </Layout>
-  );
-                    <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">5. Confirmación</h2>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <Input
-                      type="password"
-                      placeholder="Contraseña de fondos"
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      showPasswordToggle
-                      icon={ShieldCheckIcon}
-                      className="h-14 sm:h-16 rounded-xl sm:rounded-2xl bg-white border-black/5 shadow-sm"
-                    />
 
-                    <div className="px-1 flex items-start gap-3 group cursor-pointer" onClick={() => setHasSignature(!hasSignature)}>
-                      <div className={cn(
-                        "w-5 h-5 rounded border-2 flex items-center justify-center transition-all mt-0.5 shrink-0",
-                        hasSignature ? "bg-sav-primary border-sav-primary text-white" : "border-black/10 bg-white"
-                      )}>
-                        {hasSignature && <CheckIcon size={12} strokeWidth={4} />}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[9px] sm:text-[10px] font-black text-gray-900 uppercase tracking-widest group-hover:text-sav-primary transition-colors">Autorización de Transacción</p>
-                        <p className="text-[7px] sm:text-[8px] text-sav-muted font-medium uppercase tracking-widest leading-relaxed">Confirmo que los datos son correctos y autorizo el procesamiento.</p>
-                      </div>
+          {hasWithdrawalToday && (
+            <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex items-start gap-4 shadow-m3-1">
+              <AlertCircleIcon size={20} className="text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-[11px] font-bold text-amber-400 uppercase tracking-widest mb-1">Límite Diario</h4>
+                <p className="text-sm font-medium text-zinc-400 leading-relaxed">Has realizado una solicitud de retiro hoy. Debes esperar a mañana para procesar una nueva solicitud.</p>
+              </div>
+            </div>
+          )}
+
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 px-1">
+              <TrendingUpIcon size={16} className="text-sav-accent" />
+              <h3 className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">Importe del Retiro</h3>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {montos.map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMonto(m)}
+                  className={cn(
+                    "h-14 rounded-xl border font-bold transition-all duration-300 relative overflow-hidden flex items-center justify-center gap-1",
+                    monto === m 
+                      ? "bg-sav-accent text-white border-sav-accent shadow-accent-glow" 
+                      : "bg-white/[0.02] border-white/10 text-zinc-400 hover:border-white/20"
+                  )}
+                >
+                  <span className="text-lg">{m}</span>
+                  <span className="text-[9px] opacity-60">Bs</span>
+                </button>
+              ))}
+            </div>
+
+            <Card className="p-8 bg-zinc-950/60 backdrop-blur-3xl border border-white/10 space-y-8">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-sav-muted uppercase tracking-[0.15em] ml-1">Cuenta de Destino</label>
+                  <div className="relative">
+                    <select 
+                      className="w-full h-14 px-5 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white outline-none focus:border-sav-accent/50 transition-all appearance-none"
+                      value={tarjetaId}
+                      onChange={e => setTarjetaId(e.target.value)}
+                    >
+                      {tarjetas.map(t => (
+                        <option key={t.id} value={t.id}>{t.banco.toUpperCase()} - {t.numero_cuenta}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                      <ChevronRightIcon size={18} className="rotate-90" />
                     </div>
                   </div>
-                </section>
-
-                <div className="pt-2 sm:pt-4">
-                  <Button 
-                    type="submit" 
-                    loading={loading} 
-                    disabled={!canWithdrawToday || fueraHorario || hasWithdrawalToday || !comprobanteFile || !password || !hasSignature}
-                    className="h-16 sm:h-20 w-full rounded-2xl sm:rounded-[2rem] text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em] shadow-xl active:scale-95 transition-all uppercase font-black"
-                  >
-                    {!canWithdrawToday 
-                      ? 'FUERA DE DÍA ASIGNADO' 
-                      : 'SOLICITAR RETIRO'
-                    }
-                  </Button>
                 </div>
+
+                <Input 
+                  label="Contraseña de Fondos" 
+                  type="password" 
+                  placeholder="Tu PIN de seguridad"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  icon={LockIcon}
+                  showPasswordToggle
+                />
+
+                <div className="space-y-4">
+                  <label className="text-[11px] font-bold text-sav-muted uppercase tracking-[0.15em] ml-1">Respaldo Digital (Requerido)</label>
+                  <div 
+                    onClick={() => fileRef.current.click()}
+                    className={cn(
+                      "relative aspect-[2/1] rounded-2xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-300 group overflow-hidden",
+                      comprobantePreview ? "border-emerald-500/40" : "hover:border-sav-accent/40 hover:bg-white/[0.02]"
+                    )}
+                  >
+                    {comprobantePreview ? (
+                      <>
+                        <img src={comprobantePreview} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <p className="text-[10px] font-bold text-white uppercase tracking-widest">Cambiar Imagen</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center text-zinc-500 group-hover:text-sav-accent transition-colors">
+                          {isOptimizing ? <LoaderIcon className="animate-spin" /> : <UploadIcon size={28} />}
+                        </div>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Subir comprobante o firma</p>
+                      </>
+                    )}
+                    <input type="file" ref={fileRef} onChange={handleFile} accept="image/*" className="hidden" />
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 text-center">
+                    <p className="text-xs font-bold text-red-400 uppercase tracking-widest">{error}</p>
+                  </div>
+                )}
+
+                <Button 
+                  type="submit" 
+                  loading={loading || isOptimizing} 
+                  disabled={!schedRet.ok || hasWithdrawalToday || isInternar}
+                  variant="primary" 
+                  className="w-full h-16 shadow-accent-glow uppercase tracking-[0.15em] text-sm"
+                  icon={ArrowRightIcon}
+                >
+                  {isInternar ? 'NIVEL INSUFICIENTE' : 'ENVIAR SOLICITUD'}
+                </Button>
               </form>
+            </Card>
+            
+            <div className="rounded-2xl overflow-hidden border border-white/5 bg-zinc-900/50 p-2">
+              <img src="/imag/retiros.webp" alt="Info Retiros" className="w-full h-auto object-contain rounded-xl opacity-80" />
             </div>
-          )}
+          </section>
         </main>
       </div>
     </Layout>
