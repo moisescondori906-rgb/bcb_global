@@ -19,7 +19,7 @@ export default function BannerCarousel({ banners = [] }) {
 
   useEffect(() => {
     if (validBanners.length <= 1) return;
-    const t = setInterval(() => setSlide((s) => (s + 1) % validBanners.length), 5000);
+    const t = setInterval(() => setSlide((s) => (s + 1) % validBanners.length), 8000);
     return () => clearInterval(t);
   }, [validBanners.length]);
 
@@ -36,7 +36,7 @@ export default function BannerCarousel({ banners = [] }) {
   );
 
   return (
-    <div className="relative w-full aspect-[2/1] sm:aspect-video min-h-[180px] rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 group bg-slate-900">
+    <div className="relative w-full aspect-[2/1] sm:aspect-video min-h-[180px] rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 group bg-black">
       <AnimatePresence mode='wait'>
         <motion.div
           key={slide}
@@ -57,8 +57,8 @@ export default function BannerCarousel({ banners = [] }) {
             }}
           />
           {/* Overlay gradiente más sofisticado y oscuro para legibilidad */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/40 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
           
           <div className="absolute bottom-8 left-8 right-8">
             <motion.div

@@ -163,8 +163,8 @@ export default function Dashboard() {
       to: '/equipo', 
       icon: UsersIcon, 
       label: 'Mi Equipo', 
-      color: 'text-blue-700', 
-      bg: 'bg-blue-100',
+      color: 'text-sav-primary', 
+      bg: 'bg-sav-primary/10',
       className: 'text-[8px] sm:text-[9px] scale-90',
       badge: teamSummary?.niveles ? (
         <div className="flex gap-1 mt-1">
@@ -194,7 +194,7 @@ export default function Dashboard() {
         {/* Modal de Comunicado Diario Estilo Pantalla Completa (Nuevo) */}
         <AnimatePresence>
           {showDailyAnnouncement && comunicados.length > 0 && (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 sm:p-6">
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6">
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -206,7 +206,7 @@ export default function Dashboard() {
                 initial={{ opacity: 0, scale: 0.9, y: 50 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 50 }}
-                className="relative w-full h-full sm:h-auto sm:max-w-lg bg-white sm:rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
+                className="relative w-[92%] max-h-[85vh] sm:max-w-lg bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
               >
                 {/* Botón Cerrar Flotante */}
                 <button 

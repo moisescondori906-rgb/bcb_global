@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-sav-primary: #312e81; /* Indigo 900 */
+  --color-sav-primary: #be123c; /* Rose 700 - Red institucional */
   --color-sav-dark: #f8fafc;    /* Slate 50 */
   --color-sav-card: #ffffff;    
   --color-sav-surface: #f1f5f9; 
