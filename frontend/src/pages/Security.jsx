@@ -4,7 +4,18 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
-import { User, Phone, CreditCard, Lock, ChevronRight, Sparkles, ShieldCheck, BadgeCheck, Zap } from 'lucide-react';
+import { 
+  User, 
+  Phone, 
+  CreditCard, 
+  Lock, 
+  ChevronRight, 
+  Sparkles, 
+  ShieldCheck, 
+  Zap, 
+  LogOut,
+  Building2 as BuildingIcon 
+} from 'lucide-react';
 import { Card } from '../components/ui/Card.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
 import { cn } from '../lib/utils/cn';
@@ -18,14 +29,14 @@ export default function Security() {
   const [error, setError] = useState(null);
 
   const load = async () => {
-    setError(null); // Clear previous errors
+    setError(null);
     try {
       const data = await api.users.tarjetas();
       setTarjetas(data);
     } catch (err) {
       console.error("Error loading tarjetas:", err);
       setError("No se pudieron cargar las cuentas bancarias. Intenta de nuevo más tarde.");
-      setTarjetas([]); // Ensure tarjetas is empty on error
+      setTarjetas([]);
     } finally {
       setComponentLoading(false);
     }
@@ -60,7 +71,6 @@ export default function Security() {
           </div>
         )}
         
-        {/* User Identity Card - Ultra Modern */}
         <section>
           <div className="relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-sav-accent to-sav-secondary rounded-m3-lg blur opacity-20 transition duration-1000 group-hover:opacity-40"></div>
@@ -91,7 +101,6 @@ export default function Security() {
           </div>
         </section>
 
-        {/* Data Grid */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <Sparkles size={16} className="text-sav-accent" />
@@ -127,7 +136,6 @@ export default function Security() {
           </div>
         </section>
 
-        {/* Financial Accounts */}
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
@@ -168,7 +176,6 @@ export default function Security() {
           )}
         </section>
 
-        {/* Security Management */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <Lock size={16} className="text-sav-accent" />
@@ -206,7 +213,6 @@ export default function Security() {
           </div>
         </section>
 
-        {/* Logout */}
         <button
           onClick={logout}
           className="w-full h-14 rounded-m3 bg-red-500/5 border border-red-500/10 text-red-500 flex items-center justify-center gap-3 hover:bg-red-500/10 transition-all shadow-m3-1 active:scale-[0.98] group"
@@ -214,10 +220,6 @@ export default function Security() {
           <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
           <span className="text-[12px] font-bold uppercase tracking-[0.2em]">Finalizar Conexión</span>
         </button>
-      </main>
-    </Layout>
-  );
-
       </main>
     </Layout>
   );
