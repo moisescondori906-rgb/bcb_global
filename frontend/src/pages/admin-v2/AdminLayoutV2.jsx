@@ -122,7 +122,7 @@ export default function AdminLayoutV2() {
             {/* Header Sidebar */}
             <div className="p-6 flex items-center gap-4 border-b border-admin-border bg-black/40 shrink-0">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-admin-accent to-violet-500 p-2 shadow-lg shadow-admin-accent/20 border border-white/20">
-                <img src="/imag/logo.png" alt="Logo" className="w-full h-full object-contain brightness-110" />
+                <img src="/imag/logo.webp" alt="Logo" className="w-full h-full object-contain brightness-110" />
               </div>
               <div className="flex flex-col overflow-hidden">
                 <h1 className="text-lg font-black tracking-tighter text-white uppercase truncate">{APP_DISPLAY_NAME}</h1>

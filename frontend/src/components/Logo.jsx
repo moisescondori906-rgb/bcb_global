@@ -12,7 +12,7 @@ export default function Logo({ variant = 'header', className = '' }) {
 
   return (
     <img
-      src="/imag/logo.png"
+      src="/imag/logo.webp"
       alt="BCB Global"
       className={`${base} ${variants[variant] || variants.header} ${className}`}
     />
