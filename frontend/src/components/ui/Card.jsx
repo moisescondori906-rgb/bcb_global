@@ -10,10 +10,10 @@ export function Card({
   ...props 
 }) {
   const variants = {
-    default: 'bg-white border-2 border-slate-200 rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-xl shadow-slate-200/60',
-    flat: 'bg-slate-50 border-2 border-slate-300 rounded-[1.2rem] sm:rounded-[2rem] p-4 sm:p-6',
-    outline: 'bg-transparent border-2 border-slate-300 rounded-[1.2rem] sm:rounded-[2rem] p-4 sm:p-6',
-    premium: 'bg-white border-2 border-slate-200 rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-xl shadow-slate-200/60 border-t-sav-primary/80'
+    default: 'bg-white border border-sav-border rounded-m3 p-5 sm:p-7 shadow-m3-1 hover:shadow-m3-2 transition-shadow duration-300',
+    flat: 'bg-sav-surface border border-sav-border/50 rounded-m3 p-5 sm:p-7',
+    outline: 'bg-transparent border border-sav-border rounded-m3 p-5 sm:p-7',
+    premium: 'bg-white border border-sav-border rounded-m3 p-5 sm:p-7 shadow-m3-2 relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-sav-primary'
   };
 
   const Component = animate ? motion.div : 'div';

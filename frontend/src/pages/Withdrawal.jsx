@@ -284,369 +284,158 @@ export default function Withdrawal() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-sav-dark">
+      <div className="min-h-screen pb-32">
         <Header 
-          title="Retiro de Fondos" 
+          title="Retiro" 
           rightAction={
-            <Link to="/ganancias" className="text-sav-primary text-[9px] font-black uppercase tracking-widest bg-sav-primary/10 px-4 py-2 rounded-xl border border-sav-primary/20">
+            <Link to="/ganancias" className="text-sav-primary text-[9px] font-black uppercase tracking-widest bg-sav-surface px-4 py-2 rounded-m3 border border-sav-border shadow-m3-1">
               Historial
             </Link>
           } 
         />
         
-        {/* Background Decor */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-sav-primary/5 to-transparent blur-[120px]" />
-          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-sav-accent/5 rounded-full blur-[100px]" />
-        </div>
-
-        <main className="px-4 sm:px-6 py-6 sm:py-8 space-y-8 sm:space-y-10 pb-32 animate-fade">
-          {/* Balance Card - Ultra Legibilidad */}
-          <Card variant="premium" className="relative overflow-hidden group bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900 p-6 sm:p-8 border-none shadow-2xl shadow-indigo-200">
-            <div className="absolute top-0 right-0 p-6 sm:p-8 opacity-10 group-hover:scale-110 transition-transform">
-              <WalletIcon size={60} className="text-white sm:w-[100px] sm:h-[100px]" />
-            </div>
-            <div className="relative z-10 space-y-1 sm:space-y-2">
-              <p className="text-[10px] font-black text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.3em] drop-shadow-sm">Capital Disponible</p>
-              <div className="flex items-baseline gap-2 sm:gap-3 overflow-hidden">
-                <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tighter truncate drop-shadow-lg">
+        <main className="px-4 sm:px-6 py-6 space-y-6 animate-in">
+          {/* Balance Card - Flutter Style */}
+          <Card className="p-6 bg-sav-primary border-none shadow-m3-3 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+            <div className="relative z-10 space-y-1">
+              <p className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">Capital Disponible</p>
+              <div className="flex items-baseline gap-2 overflow-hidden">
+                <h2 className="text-3xl font-black text-white tracking-tighter truncate">
                   {(tipoBilletera === 'principal' ? saldoPrincipal : saldoComisiones).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </h2>
-                <span className="text-[10px] sm:text-xs font-black text-white uppercase tracking-widest shrink-0">Bs</span>
+                <span className="text-xs font-bold text-white/50 uppercase tracking-widest">Bs</span>
               </div>
             </div>
           </Card>
 
-          <AnimatePresence>
+          <AnimatePresence mode='wait'>
             {error && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <Card className="p-4 sm:p-5 bg-sav-error/10 border-sav-error/20 flex items-start sm:items-center gap-3 sm:gap-4 shadow-xl">
-                  <AlertCircleIcon size={18} className="text-sav-error shrink-0 mt-0.5 sm:mt-0" />
-                  <p className="text-[9px] sm:text-[10px] text-sav-error font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] leading-relaxed">{error}</p>
-                </Card>
+                <div className="p-4 rounded-m3 bg-sav-error/5 border border-sav-error/20 flex items-center gap-3">
+                  <AlertCircleIcon size={18} className="text-sav-error shrink-0" />
+                  <p className="text-[10px] text-sav-error font-bold uppercase tracking-tight">{error}</p>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* FLUJO OBLIGATORIO */}
           {!securityStatus.tiene_password_fondo ? (
             /* PASO 1: CONTRASEÑA DE FONDOS */
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-              <Card variant="flat" className="p-6 bg-indigo-50 border-2 border-indigo-100 rounded-[2rem]">
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-900 border border-indigo-200">
-                    <ShieldCheckIcon size={24} strokeWidth={3} />
+              <Card className="p-6 bg-white border-sav-border shadow-m3-2 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-m3 bg-sav-surface flex items-center justify-center text-sav-primary border border-sav-border shadow-m3-1">
+                    <ShieldCheckIcon size={24} />
                   </div>
                   <div>
-                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest leading-none mb-1">Paso 1: Seguridad</h3>
-                    <p className="text-[10px] text-indigo-900 font-black uppercase tracking-tight">Configura tu contraseña de fondos</p>
+                    <h3 className="text-[13px] font-black text-sav-primary uppercase tracking-tight">Seguridad de Fondos</h3>
+                    <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">Paso 1 de 2</p>
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-700 font-black leading-relaxed">
-                  Para proteger tus retiros, debes configurar una contraseña especial (diferente a la de login).
-                </p>
+                <p className="text-[11px] text-sav-muted font-medium leading-relaxed">Configura una contraseña de 6 dígitos para autorizar tus retiros.</p>
               </Card>
 
               <form onSubmit={handleFundPasswordSubmit} className="space-y-6">
-                <Card variant="outline" className="p-6 space-y-5 bg-white/[0.02] border-white/5 rounded-[2.5rem]">
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Nueva Contraseña de Fondos</label>
-                    <div className="relative">
-                      <Input
-                        type="password"
-                        value={fundPass.password_fondo}
-                        onChange={(e) => setFundPass({ ...fundPass, password_fondo: e.target.value })}
-                        className="w-full"
-                        required
-                        minLength={6}
-                        placeholder="Mínimo 6 caracteres"
-                        showPasswordToggle
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Confirmar Contraseña</label>
-                    <div className="relative">
-                      <Input
-                        type="password"
-                        value={fundPass.confirm_password_fondo}
-                        onChange={(e) => setFundPass({ ...fundPass, confirm_password_fondo: e.target.value })}
-                        className="w-full"
-                        required
-                        minLength={6}
-                        placeholder="Repite la contraseña"
-                        showPasswordToggle
-                      />
-                    </div>
-                  </div>
+                <Card className="p-8 space-y-5 bg-white border-sav-border shadow-m3-3">
+                  <Input
+                    type="password"
+                    label="Nueva Contraseña"
+                    value={fundPass.password_fondo}
+                    onChange={(e) => setFundPass({ ...fundPass, password_fondo: e.target.value })}
+                    required
+                    maxLength={6}
+                    placeholder="6 dígitos"
+                    icon={LockIcon}
+                    showPasswordToggle
+                  />
+                  <Input
+                    type="password"
+                    label="Confirmar Contraseña"
+                    value={fundPass.confirm_password_fondo}
+                    onChange={(e) => setFundPass({ ...fundPass, confirm_password_fondo: e.target.value })}
+                    required
+                    maxLength={6}
+                    placeholder="Repite los 6 dígitos"
+                    icon={LockIcon}
+                    showPasswordToggle
+                  />
+                  <Button type="submit" loading={loading} className="h-13 shadow-m3-2">GUARDAR SEGURIDAD</Button>
                 </Card>
-
-                <Button 
-                  type="submit" 
-                  loading={loading}
-                  className="w-full h-16 rounded-3xl text-xs font-black tracking-[0.2em]"
-                >
-                  GUARDAR CONTRASEÑA DE FONDOS
-                </Button>
               </form>
             </motion.div>
           ) : !securityStatus.tiene_cuenta_bancaria ? (
             /* PASO 2: CUENTA BANCARIA */
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-              <Card variant="flat" className="p-6 bg-emerald-50 border-2 border-emerald-100 rounded-[2rem]">
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-900 border border-emerald-200">
-                    <BuildingIcon size={24} strokeWidth={3} />
+               <Card className="p-6 bg-white border-sav-border shadow-m3-2 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-m3 bg-sav-surface flex items-center justify-center text-sav-primary border border-sav-border shadow-m3-1">
+                    <BuildingIcon size={24} />
                   </div>
                   <div>
-                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest leading-none mb-1">Paso 2: Cuenta Bancaria</h3>
-                    <p className="text-[10px] text-emerald-900 font-black uppercase tracking-tight">Vincula tu cuenta de retiro</p>
+                    <h3 className="text-[13px] font-black text-sav-primary uppercase tracking-tight">Cuenta de Destino</h3>
+                    <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">Paso 2 de 2</p>
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-700 font-black leading-relaxed">
-                  Registra los datos de tu cuenta bancaria o billetera digital para recibir tus fondos.
-                </p>
+                <p className="text-[11px] text-sav-muted font-medium leading-relaxed">Vincula la cuenta donde recibirás tus transferencias.</p>
               </Card>
 
               <form onSubmit={handleBankAccountSubmit} className="space-y-6">
-                <Card variant="outline" className="p-6 space-y-5 bg-white/[0.02] border-white/5 rounded-[2.5rem]">
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Banco o Plataforma</label>
+                <Card className="p-8 space-y-5 bg-white border-sav-border shadow-m3-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-sav-primary uppercase tracking-widest ml-1">Banco / Plataforma</label>
                     <select 
                       value={bankAcc.banco}
                       onChange={(e) => setBankAcc({ ...bankAcc, banco: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-2xl h-14 px-6 text-sm font-black text-slate-900 outline-none focus:border-sav-primary/30 transition-all appearance-none cursor-pointer"
+                      className="w-full bg-sav-surface border border-sav-border rounded-m3 h-12 px-4 text-sm font-bold text-slate-900 outline-none focus:border-sav-primary transition-all"
                     >
-                      <option value="bnb" className="bg-white text-slate-900">BNB (Banco Nacional de Bolivia)</option>
-                      <option value="union" className="bg-white text-slate-900">Banco Unión</option>
-                      <option value="mercantil" className="bg-white text-slate-900">Banco Mercantil Santa Cruz</option>
-                      <option value="ganadero" className="bg-white text-slate-900">Banco Ganadero</option>
-                      <option value="economico" className="bg-white text-slate-900">Banco Económico</option>
-                      <option value="bisa" className="bg-white text-slate-900">Banco BISA</option>
-                      <option value="otro" className="bg-white text-slate-900">Otro Banco / QR</option>
+                      <option value="bnb">BNB - Banco Nacional</option>
+                      <option value="union">Banco Unión</option>
+                      <option value="mercantil">Banco Mercantil</option>
+                      <option value="ganadero">Banco Ganadero</option>
+                      <option value="economico">Banco Económico</option>
+                      <option value="bisa">Banco BISA</option>
+                      <option value="otro">Otro Banco / QR</option>
                     </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Nombre del Titular</label>
-                    <Input
-                      value={bankAcc.titular}
-                      onChange={(e) => setBankAcc({ ...bankAcc, titular: e.target.value })}
-                      placeholder="Nombre completo"
-                      required
-                    />
-                  </div>
-
-                  {/* Account Number / Phone for QR */}
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Nro de Cuenta o Teléfono (QR)</label>
-                    <Input 
-                      placeholder="Nro de cuenta o celular" 
-                      value={bankAcc.numero_cuenta} 
-                      onChange={(e) => setBankAcc({ ...bankAcc, numero_cuenta: e.target.value })} 
-                      className="bg-[#161926] border-white/5 rounded-2xl h-14"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Tipo de Cuenta</label>
-                      <Input
-                        value={bankAcc.tipo_cuenta}
-                        onChange={(e) => setBankAcc({ ...bankAcc, tipo_cuenta: e.target.value })}
-                        placeholder="Caja de ahorro..."
-                      />
-                    </div>
-                    {/* CI Field */}
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-2">CI del Titular</label>
-                      <Input 
-                        placeholder="Ej: 70001234" 
-                        value={bankAcc.ci_nit} 
-                        onChange={(e) => setBankAcc({ ...bankAcc, ci_nit: e.target.value })} 
-                        className="bg-white border-slate-300 rounded-2xl h-14 font-black"
-                      />
-                    </div>
-                  </div>
+                  <Input label="Titular" value={bankAcc.titular} onChange={(e) => setBankAcc({ ...bankAcc, titular: e.target.value })} placeholder="Nombre completo" icon={ShieldCheckIcon} required />
+                  <Input label="Nro Cuenta / Celular" value={bankAcc.numero_cuenta} onChange={(e) => setBankAcc({ ...bankAcc, numero_cuenta: e.target.value })} placeholder="Nro de cuenta o celular" icon={CreditCardIcon} required />
+                  <Input label="CI / NIT" value={bankAcc.ci_nit} onChange={(e) => setBankAcc({ ...bankAcc, ci_nit: e.target.value })} placeholder="Cédula de identidad" icon={ShieldCheckIcon} required />
+                  
+                  <Button type="submit" loading={loading} className="h-13 shadow-m3-2">VINCULAR CUENTA</Button>
                 </Card>
-
-                <Button 
-                  type="submit" 
-                  loading={loading}
-                  className="w-full h-16 rounded-3xl text-xs font-black tracking-[0.2em]"
-                >
-                  REGISTRAR CUENTA BANCARIA
-                </Button>
               </form>
             </motion.div>
           ) : (
             /* PASO 3: FORMULARIO DE RETIRO */
-            <div className="space-y-8 animate-fade">
-              {/* Alerta de Horario */}
-              {fueraHorario && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-                  <Card className="p-4 sm:p-5 bg-amber-500/10 border-amber-500/20 flex items-start sm:items-center gap-3 sm:gap-4">
-                    <ClockIcon size={18} className="text-amber-500 shrink-0 mt-0.5 sm:mt-0" />
-                    <p className="text-[9px] sm:text-[10px] text-amber-500 font-black uppercase tracking-widest">{msgHorario || 'Fuera de horario de retiro'}</p>
-                  </Card>
-                </motion.div>
-              )}
-
-              {hasWithdrawalToday && (
-                <Card className="p-4 sm:p-6 border-amber-500/20 bg-amber-500/5 flex items-start sm:items-center gap-3 sm:gap-4">
-                  <ClockIcon size={20} className="text-amber-500 shrink-0 mt-0.5 sm:mt-0" />
-                  <p className="text-[9px] sm:text-[10px] font-black text-amber-500 uppercase tracking-widest leading-relaxed">
-                    Solo puedes realizar 1 retiro por día.
-                  </p>
-                </Card>
-              )}
-
-              {/* Imagen al final y completa */}
-              <div className="w-full rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-white/5">
-                <img src="/imag/retiros.png" alt="Información de Retiros" className="w-full h-auto object-contain" />
+            <div className="space-y-6">
+              {/* Wallet Selector */}
+              <div className="flex bg-white p-1.5 rounded-m3 border border-sav-border shadow-m3-1">
+                <button onClick={() => setTipoBilletera('principal')} className={cn("flex-1 py-3 rounded-m3 text-[10px] font-black uppercase tracking-widest transition-all", tipoBilletera === 'principal' ? "bg-sav-primary text-white shadow-m3-2" : "text-sav-muted")}>Capital</button>
+                <button onClick={() => setTipoBilletera('comisiones')} className={cn("flex-1 py-3 rounded-m3 text-[10px] font-black uppercase tracking-widest transition-all", tipoBilletera === 'comisiones' ? "bg-sav-primary text-white shadow-m3-2" : "text-sav-muted")}>Comisiones</button>
               </div>
 
-              {/* Formulario de Retiro */}
-              {!isAllowedDay && !isInternar && userLevel && (
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-                  <Card variant="flat" className="p-5 sm:p-6 border-amber-500/20 bg-amber-500/10 flex flex-col gap-5">
-                    <div className="flex items-center gap-2 sm:gap-3 text-amber-500">
-                      <ClockIcon size={18} />
-                      <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-widest">Días no permitidos</h3>
-                    </div>
-                    
-                    <div className="bg-white rounded-2xl p-4 border-2 border-amber-200 shadow-sm space-y-3">
-                      <div className="flex justify-between items-center px-1">
-                        <span className="text-[9px] font-black text-amber-700 uppercase tracking-widest">Cronograma Semanal</span>
-                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Bolivia Time</span>
-                      </div>
-                      <div className="grid grid-cols-7 gap-1.5">
-                        {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, i) => {
-                          let isAllowed = false;
-                          if (userLevel?.retiro_horario_habilitado) {
-                            const start = Number(userLevel.retiro_dia_inicio);
-                            const end = Number(userLevel.retiro_dia_fin);
-                            if (start <= end) isAllowed = today >= start && today <= end;
-                            else isAllowed = today >= start || today <= end;
-                          } else {
-                            isAllowed = globalAllowedDays.includes(i);
-                          }
-                          const isToday = today === i;
-                          return (
-                            <div key={i} className="flex flex-col items-center gap-1.5">
-                              <span className="text-[9px] font-black text-slate-600">{day}</span>
-                              <div className={cn(
-                                "w-full aspect-square rounded-lg flex items-center justify-center text-[10px] font-black transition-all border-2",
-                                isAllowed 
-                                  ? "bg-indigo-900 text-white border-indigo-900 shadow-md shadow-indigo-100" 
-                                  : "bg-slate-50 text-slate-400 border-slate-100",
-                                isToday && !isAllowed && "border-amber-500 bg-amber-50 text-amber-700"
-                              )}>
-                                {i === 0 ? 7 : i}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
+              {/* Schedule Info */}
+              {!schedRet.ok && (
+                <div className="p-4 rounded-m3 bg-sav-error/5 border border-sav-error/20 flex items-start gap-3 shadow-m3-1">
+                  <ClockIcon size={18} className="text-sav-error shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-sav-error font-bold uppercase tracking-tight leading-relaxed">{schedRet.message}</p>
+                </div>
               )}
 
-              {isInternar && (
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-                  <Card variant="premium" className="p-6 sm:p-8 border-sav-primary/20 bg-sav-primary/5 flex flex-col items-center gap-4 text-center">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-sav-primary/10 flex items-center justify-center text-sav-primary shadow-inner">
-                      <LockIcon size={28} className="sm:w-[32px] sm:h-[32px]" />
-                    </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <h3 className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest">Retiros Deshabilitados</h3>
-                      <p className="text-[9px] sm:text-[10px] font-bold text-sav-muted uppercase tracking-widest leading-relaxed">
-                        Los usuarios en etapa de Pasantía no tienen habilitados los retiros. Esta medida forma parte de nuestras políticas de privacidad y seguridad, para proteger los fondos de la empresa y evitar registros automatizados o usos indebidos. <br/>
-                        Para acceder a retiros, debes estar en un nivel global habilitado.
-                      </p>
-                    </div>
-                    <Button onClick={() => navigate('/vip')} variant="primary" className="mt-2 text-[10px] py-3 h-12 w-full max-w-[200px]">Ver Niveles VIP</Button>
-                  </Card>
-                </motion.div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-8 sm:space-y-10">
-                {/* Origen de Fondos */}
-                <section className="space-y-5 sm:space-y-6">
-                  <div className="flex items-center gap-2 sm:gap-3 px-1">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sav-primary/10 flex items-center justify-center text-sav-primary border border-sav-primary/20 shadow-lg">
-                      <WalletIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
-                    </div>
-                    <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">1. Origen de Fondos</h2>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                    {[
-                      { id: 'principal', label: 'Saldo Principal', val: saldoPrincipal, icon: BanknoteIcon },
-                      { id: 'comisiones', label: 'Billetera Comisiones', val: saldoComisiones, icon: TrendingUpIcon }
-                    ].map(b => {
-                      const Icon = b.icon;
-                      const active = tipoBilletera === b.id;
-                      return (
-                        <Card 
-                          key={b.id}
-                          variant={active ? 'premium' : 'flat'}
-                          className={cn(
-                            "p-4 sm:p-6 flex items-center justify-between cursor-pointer border transition-all duration-500",
-                            active ? "border-sav-primary/40 bg-sav-primary/10 scale-[1.01] sm:scale-[1.02] shadow-xl sm:shadow-2xl" : "border-black/5 bg-white shadow-sm hover:bg-black/5"
-                          )}
-                          onClick={() => setTipoBilletera(b.id)}
-                        >
-                          <div className="flex items-center gap-4 sm:gap-5 min-w-0">
-                            <div className={cn(
-                              "w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-inner shrink-0",
-                              active ? "bg-white/10 text-white" : "bg-sav-primary/5 text-sav-primary"
-                            )}>
-                              <Icon size={20} className="sm:w-[24px] sm:h-[24px]" />
-                            </div>
-                            <div className="space-y-0.5 sm:space-y-1 min-w-0">
-                              <p className={cn("text-[8px] sm:text-[9px] font-black uppercase tracking-widest truncate", active ? "text-white/60" : "text-sav-muted")}>{b.label}</p>
-                              <p className="text-xl sm:text-2xl font-black text-gray-900 tracking-tighter truncate">{b.val.toLocaleString()} <span className="text-[9px] text-gray-400 uppercase">Bs</span></p>
-                            </div>
-                          </div>
-                          <div className={cn(
-                            "w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0", 
-                            active ? "border-white bg-white text-sav-primary" : "border-black/10"
-                          )}>
-                            {active && <CheckIcon size={12} className="sm:w-[14px] sm:h-[14px]" strokeWidth={4} />}
-                          </div>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </section>
-
-                {/* Monto a Retirar */}
-                <section className="space-y-5 sm:space-y-6">
-                  <div className="flex items-center justify-between px-1">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sav-accent/10 flex items-center justify-center text-sav-accent border border-sav-accent/20 shadow-lg">
-                        <BanknoteIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
-                      </div>
-                      <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">2. Monto</h2>
-                    </div>
-                    <Badge variant="info" className="bg-slate-100 border-slate-200 text-slate-600 text-[9px] sm:text-[10px] font-black tracking-widest px-2 sm:px-3">Bs</Badge>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <section className="space-y-4">
+                  <h3 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em] px-1">Selecciona Monto</h3>
+                  <div className="grid grid-cols-3 gap-3">
                     {montos.map(m => (
-                      <button
-                        key={m}
-                        type="button"
+                      <button 
+                        key={m} 
+                        type="button" 
                         onClick={() => setMonto(m)}
                         className={cn(
-                          "h-12 sm:h-16 rounded-xl sm:rounded-[1.5rem] border text-[10px] sm:text-[11px] font-black uppercase tracking-widest transition-all duration-300",
-                          monto === m 
-                            ? "bg-sav-primary border-sav-primary text-white shadow-lg sm:shadow-[0_15px_30px_rgba(220,38,38,0.2)] scale-[1.05]" 
-                            : "bg-white border-black/5 text-sav-muted hover:bg-black/5 shadow-sm"
+                          "py-3.5 rounded-m3 border text-sm font-black transition-all shadow-m3-1",
+                          monto === m ? "bg-sav-surface border-sav-primary text-sav-primary ring-1 ring-sav-primary/30" : "bg-white border-sav-border text-sav-muted"
                         )}
                       >
                         {m}
@@ -655,98 +444,67 @@ export default function Withdrawal() {
                   </div>
                 </section>
 
-                {/* Selección de Cuenta */}
-                <section className="space-y-5 sm:space-y-6">
-                  <div className="flex items-center gap-2 sm:gap-3 px-1">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20 shadow-lg">
-                      <CreditCardIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
-                    </div>
-                    <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">3. Cuenta Bancaria</h2>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {tarjetas.map(t => {
-                      const active = tarjetaId === t.id;
-                      return (
-                        <Card 
-                          key={t.id}
-                          variant={active ? 'premium' : 'flat'}
+                <section className="space-y-4">
+                   <h3 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em] px-1">Validación y Envío</h3>
+                   <Card className="p-8 space-y-6 bg-white border-sav-border shadow-m3-3">
+                     <Input 
+                        type="password" 
+                        label="Pin de Seguridad"
+                        placeholder="6 dígitos de fondos" 
+                        maxLength={6} 
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        icon={LockIcon}
+                        required 
+                      />
+
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-black text-sav-primary uppercase tracking-widest px-1">Comprobante / Selfie</p>
+                        <button 
+                          type="button" 
+                          onClick={() => fileRef.current?.click()}
                           className={cn(
-                            "p-4 flex items-center justify-between cursor-pointer border transition-all duration-300",
-                            active ? "border-blue-500/40 bg-blue-500/10" : "bg-white border-black/5 shadow-sm"
+                            "w-full aspect-video rounded-m3 border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-all relative overflow-hidden",
+                            comprobantePreview ? "border-sav-primary bg-sav-surface/50" : "border-sav-border bg-sav-surface hover:bg-sav-surface/80"
                           )}
-                          onClick={() => setTarjetaId(t.id)}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", active ? "bg-white/10 text-white" : "bg-blue-500/10 text-blue-500")}>
-                              <BuildingIcon size={20} />
-                            </div>
-                            <div>
-                              <p className={cn("text-[9px] font-black uppercase tracking-widest", active ? "text-white/60" : "text-sav-muted")}>{t.banco}</p>
-                              <p className="text-sm font-black text-gray-900">{t.numero_cuenta}</p>
-                            </div>
-                          </div>
-                          <div className={cn(
-                            "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all", 
-                            active ? "border-white bg-white text-blue-500" : "border-black/10"
-                          )}>
-                            {active && <CheckIcon size={12} strokeWidth={4} />}
-                          </div>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </section>
+                          {comprobantePreview ? (
+                            <img src={comprobantePreview} className="w-full h-full object-cover" alt="Preview" />
+                          ) : (
+                            <>
+                              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-sav-primary shadow-m3-1">
+                                {isOptimizing ? <LoaderIcon className="animate-spin" /> : <UploadIcon size={20} />}
+                              </div>
+                              <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Capturar imagen</p>
+                            </>
+                          )}
+                          <input type="file" ref={fileRef} onChange={handleFile} accept="image/*" className="hidden" />
+                        </button>
+                      </div>
 
-                {/* Comprobante / Imagen */}
-                <section className="space-y-5 sm:space-y-6">
-                  <div className="flex items-center gap-2 sm:gap-3 px-1">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-lg">
-                      <UploadIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
-                    </div>
-                    <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">4. Comprobante</h2>
-                  </div>
-                  
-                  <Card 
-                    variant="outline" 
-                    className={cn(
-                      "p-8 sm:p-10 border-2 border-dashed flex flex-col items-center justify-center text-center gap-4 sm:gap-5 relative overflow-hidden group transition-all duration-500 cursor-pointer",
-                      comprobantePreview ? "border-emerald-500/40 bg-emerald-500/5" : "border-black/10 bg-white hover:border-sav-primary/40 hover:bg-sav-primary/5 shadow-sm"
-                    )}
-                    onClick={() => fileRef.current?.click()}
-                  >
-                    <input type="file" ref={fileRef} className="hidden" onChange={handleFile} accept="image/*" />
-                    {comprobantePreview ? (
-                      <>
-                        <img src={comprobantePreview} className="absolute inset-0 w-full h-full object-cover opacity-20 blur-[2px]" />
-                        <div className="relative z-10 w-24 h-24 rounded-3xl overflow-hidden border-2 border-emerald-500 shadow-2xl">
-                          <img src={comprobantePreview} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="relative z-10 space-y-1">
-                          <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Imagen Cargada</p>
-                          <p className="text-[8px] text-emerald-600 font-bold uppercase tracking-[0.2em] bg-emerald-500/10 px-4 py-1 rounded-full">Cambiar Imagen</p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-slate-50 flex items-center justify-center text-sav-muted group-hover:bg-sav-primary group-hover:text-white transition-all duration-500 border border-black/5 shadow-inner">
-                          {isOptimizing ? <LoaderIcon size={28} className="animate-spin" /> : <UploadIcon size={28} />}
-                        </div>
-                        <div className="space-y-1.5 sm:space-y-2">
-                          <p className="text-[10px] sm:text-xs font-black text-sav-muted uppercase tracking-[0.2em] group-hover:text-sav-primary transition-colors">Sube un comprobante</p>
-                          <p className="text-[8px] sm:text-[9px] text-gray-300 font-bold uppercase tracking-[0.3em]">Requisito obligatorio para retiro</p>
-                        </div>
-                      </>
-                    )}
-                  </Card>
+                      <Button 
+                        type="submit" 
+                        loading={loading || isOptimizing} 
+                        disabled={!schedRet.ok || hasWithdrawalToday || isInternar}
+                        className="h-14 shadow-m3-3"
+                        icon={ArrowRightIcon}
+                      >
+                        {isInternar ? 'NIVEL INSUFICIENTE' : 'ENVIAR SOLICITUD'}
+                      </Button>
+                   </Card>
                 </section>
+              </form>
 
-                {/* Seguridad Final */}
-                <section className="space-y-5 sm:space-y-6">
-                  <div className="flex items-center gap-2 sm:gap-3 px-1">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-lg">
-                      <LockIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
-                    </div>
+              {/* Info Image */}
+              <div className="rounded-m3-lg overflow-hidden border border-sav-border shadow-m3-2 bg-white p-2">
+                <img src="/imag/retiros.webp" alt="Info Retiros" className="w-full h-auto object-contain rounded-m3" />
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+    </Layout>
+  );
                     <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">5. Confirmación</h2>
                   </div>
                   

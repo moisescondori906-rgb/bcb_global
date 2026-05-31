@@ -8,7 +8,8 @@ import { CONFIG } from '../config.js';
 import { 
   Users, UserPlus, TrendingUp, Info, 
   ShieldAlert, ChevronRight, Copy, Check,
-  Target, Zap, Gem, Trash2, Star, PieChart as PieChartIcon
+  Target, Zap, Gem, Trash2, Star, PieChart as PieChartIcon,
+  Loader2
 } from 'lucide-react';
 
 // UI Components
@@ -53,9 +54,9 @@ const PieChart = ({ data }) => {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-8 sm:gap-12 p-2">
-      <div className="relative w-40 h-40 sm:w-48 sm:h-48 group">
-        <svg viewBox="-1.1 -1.1 2.2 2.2" className="transform -rotate-90 w-full h-full drop-shadow-xl">
+    <div className="flex flex-col sm:flex-row items-center gap-8 p-2">
+      <div className="relative w-40 h-40 group">
+        <svg viewBox="-1.1 -1.1 2.2 2.2" className="transform -rotate-90 w-full h-full drop-shadow-sm">
           <defs>
             {chartData.map((_, idx) => (
               <linearGradient key={`grad-${idx}`} id={`grad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -81,29 +82,20 @@ const PieChart = ({ data }) => {
                 transition={{ delay: idx * 0.1, duration: 0.5 }}
                 d={pathData} 
                 fill={`url(#grad-${idx})`}
-                stroke="rgba(255,255,255,0.2)"
-                strokeWidth="0.01"
                 className="hover:brightness-110 transition-all cursor-pointer" 
               />
             );
           })}
-          {/* Inner circle for Donut effect */}
-          <circle cx="0" cy="0" r="0.65" fill="#ffffff" />
+          <circle cx="0" cy="0" r="0.75" fill="#ffffff" />
         </svg>
         
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center text-center"
-          >
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Total</p>
-            <div className="flex items-baseline gap-0.5">
-              <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tighter">
-                {formatCurrency(total, 'Bs').trim()}
-              </span>
-            </div>
-          </motion.div>
+          <div className="flex flex-col items-center justify-center text-center">
+            <p className="text-[8px] font-black text-sav-muted uppercase tracking-[0.2em] mb-0.5">Total</p>
+            <p className="text-lg font-black text-sav-primary tracking-tighter">
+              {formatCurrency(total, 'Bs').trim()}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -112,33 +104,25 @@ const PieChart = ({ data }) => {
           const val = Number(item.value) || 0;
           const percent = (val / total) * 100;
           return (
-            <motion.div 
-              key={idx} 
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.3 + idx * 0.1 }}
-              className="space-y-1.5"
-            >
+            <div key={idx} className="space-y-1.5">
               <div className="flex justify-between items-end">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full shadow-lg" style={{ background: `linear-gradient(135deg, ${colors[idx % colors.length].from}, ${colors[idx % colors.length].to})` }} />
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{item.name.charAt(0).toUpperCase() + item.name.slice(1)}</span>
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: colors[idx % colors.length].from }} />
+                  <span className="text-[9px] font-black text-sav-muted uppercase tracking-widest">{item.name}</span>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-xs font-black text-slate-900">{percent.toFixed(1)}%</span>
-                  <span className="text-[9px] font-bold text-slate-400">{formatCurrency(val)}</span>
+                  <span className="text-[11px] font-black text-sav-primary">{percent.toFixed(1)}%</span>
                 </div>
               </div>
-              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-sav-surface rounded-full overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${percent}%` }}
-                  transition={{ duration: 1, delay: 0.5 + idx * 0.1 }}
                   className="h-full rounded-full"
-                  style={{ background: `linear-gradient(90deg, ${colors[idx % colors.length].from}, ${colors[idx % colors.length].to})` }}
+                  style={{ background: colors[idx % colors.length].from }}
                 />
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -239,257 +223,114 @@ export default function Team() {
 
   return (
     <Layout>
-      <Header title="Informe del equipo" />
+      <Header title="Equipo" />
       
-      <main className="px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-32 animate-fade">
-        {/* Aviso para Internar */}
-        {isInternar && (
-          <div className="px-1">
-            <Card className="p-4 bg-amber-50 border-amber-100 flex items-center gap-3 rounded-2xl">
-              <Info size={18} className="text-amber-600 shrink-0" />
-              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-tight">
-                Como usuario Pasante, puedes visualizar el crecimiento de tu red en tiempo real.
-              </p>
-            </Card>
-          </div>
-        )}
-
-        {/* Invitation Banner */}
-        <Card className="p-6 sm:p-8 bg-sav-primary text-white shadow-xl shadow-sav-primary/20 relative overflow-hidden rounded-[2rem] sm:rounded-[3rem] group">
-          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-            <UserPlus size={100} />
-          </div>
-          <div className="relative z-10 space-y-4 sm:space-y-6">
-            <div className="space-y-1">
-              <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight">Expande tu Red</h2>
-              <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest opacity-80">Invita amigos y gana comisiones de por vida.</p>
+      <main className="px-4 sm:px-6 py-6 space-y-6 pb-32 animate-in">
+        {/* Referral Card - Modern Flutter Style */}
+        <Card className="p-6 bg-sav-primary border-none shadow-m3-3 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+          <div className="relative z-10 space-y-6">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">Código de Invitación</p>
+                <p className="text-3xl font-black text-white tracking-tighter uppercase">{user?.codigo_invitacion || '------'}</p>
+              </div>
+              <button 
+                onClick={handleCopy}
+                className="p-3 rounded-m3 bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all shadow-lg active:scale-95"
+              >
+                {copied ? <Check size={20} /> : <Copy size={20} />}
+              </button>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/20 flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <p className="text-[8px] font-black uppercase tracking-widest opacity-60">Código de Invitación</p>
-                  <p className="text-lg font-black tracking-tighter">{user?.codigo_invitacion || '---'}</p>
-                </div>
-                <button 
-                  onClick={handleCopy}
-                  className="p-3 bg-white text-sav-primary rounded-xl shadow-lg active:scale-90 transition-all"
-                >
-                  {copied ? <Check size={20} /> : <Copy size={20} />}
-                </button>
-              </div>
-              <Link to="/invitar" className="sm:w-auto">
-                <Button variant="secondary" icon={Zap} className="h-full py-4 sm:px-8 bg-white/10 border-white/20 text-white hover:bg-white/20">
-                  Ver Enlace
-                </Button>
-              </Link>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-m3-sm bg-white/5 border border-white/10">
+              <UserPlus size={14} className="text-white/60" />
+              <p className="text-[9px] font-black text-white/80 uppercase tracking-widest truncate">Comparte tu enlace para ganar comisiones</p>
             </div>
           </div>
         </Card>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          <Card className="p-5 sm:p-7 bg-white border-2 border-slate-100 shadow-xl shadow-slate-200/50 rounded-2xl sm:rounded-[2.5rem] space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest truncate">Ganancia Total</span>
-              <TrendingUp size={16} className="text-sav-primary shrink-0" />
-            </div>
-            <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter truncate">{(Number(resumen.ingresos_totales) || 0).toFixed(2)}</p>
+        {/* Team Statistics - Rediseñado */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <PieChartIcon size={14} className="text-sav-primary" />
+            <h3 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em]">Resumen de Comisiones</h3>
+          </div>
+
+          <Card className="p-6 bg-white border-sav-border shadow-m3-2">
+            <PieChart data={[
+              { name: 'Nivel A', value: resumen.comisiones_a || 0 },
+              { name: 'Nivel B', value: resumen.comisiones_b || 0 },
+              { name: 'Nivel C', value: resumen.comisiones_c || 0 }
+            ]} />
           </Card>
-          <Card className="p-5 sm:p-7 bg-white border-2 border-slate-100 shadow-xl shadow-slate-200/50 rounded-2xl sm:rounded-[2.5rem] space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest truncate">Miembros</span>
-              <Users size={16} className="text-blue-600 shrink-0" />
-            </div>
-            <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter truncate">{resumen.total_miembros || 0}</p>
-          </Card>
+        </section>
+
+        {/* Levels Grid */}
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: 'Nivel A', count: resumen.total_a || 0, icon: Gem, color: 'text-sav-primary', bg: 'bg-sav-surface' },
+            { label: 'Nivel B', count: resumen.total_b || 0, icon: Zap, color: 'text-amber-500', bg: 'bg-amber-50' },
+            { label: 'Nivel C', count: resumen.total_c || 0, icon: Star, color: 'text-rose-500', bg: 'bg-rose-50' }
+          ].map((item, idx) => (
+            <button
+              key={idx}
+              onClick={() => setSelectedNivel(item.label.split(' ')[1])}
+              className={cn(
+                "p-4 rounded-m3-lg border transition-all flex flex-col items-center gap-2 text-center",
+                selectedNivel === item.label.split(' ')[1]
+                  ? "bg-sav-primary border-sav-primary shadow-m3-2 text-white"
+                  : "bg-white border-sav-border shadow-m3-1 text-sav-primary"
+              )}
+            >
+              <div className={cn(
+                "w-10 h-10 rounded-m3 flex items-center justify-center mb-1",
+                selectedNivel === item.label.split(' ')[1] ? "bg-white/10" : item.bg
+              )}>
+                <item.icon size={20} className={selectedNivel === item.label.split(' ')[1] ? "text-white" : item.color} />
+              </div>
+              <p className="text-[8px] font-black uppercase tracking-widest opacity-60">{item.label}</p>
+              <p className="text-lg font-black tracking-tight">{item.count}</p>
+            </button>
+          ))}
         </div>
 
-        {/* Módulo: Análisis de Ingresos */}
-        <section className="px-1">
-          <Card className="bg-white border-slate-200 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] shadow-xl shadow-slate-200/50 space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
-                  <PieChartIcon size={14} className="text-sav-primary" /> Análisis de Ingresos
-                </h3>
-                <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-widest">Desglose de tus ganancias acumuladas.</p>
-              </div>
-            </div>
-            
-            <PieChart data={stats?.pie_chart || []} />
-          </Card>
-        </section>
-
-        {/* Módulo: Porcentaje de Ganancias por Red */}
-        <section className="px-1">
-          <Card className="bg-sav-primary/5 border-sav-primary/10 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
-              <Zap size={60} className="text-sav-primary" />
-            </div>
-            <div className="relative z-10 space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-sav-primary/10 flex items-center justify-center text-sav-primary">
-                  <Star size={16} />
-                </div>
-                <h3 className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Comisiones por Niveles</h3>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-slate-200 text-center shadow-sm">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1">Nivel A</p>
-                  <p className="text-sm sm:text-base font-black text-sav-primary">10%</p>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-slate-200 text-center shadow-sm">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1">Nivel B</p>
-                  <p className="text-sm sm:text-base font-black text-sav-primary">3%</p>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-slate-200 text-center shadow-sm">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1">Nivel C</p>
-                  <p className="text-sm sm:text-base font-black text-sav-primary">1%</p>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </section>
-
-        {/* Breakdown by Levels */}
-        <section className="px-1 space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Target size={16} className="text-sav-primary" />
-            <h3 className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Estructura de Red</h3>
+        {/* Referrals List - Clean Material Table */}
+        <section className="space-y-4 pb-12">
+          <div className="flex items-center justify-between px-1">
+             <h3 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em]">Integrantes Nivel {selectedNivel}</h3>
+             <Badge variant="info" className="bg-sav-surface text-sav-primary border-sav-border">Sincronizado</Badge>
           </div>
-          
+
           <div className="space-y-3">
-            {niveles.map((n, i) => (
-              <Card key={i} className="bg-white border-slate-200 p-4 sm:p-5 flex items-center justify-between rounded-2xl sm:rounded-[2rem] shadow-lg shadow-slate-200/50 hover:border-sav-primary/20 transition-all group">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sav-primary/5 flex items-center justify-center text-sav-primary group-hover:bg-sav-primary group-hover:text-white transition-all duration-500">
-                    <span className="text-sm sm:text-base font-black">L{i+1}</span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-tight">Nivel {n.nivel}</p>
-                    <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest">{n.total_miembros || 0} Integrantes</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs sm:text-sm font-black text-slate-900">{(Number(n.monto_recarga) || 0).toFixed(2)} Bs</p>
-                  <p className="text-[8px] font-black text-sav-success uppercase tracking-widest">+{n.porcentaje}% Comisión</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Miembros por nivel */}
-        <section className="space-y-4">
-          <div className="flex flex-col gap-1 px-1">
-            <h3 className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Users size={14} className="text-sav-primary" /> Miembros por nivel
-            </h3>
-            <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-              Gestiona los integrantes de tu red.
-            </p>
-          </div>
-
-          <div className="flex gap-2 px-1">
-            {['A', 'B', 'C'].map((nivel) => (
-              <button
-                key={nivel}
-                onClick={() => setSelectedNivel(nivel)}
-                className={cn(
-                  "flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
-                  selectedNivel === nivel 
-                    ? "bg-sav-primary text-white border-sav-primary shadow-lg shadow-sav-primary/20" 
-                    : "bg-white text-slate-400 border-slate-200 hover:border-sav-primary/20"
-                )}
-              >
-                Nivel {nivel}
-              </button>
-            ))}
-          </div>
-
-          <Card className="bg-white border-slate-200 shadow-xl shadow-slate-200/50 rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden">
-            <div className="divide-y divide-slate-100">
-              {referralsLoading && referrals.length === 0 ? (
-                <div className="p-10 flex flex-col items-center justify-center space-y-4">
-                  <div className="w-8 h-8 border-2 border-slate-200 border-t-sav-primary rounded-full animate-spin" />
-                  <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">Cargando nivel {selectedNivel}...</p>
-                </div>
-              ) : referrals.length > 0 ? (
-                referrals.map((ref, idx) => (
-                  <div 
-                    key={ref.id} 
-                    className="p-5 sm:p-6 flex items-center justify-between hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-slate-500 font-black text-sm sm:text-base shadow-sm">
-                        {ref.nombre_usuario?.charAt(0).toUpperCase() || '?'}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight truncate">
-                          {ref.nombre_usuario}
-                        </p>
-                        <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 tracking-[0.1em]">
-                          {ref.telefono_masked}
-                        </p>
-                      </div>
+            {referralsLoading ? (
+              <div className="py-12 flex justify-center"><Loader2 size={24} className="animate-spin text-sav-primary/30" /></div>
+            ) : referrals.length > 0 ? (
+              referrals.map((ref) => (
+                <Card key={ref.id} className="p-4 flex items-center justify-between bg-white border-sav-border shadow-m3-1">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-10 h-10 rounded-m3 bg-sav-surface border border-sav-border flex items-center justify-center text-sav-primary font-black text-xs">
+                      {ref.nombre_usuario?.charAt(0).toUpperCase()}
                     </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-right space-y-1">
-                        <div className="inline-block px-2.5 py-1 rounded-lg bg-sav-primary/10 border-2 border-sav-primary/20">
-                          <p className="text-[9px] sm:text-[10px] font-black text-sav-primary uppercase tracking-widest">
-                            {ref.nivel}
-                          </p>
-                        </div>
-                        <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-tighter">
-                          {ref.created_at ? new Date(ref.created_at).toLocaleDateString('es-BO', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '---'}
-                        </p>
-                      </div>
-                      
-                      {selectedNivel === 'A' && String(ref.nivel_codigo).toLowerCase() === 'internar' && (
-                        <button
-                          onClick={() => handleDeleteReferral(ref.id)}
-                          disabled={deletingId === ref.id}
-                          className="p-2 text-sav-error hover:bg-sav-error/5 rounded-lg transition-colors disabled:opacity-50 border border-transparent hover:border-sav-error/10"
-                        >
-                          {deletingId === ref.id ? (
-                            <div className="w-4 h-4 border-2 border-sav-error/20 border-t-sav-error rounded-full animate-spin" />
-                          ) : (
-                            <Trash2 size={16} />
-                          )}
-                        </button>
-                      )}
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-black text-sav-primary uppercase truncate">{ref.nombre_usuario}</p>
+                      <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest">{ref.telefono}</p>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="p-12 flex flex-col items-center justify-center text-center space-y-4">
-                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200">
-                    <Users size={28} />
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-sav-primary">{ref.nivel_nombre || 'Pasante'}</p>
+                    <p className="text-[8px] font-bold text-sav-muted uppercase tracking-widest">{new Date(ref.created_at).toLocaleDateString()}</p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Sin miembros</p>
-                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">No hay usuarios registrados en el Nivel {selectedNivel}.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </Card>
+                </Card>
+              ))
+            ) : (
+              <div className="py-20 text-center opacity-40 flex flex-col items-center gap-3">
+                <Users size={40} className="text-sav-muted" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-sav-muted">No hay integrantes registrados</p>
+              </div>
+            )}
+          </div>
         </section>
-
-        {/* Info Card */}
-        <Card className="p-6 bg-slate-50 border-slate-100 rounded-[2rem] flex items-center gap-4">
-          <div className="w-12 h-12 bg-sav-primary/5 rounded-2xl flex items-center justify-center text-sav-primary">
-            <Info size={24} />
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Soporte de Red</p>
-            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
-              Si tienes problemas con tus comisiones, contacta a tu asesor de cuenta.
-            </p>
-          </div>
-        </Card>
       </main>
     </Layout>
   );

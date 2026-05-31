@@ -46,161 +46,109 @@ export default function VIP() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-sav-dark pb-32">
-        <header className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6">
+      <div className="min-h-screen pb-32">
+        <header className="px-6 py-8 space-y-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter leading-none">Inversiones GLOBAL</h1>
-            <Badge variant="outline" className="bg-white border-slate-200 text-slate-500 font-bold px-3 py-1 text-[10px]">OFICIAL</Badge>
+            <h1 className="text-2xl font-black text-sav-primary uppercase tracking-tighter leading-none">VIP Global</h1>
+            <div className="px-2 py-1 rounded-m3-sm bg-sav-surface border border-sav-border text-sav-primary text-[9px] font-black uppercase tracking-widest">
+              OFICIAL
+            </div>
           </div>
 
-          {/* Current Status Card */}
-          <Card className="relative overflow-hidden group border-2 border-slate-200 bg-white p-5 sm:p-6 shadow-2xl shadow-slate-200">
-            <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-10 group-hover:rotate-12 transition-transform">
-              <Crown size={60} className="text-indigo-900 sm:w-[80px] sm:h-[80px]" />
-            </div>
-            <div className="relative z-10 flex flex-col items-center py-2 sm:py-4">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[1.2rem] sm:rounded-3xl bg-indigo-50 border-2 border-indigo-100 flex items-center justify-center text-indigo-900 mb-3 sm:mb-4 shadow-sm">
-                <Crown className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={3} />
-              </div>
-              <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-1">Tu Nivel Actual</p>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-tight">
-                {displayLevelCode(user?.nivel_codigo || 'Internar')}
-              </h2>
-              <div className="w-full mt-6 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-lg bg-white p-2">
-                <img src="/imag/tabla_invercion.png" alt="Tabla de Inversión" className="w-full h-auto object-contain contrast-125 rounded-xl" />
-              </div>
-            </div>
+          {/* Current Status Card - Flutter Redesign */}
+          <Card className="p-6 bg-sav-primary border-none shadow-m3-3 relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+             <div className="flex flex-col items-center py-4 relative z-10">
+               <div className="w-16 h-16 rounded-m3 bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white mb-4 shadow-lg">
+                 <Crown size={32} strokeWidth={2.5} />
+               </div>
+               <p className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] mb-1">Membresía Actual</p>
+               <h2 className="text-3xl font-black text-white uppercase tracking-tight">
+                 {displayLevelCode(user?.nivel_codigo || 'Internar')}
+               </h2>
+             </div>
+          </Card>
+          
+          {/* Info Table Card */}
+          <Card className="p-4 bg-white border-sav-border shadow-m3-1 overflow-hidden">
+             <div className="rounded-m3 overflow-hidden border border-sav-border/50">
+               <img src="/imag/tabla_invercion.webp" alt="Tabla de Inversión" className="w-full h-auto object-contain" />
+             </div>
           </Card>
         </header>
 
-        <main className="px-4 sm:px-5 space-y-6 pb-10">
+        <main className="px-5 space-y-4">
           <div className="flex items-center gap-2 px-1 mb-2">
             <Sparkles size={16} className="text-sav-primary" />
-            <h2 className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Portafolio de Inversión</h2>
+            <h2 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em]">Opciones de Membresía</h2>
           </div>
 
-          <div className="space-y-5 sm:space-y-6">
-            {Array.isArray(niveles) && niveles.map((nivel, i) => {
+          <div className="space-y-4">
+            {Array.isArray(niveles) && niveles.filter(n => (n.deposito || n.costo) > 0).map((nivel, i) => {
               const esActual = nivel.id === user?.nivel_id;
               const esSuperior = esNivelSuperior(nivel);
               const bloqueado = nivel.activo === false;
 
-              return (
-                <Card 
+              return (                <Card 
                   key={nivel.id} 
                   className={cn(
-                    "p-5 sm:p-6 transition-all relative overflow-hidden border-2 border-slate-200 shadow-2xl shadow-slate-200",
-                    esActual ? "bg-white ring-2 ring-indigo-900 ring-opacity-10" : "bg-white",
-                    !esActual && !esSuperior && "opacity-40 grayscale"
+                    "p-6 transition-all border-sav-border shadow-m3-1 relative overflow-hidden",
+                    esActual ? "bg-sav-surface border-sav-primary/30" : "bg-white",
+                    !esActual && !esSuperior && "opacity-50 grayscale-[0.5]"
                   )}
-                  delay={i * 0.05}
                 >
-                  <div className="flex justify-between items-start mb-5 sm:mb-6 gap-2">
-                    <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                  {esActual && (
+                    <div className="absolute top-0 left-0 w-full h-1 bg-sav-primary" />
+                  )}
+                  
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex items-center gap-4">
                       <div className={cn(
-                        "w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-[1.2rem] flex items-center justify-center border-2 transition-transform group-hover:scale-110 shrink-0",
-                        esActual ? "bg-indigo-50 border-indigo-100 text-indigo-900" : "bg-slate-50 border-slate-200 text-slate-600"
+                        "w-12 h-12 rounded-m3 flex items-center justify-center shadow-m3-1 border",
+                        esActual ? "bg-sav-primary text-white border-sav-primary" : "bg-sav-surface text-sav-primary border-sav-border"
                       )}>
-                        <TrendingUp size={22} className="sm:w-[28px] sm:h-[28px]" strokeWidth={3} />
+                        <Crown size={22} strokeWidth={2.5} />
                       </div>
-                      <div className="min-w-0">
-                        <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tighter leading-none truncate">
-                          {nivel.nombre}
-                        </h3>
-                        <div className="flex items-center gap-1 mt-1">
-                          <CheckCircle2 size={10} className="text-emerald-600 shrink-0" />
-                          <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest truncate">Activo Institucional</p>
-                        </div>
+                      <div className="space-y-0.5">
+                        <h3 className="text-base font-black text-sav-primary uppercase tracking-tight">{nivel.nombre}</h3>
+                        <p className="text="[9px] font-black text-sav-muted uppercase tracking-widest">Inversión: {formatBs(nivel.deposito)} Bs</p>
                       </div>
                     </div>
-                    <div className="shrink-0">
-                      {esActual ? (
-                        <Badge variant="success" icon={CheckCircle2} className="bg-emerald-100 text-emerald-900 border-emerald-200">ACTIVO</Badge>
-                      ) : esSuperior && !bloqueado ? (
-                        <Button 
-                          onClick={() => handleUpgrade(nivel)}
-                          className="h-10 sm:h-11 px-4 sm:px-8 text-[10px] font-black tracking-widest uppercase shadow-xl shadow-indigo-100 text-white bg-indigo-900"
-                        >
-                          INVERTIR
-                        </Button>
-                      ) : (
-                        <Badge variant="outline" className="bg-slate-100 border-slate-200 text-slate-600 text-[10px] font-black" icon={Lock}>{bloqueado ? 'PRONTO' : 'CERRADO'}</Badge>
-                      )}
+                    {esActual && (
+                       <Badge variant="success" className="bg-sav-primary text-white border-none px-3">ACTIVO</Badge>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="p-3.5 rounded-m3 bg-sav-surface border border-sav-border/50">
+                      <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest mb-1">Diario</p>
+                      <p className="text-sm font-black text-sav-primary">+{formatBs(nivel.ingreso_diario)} Bs</p>
+                    </div>
+                    <div className="p-3.5 rounded-m3 bg-sav-surface border border-sav-border/50">
+                      <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest mb-1">Tareas</p>
+                      <p className="text-sm font-black text-sav-primary">{nivel.num_tareas_diarias} Videos</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                    {/* Depósito y Tareas */}
-                    <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                      <div className="bg-slate-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border-2 border-slate-100">
-                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-[0.2em] mb-1">Depósito</p>
-                        <p className="text-base sm:text-lg font-black text-slate-900 tracking-tighter truncate">
-                          {formatBs(nivel.deposito)} <span className="text-[10px] font-black text-slate-500">Bs</span>
-                        </p>
-                      </div>
-                      <div className="bg-slate-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border-2 border-slate-100">
-                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-[0.2em] mb-1">Tareas</p>
-                        <p className="text-base sm:text-lg font-black text-slate-900 tracking-tighter truncate">
-                          {nivel.num_tareas_diarias} <span className="text-[10px] font-black text-slate-500">CUPOS</span>
-                        </p>
-                      </div>
+                  {esSuperior && !bloqueado && (
+                    <Button 
+                      onClick={() => handleUpgrade(nivel)}
+                      variant="primary"
+                      className="h-13 text-[11px]"
+                    >
+                      ADQUIRIR MEMBRESÍA
+                    </Button>
+                  )}
+                  
+                  {bloqueado && (
+                    <div className="flex items-center justify-center gap-2 p-3.5 bg-sav-surface rounded-m3 text-sav-muted text-[10px] font-black uppercase tracking-widest border border-dashed border-sav-border">
+                      <Lock size={14} /> Próximamente
                     </div>
-
-                    {/* Comisiones y Rentas */}
-                    <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border-2 border-slate-200 space-y-3 sm:space-y-4 shadow-sm">
-                      <div className="flex justify-between items-center border-b-2 border-slate-100 pb-2 sm:pb-3">
-                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Pago por Tarea</span>
-                        <span className="text-xs font-black text-slate-900">{formatBs(nivel.ganancia_tarea)} Bs</span>
-                      </div>
-                      
-                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                        <div className="text-center space-y-1">
-                          <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Diario</p>
-                          <p className="text-[11px] sm:text-sm font-black text-emerald-700">+{formatBs(nivel.ingreso_diario)}</p>
-                        </div>
-                        <div className="text-center space-y-1 border-x-2 border-slate-100">
-                          <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Mensual</p>
-                          <p className="text-[11px] sm:text-sm font-black text-slate-900">{formatBs(nivel.ingreso_mensual)}</p>
-                        </div>
-                        <div className="text-center space-y-1">
-                          <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Anual</p>
-                          <p className="text-[11px] sm:text-sm font-black text-slate-900">{formatBs(nivel.ingreso_anual)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </Card>
               );
             })}
           </div>
-
-          {/* Benefits Section */}
-          <section className="space-y-4 pt-4">
-            <div className="flex items-center gap-2 px-1 mb-2">
-              <Users size={16} className="text-indigo-900" />
-              <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Beneficios por Invitación</h2>
-            </div>
-            <Card className="p-6 border-2 border-dashed border-slate-300 bg-white space-y-6 shadow-2xl shadow-slate-200">
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: 'Nivel A', val: '10%', sub: 'Directo' },
-                  { label: 'Nivel B', val: '3%', sub: 'Indirecto' },
-                  { label: 'Nivel C', val: '1%', sub: 'Equipo' },
-                ].map((item, i) => (
-                  <div key={i} className="text-center space-y-1">
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{item.label}</p>
-                    <p className="text-xl font-black text-slate-900 tracking-tighter">{item.val}</p>
-                    <p className="text-[8px] font-black text-indigo-900 uppercase tracking-widest">{item.sub}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="pt-6 border-t-2 border-slate-100">
-                <p className="text-[11px] font-black text-slate-600 leading-relaxed text-center italic">
-                  * Las comisiones se acreditan instantáneamente al saldo de equipo tras la validación de la tarea por parte de su referido.
-                </p>
-              </div>
-            </Card>
-          </section>
         </main>
       </div>
     </Layout>

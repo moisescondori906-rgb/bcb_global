@@ -16,10 +16,10 @@ export function Input({
   const finalType = isPassword && showPass ? 'text' : type;
 
   return (
-    <div className={cn("space-y-2 w-full", className)}>
+    <div className={cn("space-y-1.5 w-full", className)}>
       {label && (
-        <label className="flex items-center gap-2 text-[10px] font-black text-sav-muted uppercase tracking-[0.2em] ml-1">
-          {Icon && <Icon size={12} className="text-sav-primary" />}
+        <label className="flex items-center gap-2 text-[11px] font-black text-sav-primary uppercase tracking-[0.12em] ml-1">
+          {Icon && <Icon size={12} />}
           {label}
         </label>
       )}
@@ -27,7 +27,7 @@ export function Input({
         <input
           type={finalType}
           className={cn(
-            "h-12 sm:h-14 w-full px-4 sm:px-5 rounded-xl sm:rounded-2xl bg-white border-2 border-slate-200 text-slate-900 text-base font-bold focus:border-sav-primary focus:ring-4 focus:ring-sav-primary/10 transition-all outline-none placeholder:text-slate-400 shadow-md",
+            "h-12 sm:h-13 w-full px-5 rounded-m3 bg-white border border-sav-border text-slate-900 text-[14px] font-bold focus:border-sav-primary focus:ring-4 focus:ring-sav-primary/5 transition-all outline-none placeholder:text-slate-400 shadow-m3-1 hover:border-sav-primary/40",
             error && "border-sav-error bg-sav-error/5",
             showPasswordToggle && "pr-14"
           )}

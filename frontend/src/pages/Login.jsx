@@ -43,41 +43,41 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-sav-dark relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-sav-primary/10 blur-[100px] rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-sav-accent/5 blur-[100px] rounded-full" />
+      {/* Background Decor - Flutter Style */}
+      <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-sav-primary/10 to-transparent" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-sav-primary/5 blur-[100px] rounded-full" />
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm relative z-10"
       >
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <motion.div 
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            className="inline-block mb-6 p-4 bg-white/10 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-sav-primary/10 border border-white/5"
+            className="inline-block mb-6 p-4 bg-white rounded-m3-lg shadow-m3-2 border border-sav-border"
           >
-            <img src="/imag/logo.webp" alt="Logo" className="w-20 h-20" />
+            <img src="/imag/logo.webp" alt="Logo" className="w-16 h-16" />
           </motion.div>
-          <h1 className="text-4xl font-black tracking-tighter text-white mb-2 uppercase">
-            Bienvenido
+          <h1 className="text-3xl font-black tracking-tighter text-sav-primary mb-2 uppercase">
+            Portal Institucional
           </h1>
           <div className="flex items-center justify-center gap-2">
             <ShieldCheck size={14} className="text-sav-primary" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-sav-muted">Portal Seguro BCB</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-sav-muted">Conexión Segura SSL</p>
           </div>
         </div>
 
-        <Card variant="premium" className="space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <Card className="p-8 space-y-6 bg-white border-sav-border shadow-m3-3">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <AnimatePresence mode='wait'>
               {error && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="p-4 rounded-2xl bg-sav-error/10 border border-sav-error/20 text-sav-error text-[10px] font-bold uppercase tracking-widest text-center"
+                  className="p-3.5 rounded-m3 bg-sav-error/5 border border-sav-error/20 text-sav-error text-[10px] font-bold uppercase tracking-widest text-center"
                 >
                   {error}
                 </motion.div>
@@ -109,10 +109,13 @@ export default function Login() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="hidden" 
                 />
-                <div className={`w-5 h-5 rounded-md border transition-all flex items-center justify-center ${rememberMe ? 'bg-sav-primary border-sav-primary' : 'bg-white/5 border-white/10'}`}>
+                <div className={cn(
+                  "w-5 h-5 rounded-m3-sm border transition-all flex items-center justify-center shadow-m3-1",
+                  rememberMe ? 'bg-sav-primary border-sav-primary' : 'bg-white border-sav-border'
+                )}>
                   {rememberMe && <div className="w-2 h-2 bg-white rounded-sm" />}
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-white transition-colors">Recordarme</span>
+                <span className="text-[10px] font-black text-sav-muted uppercase tracking-widest group-hover:text-sav-primary transition-colors">Recordarme</span>
               </label>
               <button type="button" className="text-[10px] font-black text-sav-primary uppercase tracking-widest hover:underline">¿Olvidaste?</button>
             </div>
@@ -120,23 +123,23 @@ export default function Login() {
             <Button 
               type="submit" 
               loading={loading}
-              className="mt-4"
+              className="mt-2 h-13 shadow-m3-2"
               icon={ArrowRight}
             >
-              Iniciar Sesión
+              ACCEDER AHORA
             </Button>
           </form>
         </Card>
 
-        <div className="mt-10 text-center space-y-4">
+        <div className="mt-8 text-center space-y-4">
           <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.2em]">
-            ¿No tienes una cuenta?
+            ¿Aún no eres miembro?
           </p>
           <Link
             to="/register"
-            className="flex items-center justify-center gap-2 text-white font-bold uppercase tracking-widest text-xs hover:text-sav-primary transition-all group"
+            className="inline-flex items-center justify-center gap-2 text-sav-primary font-black uppercase tracking-widest text-xs hover:brightness-125 transition-all group"
           >
-            Crear cuenta VIP
+            CREAR CUENTA INSTITUCIONAL
             <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
           </Link>
         </div>

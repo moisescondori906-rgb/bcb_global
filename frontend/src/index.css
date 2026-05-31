@@ -1,18 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-sav-primary: #312e81; /* Indigo 900 */
-  --color-sav-dark: #f8fafc;    /* Slate 50 */
-  --color-sav-card: #ffffff;    
-  --color-sav-surface: #f1f5f9; 
-  --color-sav-accent: #9f1239;  
-  --color-sav-accent-hot: #5b21b6; 
-  --color-sav-muted: #334155;   
-  --color-sav-success: #064e3b; 
-  --color-sav-error: #991b1b;   
-  --color-sav-border: #cbd5e1;  
+  /* Flutter / Fintech Modern Theme - Material 3 Inspired */
+  --color-sav-primary: #1A237E; /* Indigo 900 - Corporativo Profundo */
+  --color-sav-accent: #C62828;  /* Red 800 - Acento Serio */
+  --color-sav-dark: #F5F7FA;    /* Fondo Limpio App */
+  --color-sav-card: #FFFFFF;    
+  --color-sav-surface: #E8EAF6; /* Indigo 50 */
+  --color-sav-muted: #546E7A;   /* Blue Grey 600 - Texto Secundario */
+  --color-sav-success: #2E7D32; /* Green 800 */
+  --color-sav-error: #D32F2F;   /* Red 700 */
+  --color-sav-border: #D1D9E6;  /* Soft Border */
+  
+  /* Radios Discretos Material 3 / Flutter */
+  --radius-m3-sm: 8px;
+  --radius-m3: 12px;
+  --radius-m3-lg: 16px;
 
-  /* Admin Theme - Premium Dark */
+  /* Sombras Material Design 3 */
+  --shadow-m3-1: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-m3-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-m3-3: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+  /* Admin Theme - Premium Dark (Sin cambios solicitados) */
   --color-admin-bg: #030303;
   --color-admin-card: #09090b;
   --color-admin-border: rgba(255, 255, 255, 0.06);

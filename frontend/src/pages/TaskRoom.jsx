@@ -330,88 +330,90 @@ export default function TaskRoom() {
     <Layout>
       <header className="px-6 py-8 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tighter leading-none">Tareas</h1>
-          <Badge variant="info">{data?.nivel || 'Cargando...'}</Badge>
+          <h1 className="text-2xl font-black text-sav-primary uppercase tracking-tighter leading-none">Tareas</h1>
+          <div className="px-3 py-1.5 rounded-m3-sm bg-sav-surface border border-sav-border text-sav-primary text-[10px] font-black uppercase tracking-widest">
+            {data?.nivel || 'Cargando...'}
+          </div>
         </div>
         
-        <Card variant="flat" className="p-6 space-y-4 border-black/5 bg-white shadow-xl shadow-black/5">
+        <Card className="p-6 space-y-4 bg-white border-sav-border shadow-m3-2">
           <div className="flex justify-between items-end">
             <div className="space-y-1">
               <p className="text-[10px] font-black text-sav-muted uppercase tracking-widest">Progreso Diario</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-gray-900">{tareasCompletadas}</span>
-                <span className="text-xs font-bold text-sav-muted uppercase">/ {totalDiarias}</span>
+                <span className="text-3xl font-black text-sav-primary tracking-tighter">{tareasCompletadas}</span>
+                <span className="text-xs font-bold text-sav-muted uppercase tracking-widest">/ {totalDiarias}</span>
               </div>
             </div>
-            <span className="text-[10px] font-black text-sav-primary uppercase tracking-widest">{Math.round(progress)}%</span>
+            <div className="text-right">
+              <span className="text-[10px] font-black text-sav-primary uppercase tracking-[0.2em]">{Math.round(progress)}%</span>
+            </div>
           </div>
-          <div className="h-2 bg-black/5 rounded-full overflow-hidden border border-black/5">
+          <div className="h-2.5 bg-sav-surface rounded-full overflow-hidden border border-sav-border/50">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              className="h-full bg-sav-primary shadow-[0_0_10px_rgba(220,38,38,0.2)]" 
+              className="h-full bg-sav-primary shadow-sm" 
             />
           </div>
         </Card>
       </header>
 
-      <main className="px-5 space-y-4 pb-10">
+      <main className="px-5 space-y-4 pb-12">
         <div className="flex items-center gap-2 px-1 mb-2">
           <Target size={16} className="text-sav-primary" />
-          <h2 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Disponibles Ahora</h2>
+          <h2 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em]">Tareas Disponibles</h2>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
           {data?.tareas?.map((t, i) => (
             <Card 
-              key={`${t.id}-${i}`} // Usar i para evitar problemas de key si hay pocos videos
-              variant="outline" 
+              key={`${t.id}-${i}`}
               className={cn(
-                "p-4 flex items-center gap-4 active:scale-[0.98] transition-all cursor-pointer group bg-white border-black/5",
-                data.tareas_restantes <= 0 && "opacity-60 grayscale-[0.5]"
+                "p-4 flex items-center gap-5 bg-white border-sav-border shadow-m3-1 active:scale-[0.98] transition-all cursor-pointer group",
+                data.tareas_restantes <= 0 && "opacity-60 grayscale"
               )}
               onClick={() => startTask(t)}
-              delay={i * 0.05}
             >
-              <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-black/5 shrink-0 bg-black">
-                {/* Previsualización del video optimizada para Android v11.3.1 */}
+              <div className="relative w-16 h-16 rounded-m3 overflow-hidden border border-sav-border shrink-0 bg-sav-primary/10">
                 <video 
                   src={`${api.getMediaUrl(t.video_url)}#t=0.1`} 
-                  className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
+                  className="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-700"
                   muted
                   playsInline
-                  loop
-                  preload="metadata" // CARGAR SOLO EL INICIO PARA MOSTRAR EL THUMBNAIL EN ANDROID
-                  onMouseOver={(e) => {
-                    e.target.play().catch(() => {});
-                  }}
-                  onMouseOut={(e) => e.target.pause()}
+                  preload="metadata"
                 />
-                <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity pointer-events-none">
-                  <Play size={20} className="text-white fill-white/80" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Play size={20} className="text-white fill-white shadow-sm" />
                 </div>
               </div>
+              
               <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex items-center justify-between">
-                  <Badge className="px-2 py-0.5" variant="info">VIDEO</Badge>
-                  <span className="text-sm font-black text-sav-success">+{(taskReward || 0).toFixed(2)} <span className="text-[9px]">Bs</span></span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[9px] font-black text-sav-primary uppercase tracking-widest bg-sav-surface px-2 py-0.5 rounded-m3-sm border border-sav-primary/10">Video AD</span>
+                  <span className="text-sm font-black text-sav-success">+{ (taskReward || 0).toFixed(2) } Bs</span>
                 </div>
-                <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight truncate">{t.nombre}</h3>
-                <p className="text-[10px] text-sav-muted font-bold uppercase tracking-widest flex items-center gap-1.5">
-                  <Clock size={10} /> 10 segundos
-                </p>
+                <h3 className="text-[13px] font-black text-sav-primary uppercase tracking-tight truncate">{t.nombre}</h3>
+                <div className="flex items-center gap-3">
+                   <p className="text-[9px] text-sav-muted font-bold uppercase tracking-widest flex items-center gap-1">
+                    <Clock size={10} /> 10s
+                  </p>
+                </div>
               </div>
-              <ArrowRight size={18} className="text-sav-muted group-hover:text-sav-primary group-hover:translate-x-1 transition-all" />
+              <ChevronRight size={18} className="text-sav-border group-hover:text-sav-primary transition-colors" />
             </Card>
           ))}
           
           {(!data?.tareas || data.tareas.length === 0) && (
-            <div className="py-20 flex flex-col items-center justify-center text-center space-y-4 opacity-40">
-              <ClipboardList size={48} className="text-gray-400" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">No hay tareas pendientes</p>
+            <div className="py-20 flex flex-col items-center justify-center text-center space-y-4 opacity-50">
+              <ClipboardList size={48} className="text-sav-muted" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-sav-muted">No hay tareas pendientes por hoy</p>
             </div>
           )}
         </div>
+      </main>
+    </Layout>
+  );
 
         {/* Visibility Everywhere - Investment Opportunities */}
         <section className="space-y-4 pt-6">
