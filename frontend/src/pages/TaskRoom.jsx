@@ -60,9 +60,8 @@ export default function TaskRoom() {
   useEffect(() => {
     fetchTasks();
     const interval = setInterval(() => {
-      // Usar getBoliviaNow para asegurar consistencia si se llegara a usar para lógica de tiempo local
       if (document.visibilityState === 'visible' && !activeTask) fetchTasks();
-    }, 60000); // Polling cada 60s en lugar de 20s para reducir carga de red
+    }, 60000);
     return () => clearInterval(interval);
   }, [activeTask]);
 
@@ -108,13 +107,11 @@ export default function TaskRoom() {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      // Generar idempotency_key única para evitar doble cobro
       const idempotency_key = `task_${activeTask.id}_${Date.now()}`;
-      
       const res = await api.tasks.responder(activeTask.id, { idempotency_key });
       setShowResult(true);
       setEarnedAmount(res.monto);
-      setIsCorrect(true); // Siempre correcto en este modo simplificado
+      setIsCorrect(true);
       refreshUser();
     } catch (err) {
       setErrorMessage(err.message || 'Error de conexión');
@@ -211,7 +208,6 @@ export default function TaskRoom() {
           </header>
 
           <main className="px-5 py-6 space-y-6 flex-1 max-w-[430px] mx-auto w-full">
-            {/* Video Card - Premium Look */}
             <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/10 bg-black shadow-[0_20px_50px_rgba(0,0,0,0.6)] group">
               <video 
                 ref={videoRef}
@@ -227,7 +223,6 @@ export default function TaskRoom() {
                   <span className="text-sm font-bold text-white tracking-tighter">{timer}s</span>
                 </div>
               )}
-              {/* Subtle glass overlay when video finished */}
               {videoFinished && !surveyVisible && !showResult && (
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
                   <div className="w-16 h-16 rounded-full bg-sav-accent text-white flex items-center justify-center animate-bounce shadow-accent-glow">
@@ -332,7 +327,6 @@ export default function TaskRoom() {
             <Badge variant="info" className="py-1">LIVE</Badge>
           </div>
 
-          {/* Metrics Summary - Modern Style */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/[0.02] border border-white/[0.05] rounded-m3 p-5 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -345,7 +339,7 @@ export default function TaskRoom() {
             </div>
             <div className="bg-white/[0.02] border border-white/[0.05] rounded-m3 p-5 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                <TrendingUp size={40} className="text-emerald-500" />
+                <TrendingUpIcon size={40} className="text-emerald-500" />
               </div>
               <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.2em] mb-1">Comisión Hoy</p>
               <p className="text-2xl font-bold text-emerald-400 tracking-tight">
@@ -410,52 +404,6 @@ export default function TaskRoom() {
           )}
         </main>
       </div>
-    </Layout>
-  );
-
-        {/* Visibility Everywhere - Investment Opportunities */}
-        <section className="space-y-4 pt-6">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <TrendingUp size={16} className="text-sav-primary" />
-              <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Sube de Nivel</h3>
-            </div>
-            <Link to="/vip" className="text-[9px] font-black text-sav-primary uppercase tracking-widest flex items-center gap-1">
-              Ver VIP <ChevronRight size={12} />
-            </Link>
-          </div>
-
-          <div className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar snap-x">
-            {niveles.filter(n => (n.deposito || n.costo) > 0).map((n, i) => {
-              const esActual = n.id === user?.nivel_id;
-              return (
-                <Link 
-                  key={n.id} 
-                  to="/vip"
-                  className={cn(
-                    "min-w-[150px] p-5 rounded-[2rem] border transition-all snap-start relative overflow-hidden group",
-                    esActual ? "bg-sav-primary/10 border-sav-primary/30" : "bg-black/5 border-black/5"
-                  )}
-                >
-                  <div className="space-y-3 relative z-10">
-                    <div className="flex justify-between items-start">
-                      <span className="text-[10px] font-black text-gray-900 uppercase tracking-tighter">{n.nombre}</span>
-                      {esActual && <div className="w-1.5 h-1.5 rounded-full bg-sav-success animate-pulse" />}
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest leading-none">Ganancia Diaria</p>
-                      <p className="text-lg font-black text-gray-900">+{Number(n.ingreso_diario || (Number(n.num_tareas_diarias || 0) * Number(n.ganancia_tarea || 0))).toFixed(2)} <span className="text-[9px] opacity-60">Bs</span></p>
-                    </div>
-                  </div>
-                  <div className="absolute right-[-10px] bottom-[-10px] opacity-[0.05] rotate-12 group-hover:rotate-[25deg] transition-transform duration-700 text-gray-900">
-                    <TrendingUp size={50} />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      </main>
     </Layout>
   );
 }
