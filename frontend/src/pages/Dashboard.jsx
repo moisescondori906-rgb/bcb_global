@@ -196,24 +196,17 @@ export default function Dashboard() {
           {showDailyAnnouncement && comunicados.length > 0 && (
             <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6">
               <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowDailyAnnouncement(false)}
-                className="absolute inset-0 bg-black/80 backdrop-blur-md"
-              />
-              <motion.div 
                 initial={{ opacity: 0, scale: 0.9, y: 50 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 50 }}
-                className="relative w-[92%] max-h-[85vh] sm:max-w-lg bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
+                className="relative w-[92%] max-h-[85vh] sm:max-w-lg bg-white rounded-[2.5rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] flex flex-col"
               >
                 {/* Botón Cerrar Flotante */}
                 <button 
                   onClick={() => setShowDailyAnnouncement(false)}
                   className="absolute top-6 right-6 z-50 p-3 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white transition-all active:scale-90"
                 >
-                  <CloseIcon size={24} />
+                  <CloseIcon size={24} className="text-white" />
                 </button>
 
                 {/* Imagen del Comunicado (Si existe) */}
@@ -259,7 +252,7 @@ export default function Dashboard() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-sav-primary/10 rounded-xl flex items-center justify-center text-sav-primary border border-sav-primary/10">
-                          <BellIcon size={20} />
+                          <BellIcon size={20} className="text-sav-primary" />
                         </div>
                         <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter">
                           {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
@@ -267,7 +260,7 @@ export default function Dashboard() {
                       </div>
                       
                       <div className="space-y-4 text-[13px] sm:text-sm font-bold uppercase tracking-widest leading-relaxed text-slate-600">
-                        <p className="whitespace-pre-wrap">
+                        <p className="whitespace-pre-wrap text-black">
                           {comunicados[currentAnnouncementIndex].mensaje}
                         </p>
                       </div>
@@ -278,7 +271,7 @@ export default function Dashboard() {
                     onClick={() => setShowDailyAnnouncement(false)}
                     className="w-full h-14 rounded-2xl bg-sav-primary text-white font-black uppercase tracking-[0.2em] shadow-xl shadow-sav-primary/20 hover:scale-[1.02] active:scale-95 transition-all mt-auto"
                   >
-                    ENTENDIDO
+                    <span className="text-white">ENTENDIDO</span>
                   </Button>
                 </div>
               </motion.div>
@@ -286,62 +279,7 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
 
-        {/* Modal de Mantenimiento Domingo (v13.0.0) */}
-        <AnimatePresence>
-          {isSunday && showSundayModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowSundayModal(false)}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              />
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-lg bg-sav-card border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/50"
-              >
-                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
-                  <CoffeeIcon size={120} className="text-white" />
-                </div>
-                
-                <div className="relative z-10 p-8 sm:p-10 space-y-6">
-                  <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="w-20 h-20 bg-sav-primary/20 rounded-[2rem] flex items-center justify-center text-sav-primary border border-sav-primary/20 shadow-lg">
-                      <CoffeeIcon size={40} />
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-tighter leading-tight">
-                      ¡Buen domingo <br/> <span className="text-sav-primary">para todos!</span> 😊
-                    </h2>
-                  </div>
-
-                  <div className="space-y-4 text-[11px] sm:text-xs font-bold uppercase tracking-widest leading-relaxed text-slate-500 text-center">
-                    <p>
-                      Les informamos que todos los domingos el sistema entra en mantenimiento con el objetivo de corregir errores, optimizar el funcionamiento e implementar nuevas funciones.
-                    </p>
-                    <p>
-                      Este día también es para que cada integrante pueda descansar y recuperar energías sin afectar el trabajo realizado durante la semana.
-                    </p>
-                    <div className="pt-6 border-t border-slate-100">
-                      <p className="text-slate-900 font-black">
-                        ¡Feliz domingo les desea <br/> todo el equipo de BCB Global! 🚀
-                      </p>
-                    </div>
-                  </div>
-
-                  <Button 
-                    onClick={() => setShowSundayModal(false)}
-                    className="w-full h-14 rounded-2xl bg-sav-primary text-white font-black uppercase tracking-[0.2em] shadow-xl shadow-sav-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-                  >
-                    CONTINUAR AL PANEL
-                  </Button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+        {/* Modal de Mantenimiento Domingo (Eliminado por petición del usuario) */}
 
         {/* Alerta de Seguridad */}
         <AnimatePresence>
@@ -594,9 +532,8 @@ export default function Dashboard() {
         </div>
 
         {/* Footer Brand */}
-        <div className="h-40 w-full rounded-[2.5rem] bg-slate-950/50 border border-white/5 p-8 flex items-center justify-center relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-sav-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          <img src="/images/institutional-security.webp" alt="Seguridad Institucional Garantizada" className="mx-auto w-full h-full object-contain opacity-70" />
+        <div className="h-40 w-full rounded-[2.5rem] bg-slate-950 border border-white/5 p-8 flex items-center justify-center relative overflow-hidden group">
+          <img src="/images/institutional-security.webp" alt="Seguridad Institucional Garantizada" className="mx-auto w-full h-full object-contain" />
         </div>
       </main>
 

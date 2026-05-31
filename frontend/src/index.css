@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-sav-primary: #312e81; /* Restaurado a Indigo 900 (Azul) */
-  --color-sav-dark: #ffffff;    /* Fondo blanco puro */
+  --color-sav-primary: #1e1b4b; /* Indigo 950 - El azul que tenían */
+  --color-sav-dark: #ffffff;    
   --color-sav-card: #ffffff;    
   --color-sav-surface: #f8fafc; 
-  --color-sav-accent: #9f1239;  
-  --color-sav-accent-hot: #5b21b6; 
-  --color-sav-muted: #1e293b;   /* Slate 800 para texto secundario */
-  --color-sav-success: #064e3b; 
-  --color-sav-error: #991b1b;   
+  --color-sav-accent: #312e81;  /* Otro tono de azul para acentos */
+  --color-sav-accent-hot: #4338ca; 
+  --color-sav-muted: #000000;   /* Negro puro para texto secundario */
+  --color-sav-success: #059669; 
+  --color-sav-error: #dc2626;   
   --color-sav-border: #e2e8f0;  
 
   /* Admin Theme - Premium Dark */
@@ -44,22 +44,28 @@
 
 @layer base {
   html, body {
-    @apply w-full overflow-x-hidden bg-white text-slate-950 font-bold;
+    @apply w-full overflow-x-hidden bg-white text-black font-bold;
     height: -webkit-fill-available;
     color-scheme: light;
   }
 
-  /* Forzar que todo el texto sea negro/oscuro por defecto */
-  p, span, h1, h2, h3, h4, h5, h6, label {
-    @apply text-slate-950;
+  /* Forzar que todo el texto sea negro por defecto */
+  p, span, h1, h2, h3, h4, h5, h6, label, div {
+    @apply text-black;
   }
 
-  /* Excepción para botones con fondo oscuro */
-  .bg-sav-primary p, 
-  .bg-sav-primary span,
+  /* Excepciones para elementos que DEBEN ser blancos o de color */
+  .text-white, 
+  .text-white p, 
+  .text-white span,
   button.bg-sav-primary,
-  .bg-indigo-900 p,
-  .bg-indigo-900 span {
+  button.bg-sav-primary span,
+  .bg-indigo-900,
+  .bg-indigo-900 span,
+  .bg-indigo-950,
+  .bg-indigo-950 span,
+  .bg-sav-primary span,
+  .bg-sav-primary p {
     color: white !important;
   }
 
