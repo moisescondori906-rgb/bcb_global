@@ -63,6 +63,7 @@ export default function Dashboard() {
   const [securityAlert, setSecurityAlert] = useState(null);
   const [showSundayModal, setShowSundayModal] = useState(true);
   const [showDailyAnnouncement, setShowDailyAnnouncement] = useState(false);
+  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
   const isSunday = now.getDay() === 0;
 
   useEffect(() => {
@@ -75,6 +76,16 @@ export default function Dashboard() {
       localStorage.setItem('last_announcement_show', today);
     }
   }, [comunicados]);
+
+  // Rotación automática de comunicados en el modal (cada 5s)
+  useEffect(() => {
+    if (showDailyAnnouncement && comunicados.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentAnnouncementIndex(prev => (prev + 1) % comunicados.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [showDailyAnnouncement, comunicados.length]);
 
   useEffect(() => {
     if (user?.security_alert) {
@@ -207,31 +218,62 @@ export default function Dashboard() {
 
                 {/* Imagen del Comunicado (Si existe) */}
                 <div className="w-full aspect-[9/16] sm:aspect-video bg-slate-900 overflow-hidden relative">
-                  <img 
-                    src={comunicados[0].imagen_url ? api.getMediaUrl(comunicados[0].imagen_url) : '/imag/logo-carrusel.webp'} 
-                    className="w-full h-full object-contain"
-                    alt="Comunicado"
-                  />
+                  <AnimatePresence mode="wait">
+                    <motion.img 
+                      key={currentAnnouncementIndex}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 1.5 }}
+                      src={comunicados[currentAnnouncementIndex].imagen_url ? api.getMediaUrl(comunicados[currentAnnouncementIndex].imagen_url) : '/imag/logo-carrusel.webp'} 
+                      className="w-full h-full object-contain"
+                      alt="Comunicado"
+                    />
+                  </AnimatePresence>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  
+                  {/* Indicadores de Carrusel en el Modal */}
+                  {comunicados.length > 1 && (
+                    <div className="absolute top-6 left-6 flex gap-1.5 z-50">
+                      {comunicados.map((_, i) => (
+                        <div 
+                          key={i} 
+                          className={cn(
+                            "h-1 rounded-full transition-all duration-500",
+                            i === currentAnnouncementIndex ? "w-6 bg-sav-primary" : "w-2 bg-white/30"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex-1 p-8 sm:p-10 space-y-6 overflow-y-auto">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-sav-primary/10 rounded-xl flex items-center justify-center text-sav-primary border border-sav-primary/10">
-                        <BellIcon size={20} />
+                  <AnimatePresence mode="wait">
+                    <motion.div 
+                      key={currentAnnouncementIndex}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.5 }}
+                      className="space-y-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-sav-primary/10 rounded-xl flex items-center justify-center text-sav-primary border border-sav-primary/10">
+                          <BellIcon size={20} />
+                        </div>
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                          {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
+                        </h2>
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter">
-                        {comunicados[0].titulo || 'Comunicado Oficial'}
-                      </h2>
-                    </div>
-                    
-                    <div className="space-y-4 text-[13px] sm:text-sm font-bold uppercase tracking-widest leading-relaxed text-slate-600">
-                      <p className="whitespace-pre-wrap">
-                        {comunicados[0].mensaje}
-                      </p>
-                    </div>
-                  </div>
+                      
+                      <div className="space-y-4 text-[13px] sm:text-sm font-bold uppercase tracking-widest leading-relaxed text-slate-600">
+                        <p className="whitespace-pre-wrap">
+                          {comunicados[currentAnnouncementIndex].mensaje}
+                        </p>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
 
                   <Button 
                     onClick={() => setShowDailyAnnouncement(false)}
@@ -555,7 +597,7 @@ export default function Dashboard() {
         {/* Footer Brand */}
         <div className="h-40 w-full rounded-[2.5rem] bg-slate-950/50 border border-white/5 p-8 flex items-center justify-center relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-sav-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          <img src="/imag/logo.webp" alt="Seguridad Institucional Garantizada" className="mx-auto w-full h-full object-contain opacity-70" />
+          <img src="/images/institutional-security.webp" alt="Seguridad Institucional Garantizada" className="mx-auto w-full h-full object-contain opacity-70" />
         </div>
       </main>
 

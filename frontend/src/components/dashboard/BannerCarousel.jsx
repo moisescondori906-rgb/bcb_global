@@ -36,20 +36,20 @@ export default function BannerCarousel({ banners = [] }) {
   );
 
   return (
-    <div className="relative h-60 w-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 group">
+    <div className="relative w-full aspect-[2/1] sm:aspect-video min-h-[180px] rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 group bg-slate-900">
       <AnimatePresence mode='wait'>
         <motion.div
           key={slide}
-          initial={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.5, ease: "easeInOut" }}
           className="absolute inset-0"
         >
           <img
             src={api.getMediaUrl(validBanners[slide]?.imagen_url)}
             alt={validBanners[slide]?.titulo || 'Promoción'}
-            className="w-full h-full object-contain bg-slate-900"
+            className="w-full h-full object-contain"
             onError={(e) => { 
               if (e.target.src !== '/imag/carrusel1.webp') {
                 e.target.src = '/imag/carrusel1.webp'; 
