@@ -532,8 +532,8 @@ export default function Dashboard() {
         </div>
 
         {/* Footer Brand */}
-        <div className="h-40 w-full rounded-[2.5rem] bg-slate-950 border border-white/5 p-8 flex items-center justify-center relative overflow-hidden group">
-          <img src="/images/institutional-security.webp" alt="Seguridad Institucional Garantizada" className="mx-auto w-full h-full object-contain" />
+        <div className="w-full flex justify-center py-4">
+          <img src="/images/institutional-security.webp" alt="Seguridad Institucional Garantizada" className="w-full h-auto max-w-md object-contain" />
         </div>
       </main>
 
