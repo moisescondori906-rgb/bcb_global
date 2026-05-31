@@ -13,32 +13,41 @@ export default function ActionGrid({ items }) {
 
   const itemAnim = {
     hidden: { y: 15, opacity: 0 },
-    show: { y: 0, opacity: 1 }
+    show: { y: 0, opacity: 1, transition: { type: 'spring', bounce: 0.4 } }
   };
 
   return (
     <motion.div 
       variants={container}
       initial="hidden"
-      animate="show"
-      className="grid grid-cols-3 gap-4"
+      whileInView="show"
+      viewport={{ once: true }}
+      className="grid grid-cols-3 gap-4 sm:gap-6"
     >
       {items.map((item, idx) => {
-        const { to, icon: Icon, label, badge } = item;
+        const { to, icon: Icon, label, badge, color, bg } = item;
         return (
           <motion.div key={idx} variants={itemAnim}>
             <Link
               to={to}
-              className="group flex flex-col items-center gap-3 p-4 rounded-m3 border border-white/[0.05] bg-white/[0.02] transition-all duration-300 hover:bg-white/[0.05] hover:border-white/[0.1] active:scale-95"
+              className="group flex flex-col items-center gap-3.5 p-5 rounded-m3-lg border border-black/[0.03] bg-white transition-all duration-500 hover:shadow-m3-2 hover:-translate-y-1 active:scale-95 shadow-m3-1"
             >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-white/5 to-white/[0.01] border border-white/5 flex items-center justify-center text-sav-accent transition-all duration-300 group-hover:scale-110 group-hover:text-white group-hover:shadow-accent-glow">
-                <Icon size={24} strokeWidth={2} />
+              <div className={cn(
+                "w-13 h-13 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:rotate-3 shadow-sm",
+                bg || "bg-sav-surface",
+                color || "text-sav-primary"
+              )}>
+                <Icon size={26} strokeWidth={2.5} />
               </div>
-              <div className="flex flex-col items-center">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors text-center leading-tight">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-[11px] font-extrabold uppercase tracking-widest text-sav-text-dim group-hover:text-sav-primary transition-colors text-center leading-none">
                   {label}
                 </span>
-                {badge}
+                {badge && (
+                   <div className="scale-75 origin-top">
+                     {badge}
+                   </div>
+                )}
               </div>
             </Link>
           </motion.div>

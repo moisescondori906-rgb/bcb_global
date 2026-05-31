@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
+import Header from '../components/Header';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { 
   Wallet, TrendingUp, History, Target, 
   ArrowUpCircle, ArrowDownCircle, AlertCircle,
-  Trophy, Users, UserPlus, Filter, Clock
+  Trophy, Users, UserPlus, Filter, Clock,
+  Sparkles, DollarSign, ChevronRight
 } from 'lucide-react';
 
 // UI Components
 import { Card } from '../components/ui/Card.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { cn } from '../lib/utils/cn';
 
 const categories = [
@@ -25,31 +28,25 @@ const categories = [
 ];
 
 export default function Ganancias() {
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const [tab, setTab] = useState('todo');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [punished, setPunished] = useState(false);
 
   const fetchData = async () => {
     try {
       if (!data) setLoading(true);
-      const res = await api.users.earnings().catch(err => {
-        console.error('Error earnings API:', err);
-        return { 
-          history: [], 
-          summary: { total: 0, hoy: 0 } 
-        };
-      });
-      // Asegurar estructura mínima para evitar errores de renderizado
+      const res = await api.users.earnings().catch(() => ({ 
+        history: [], 
+        summary: { total: 0, hoy: 0 } 
+      }));
       setData({
         history: res?.history || [],
         summary: res?.summary || { total: 0, hoy: 0 }
       });
     } catch (err) {
-      console.error('Error general fetchData Ganancias:', err);
-      setError('No se pudo sincronizar el historial.');
+      console.error('Error fetching earnings:', err);
     } finally {
       setLoading(false);
     }
@@ -60,10 +57,7 @@ export default function Ganancias() {
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') fetchData();
     }, 15000);
-    
-    return () => {
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [user?.id]);
 
   const historyList = Array.isArray(data?.history) ? data.history.filter(item => {
@@ -84,8 +78,8 @@ export default function Ganancias() {
     return (
       <Layout>
         <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] space-y-6">
-          <div className="w-16 h-16 border-4 border-white/5 border-t-sav-accent rounded-full animate-spin" />
-          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-sav-muted animate-pulse">Sincronizando Billetera</p>
+          <div className="w-16 h-16 border-4 border-sav-surface border-t-sav-primary rounded-full animate-spin" />
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-sav-muted animate-pulse">Sincronizando Billetera</p>
         </div>
       </Layout>
     );
@@ -94,18 +88,18 @@ export default function Ganancias() {
   if (punished) {
     return (
       <Layout>
-        <div className="p-6 flex flex-col items-center justify-center min-h-[70vh] text-center space-y-8">
-          <Card className="w-full flex flex-col items-center p-10 space-y-8 bg-zinc-950/60 backdrop-blur-3xl border border-white/10">
-            <div className="w-20 h-20 bg-sav-error/10 text-sav-error border border-sav-error/20 rounded-[2rem] flex items-center justify-center animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.15)]">
-              <AlertCircle size={40} />
+        <div className="px-6 py-12 flex flex-col items-center justify-center min-h-[80vh] text-center space-y-8">
+          <Card variant="premium" className="w-full flex flex-col items-center p-12 space-y-8">
+            <div className="w-24 h-24 bg-rose-50 text-rose-500 rounded-[2.5rem] flex items-center justify-center border border-rose-100 shadow-sm animate-pulse">
+              <AlertCircle size={48} strokeWidth={1.5} />
             </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold uppercase tracking-tight text-white">Acceso Restringido</h2>
-              <p className="text-sm font-medium text-zinc-400 leading-relaxed px-4">
-                Tu sistema de ganancias ha sido bloqueado por hoy debido al cuestionario obligatorio.
+            <div className="space-y-4">
+              <h2 className="text-3xl font-extrabold text-sav-text-main uppercase tracking-tight">Acceso Restringido</h2>
+              <p className="text-sm text-sav-text-dim font-medium leading-relaxed max-w-xs mx-auto">
+                Tu sistema de ganancias ha sido <span className="text-rose-600 font-extrabold uppercase">restringido por hoy</span> debido a normativas de seguridad institucional.
               </p>
             </div>
-            <Button onClick={() => window.location.reload()} variant="primary" className="w-full">VERIFICAR ESTADO</Button>
+            <Button onClick={() => window.location.reload()} variant="primary" className="w-full h-14 uppercase tracking-widest">VERIFICAR ESTADO</Button>
           </Card>
         </div>
       </Layout>
@@ -114,137 +108,144 @@ export default function Ganancias() {
 
   return (
     <Layout>
-      <header className="px-5 py-8 space-y-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white tracking-tight uppercase">Mi <span className="text-gradient">Billetera</span></h1>
-          <Badge variant="info">GLOBAL TECH</Badge>
-        </div>
-
-        <div className="relative group perspective-1000">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-sav-accent to-sav-secondary rounded-m3-lg blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-          <Card className="relative bg-zinc-950/60 backdrop-blur-3xl border border-white/10 p-8 overflow-hidden shadow-m3-3">
-            <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-sav-accent/20 rounded-full blur-[80px] animate-pulse" />
-            
-            <div className="space-y-8 relative z-10">
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.3em]">Capital Acumulado</p>
-                <div className="flex items-baseline gap-2">
-                  <h2 className="text-4xl font-bold text-white tracking-tighter">
-                    {(data?.summary?.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </h2>
-                  <span className="text-sm font-bold text-sav-accent uppercase tracking-widest">Bs</span>
+      <div className="bg-sav-bg min-h-screen pb-32">
+        <Header title="Mi Billetera Global" />
+        
+        <main className="px-6 py-8 space-y-10 max-w-lg mx-auto animate-in">
+          {/* Main Wallet Card */}
+          <section>
+            <Card variant="premium" className="p-8 space-y-10">
+              <div className="flex justify-between items-start">
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-extrabold text-sav-muted uppercase tracking-[0.2em]">Capital Acumulado</p>
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-5xl font-black text-sav-text-main tracking-tighter">
+                      {(data?.summary?.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </h2>
+                    <span className="text-lg font-black text-sav-primary uppercase tracking-widest">Bs</span>
+                  </div>
+                </div>
+                <div className="w-14 h-14 rounded-2xl bg-sav-primary/10 flex items-center justify-center text-sav-primary shadow-sm border border-sav-primary/20">
+                   <Wallet size={28} strokeWidth={1.5} />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-8 pt-6 border-t border-white/5">
-                <div className="space-y-1">
-                  <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest">Tareas (Hoy)</p>
-                  <p className="text-xl font-bold text-white tracking-tight">
-                    {(data?.summary?.tareas_hoy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              <div className="grid grid-cols-2 gap-8 pt-8 border-t border-black/[0.03]">
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">Misiones (Hoy)</p>
+                  <p className="text-2xl font-black text-sav-text-main tracking-tight">
+                    {(data?.summary?.tareas_today || data?.summary?.tareas_hoy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                <div className="space-y-1 text-right">
-                  <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest">Red (Hoy)</p>
-                  <p className="text-xl font-bold text-sav-accent tracking-tight">
-                    {(data?.summary?.comisiones_hoy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                <div className="space-y-1.5 text-right">
+                  <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">Red (Hoy)</p>
+                  <p className="text-2xl font-black text-emerald-600 tracking-tight">
+                    {(data?.summary?.comisiones_today || data?.summary?.comisiones_hoy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
+            </Card>
+          </section>
+
+          {/* Filters Horizontal Scroll */}
+          <section className="space-y-5">
+            <div className="flex items-center gap-2 px-1">
+              <div className="w-1.5 h-4 bg-sav-primary rounded-full" />
+              <h3 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em]">Filtrar Historial</h3>
             </div>
-          </Card>
-        </div>
-      </header>
-
-      <main className="px-5 space-y-8 pb-32">
-        <section className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Filter size={14} className="text-sav-accent" />
-            <h2 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Filtrar Historial</h2>
-          </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-5 px-5 pb-2">
-            {categories.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setTab(cat.id)}
-                className={cn(
-                  "flex items-center gap-2.5 px-6 py-3 rounded-xl whitespace-nowrap text-[10px] font-bold uppercase tracking-widest border transition-all duration-300 active:scale-95",
-                  tab === cat.id 
-                    ? "bg-sav-accent border-sav-accent text-white shadow-accent-glow" 
-                    : "bg-white/[0.03] border-white/10 text-zinc-500 hover:border-white/20"
-                )}
-              >
-                <cat.icon size={14} strokeWidth={2.5} />
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="space-y-6">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] flex items-center gap-2">
-              <History size={16} className="text-sav-accent" /> Actividad Reciente
-            </h2>
-            <Badge variant="muted" className="px-2 py-0.5">{historyList.length}</Badge>
-          </div>
-
-          <div className="space-y-3">
-            <AnimatePresence mode="popLayout">
-              {historyList.map((item, i) => {
-                const tipoLower = item.tipo_movimiento?.toLowerCase() || '';
-                const isPositive = !['retiro', 'extraccion', 'ajuste_admin_negativo'].some(t => tipoLower.includes(t));
+            <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+              {categories.map(cat => {
+                const isActive = tab === cat.id;
                 return (
-                  <motion.div
-                    layout
-                    key={item.id || i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
+                  <button
+                    key={cat.id}
+                    onClick={() => setTab(cat.id)}
+                    className={cn(
+                      "flex items-center gap-2.5 px-6 py-3.5 rounded-2xl whitespace-nowrap text-[11px] font-black uppercase tracking-widest transition-all duration-500 shadow-sm",
+                      isActive 
+                        ? "bg-sav-primary text-white shadow-accent-glow -translate-y-1" 
+                        : "bg-white text-sav-muted border border-black/[0.03] hover:bg-sav-surface"
+                    )}
                   >
-                    <Card className="p-4 bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all flex items-center gap-4">
-                      <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border transition-colors",
-                        isPositive ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
-                      )}>
-                        {isPositive ? <ArrowUpCircle size={24} /> : <ArrowDownCircle size={24} />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-[11px] font-bold text-white uppercase tracking-wide truncate">
-                          {item.descripcion || item.tipo_movimiento}
-                        </h4>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <Clock size={10} className="text-zinc-600" />
-                          <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest truncate">
-                            {new Date(item.created_at).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className={cn(
-                          "text-lg font-bold tracking-tight",
-                          isPositive ? "text-emerald-400" : "text-red-400"
-                        )}>
-                          {isPositive ? '+' : '-'}{Math.abs(Number(item.monto)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </p>
-                        <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-tighter">Bs</p>
-                      </div>
-                    </Card>
-                  </motion.div>
+                    <cat.icon size={16} strokeWidth={isActive ? 3 : 2} />
+                    {cat.label}
+                  </button>
                 );
               })}
-            </AnimatePresence>
+            </div>
+          </section>
 
-            {historyList.length === 0 && (
-              <div className="py-20 flex flex-col items-center justify-center space-y-4">
-                <div className="w-16 h-16 bg-white/[0.02] border border-white/5 rounded-[2rem] flex items-center justify-center text-zinc-800">
-                  <History size={32} />
+          {/* Activity List */}
+          <section className="space-y-6 pb-12">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em] flex items-center gap-2">
+                <History size={18} className="text-sav-primary" strokeWidth={2.5} /> Actividad Reciente
+              </h2>
+              <Badge variant="info">{historyList.length} EVENTOS</Badge>
+            </div>
+
+            <div className="space-y-4">
+              <AnimatePresence mode="popLayout">
+                {historyList.map((item, i) => {
+                  const tipoLower = item.tipo_movimiento?.toLowerCase() || '';
+                  const isPositive = !['retiro', 'extraccion', 'ajuste_admin_negativo'].some(t => tipoLower.includes(t));
+                  return (
+                    <motion.div
+                      layout
+                      key={item.id || i}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Card className="p-5 flex items-center gap-5 bg-white border-black/[0.03] hover:shadow-m3-2 transition-all group">
+                        <div className={cn(
+                          "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border shadow-sm transition-all duration-500 group-hover:rotate-6",
+                          isPositive ? "bg-emerald-50 border-emerald-100 text-emerald-500" : "bg-rose-50 border-rose-100 text-rose-500"
+                        )}>
+                          {isPositive ? <ArrowUpCircle size={24} strokeWidth={2} /> : <ArrowDownCircle size={24} strokeWidth={2} />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-[12px] font-extrabold text-sav-text-main uppercase tracking-tight truncate group-hover:text-sav-primary transition-colors">
+                            {item.descripcion || item.tipo_movimiento?.replace(/_/g, ' ')}
+                          </h4>
+                          <div className="flex items-center gap-1.5 mt-1 opacity-60">
+                            <Clock size={10} strokeWidth={3} />
+                            <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest truncate">
+                              {new Date(item.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className={cn(
+                            "text-lg font-black tracking-tighter",
+                            isPositive ? "text-emerald-600" : "text-sav-text-main"
+                          )}>
+                            {isPositive ? '+' : '-'}{Math.abs(Number(item.monto)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </p>
+                          <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Bs</p>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+
+              {historyList.length === 0 && (
+                <div className="py-24 flex flex-col items-center justify-center text-center space-y-6">
+                  <div className="w-24 h-24 rounded-[3rem] bg-sav-surface border-2 border-dashed border-black/[0.05] flex items-center justify-center text-sav-muted/30">
+                    <History size={48} strokeWidth={1.5} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-widest">Sin actividad</p>
+                    <p className="text-[11px] font-bold text-sav-muted uppercase tracking-tight leading-relaxed max-w-[180px] mx-auto">Comienza a realizar tareas para ver tus ganancias aquí.</p>
+                  </div>
                 </div>
-                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Sin movimientos registrados</p>
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
+              )}
+            </div>
+          </section>
+        </main>
+      </div>
     </Layout>
   );
 }

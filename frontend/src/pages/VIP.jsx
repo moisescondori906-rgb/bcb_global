@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
+import Header from '../components/Header.jsx';
 import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { 
   Crown, CheckCircle2, Lock, TrendingUp, 
   Users, Sparkles, Clock, ChevronRight, 
-  ShieldCheck, ArrowUpCircle 
+  ShieldCheck, ArrowUpCircle, Zap, Star
 } from 'lucide-react';
 import { displayLevelCode } from '../lib/displayLevel.js';
 import { cn } from '../lib/utils/cn';
@@ -46,111 +47,118 @@ export default function VIP() {
 
   return (
     <Layout>
-      <div className="min-h-screen pb-32">
-        <header className="px-6 py-8 space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-white tracking-tight uppercase">Membresía <span className="text-gradient">VIP</span></h1>
-            <Badge variant="info" className="py-1">OFICIAL</Badge>
-          </div>
-
-          {/* Current Status Card - Ultra Modern */}
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-sav-accent to-sav-secondary rounded-m3-lg blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-            <Card className="relative bg-zinc-950/60 backdrop-blur-3xl border border-white/10 p-8 overflow-hidden shadow-m3-3">
-              <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-sav-accent/20 rounded-full blur-[60px]" />
-              <div className="flex flex-col items-center relative z-10 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sav-accent to-sav-secondary flex items-center justify-center text-white mb-4 shadow-accent-glow">
-                  <Crown size={32} strokeWidth={2.5} />
-                </div>
-                <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.3em] mb-1">Tu Nivel Actual</p>
-                <h2 className="text-3xl font-bold text-white tracking-tight">
+      <div className="bg-sav-bg min-h-screen pb-32">
+        <Header title="Membresía VIP" />
+        
+        <main className="px-6 py-8 space-y-10 max-w-lg mx-auto animate-in">
+          {/* Current Status Header Card */}
+          <section>
+            <Card variant="premium" className="p-10 flex flex-col items-center text-center">
+              <div className="w-20 h-20 rounded-[2.5rem] bg-sav-primary/10 flex items-center justify-center text-sav-primary mb-6 shadow-sm border border-sav-primary/20">
+                <Crown size={40} strokeWidth={1.5} />
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-extrabold text-sav-muted uppercase tracking-[0.3em]">Tu Estatus Actual</p>
+                <h2 className="text-4xl font-black text-sav-text-main uppercase tracking-tight">
                   {displayLevelCode(user?.nivel_codigo || 'Internar')}
                 </h2>
               </div>
+              <Badge variant="info" className="mt-6 py-1.5 px-4 rounded-full border-indigo-200/50">MEMBRESÍA ACTIVA</Badge>
             </Card>
-          </div>
-          
-          {/* Info Table Card */}
-          <Card className="p-4 bg-white/[0.03] border-white/10 shadow-m3-1 overflow-hidden group">
-             <div className="rounded-m3 overflow-hidden border border-white/5 opacity-80 group-hover:opacity-100 transition-opacity">
-               <img src="/imag/tabla_invercion.webp" alt="Tabla de Inversión" className="w-full h-auto object-contain" />
-             </div>
-          </Card>
-        </header>
+          </section>
 
-        <main className="px-5 space-y-6">
-          <div className="flex items-center gap-2 px-1">
-            <Sparkles size={16} className="text-sav-accent" />
-            <h2 className="text-[12px] font-bold text-white uppercase tracking-[0.2em]">Opciones Premium</h2>
-          </div>
+          {/* Investment Guide Banner */}
+          <section className="space-y-5">
+            <div className="flex items-center gap-2 px-1">
+              <div className="w-1.5 h-4 bg-sav-primary rounded-full" />
+              <h3 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em]">Guía de Inversión</h3>
+            </div>
+            <Card className="p-4 bg-white border-black/[0.03] shadow-m3-1 overflow-hidden group">
+               <div className="rounded-2xl overflow-hidden border border-black/[0.02]">
+                 <img src="/imag/tabla_invercion.webp" alt="Tabla de Inversión" className="w-full h-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
+               </div>
+            </Card>
+          </section>
 
-          <div className="space-y-6">
-            {Array.isArray(niveles) && niveles.filter(n => (n.deposito || n.costo) > 0).map((nivel, i) => {
-              const esActual = nivel.id === user?.nivel_id;
-              const esSuperior = esNivelSuperior(nivel);
-              const bloqueado = nivel.activo === false;
+          {/* VIP Levels Grid */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 px-1">
+              <Sparkles size={16} className="text-sav-accent" />
+              <h3 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em]">Planes Institucionales</h3>
+            </div>
 
-              return (
-                <Card 
-                  key={nivel.id} 
-                  className={cn(
-                    "p-6 transition-all duration-500 border-white/10 relative overflow-hidden group",
-                    esActual ? "bg-gradient-to-br from-sav-accent/20 to-sav-secondary/20 border-sav-accent/40 shadow-accent-glow" : "bg-white/[0.03]",
-                    !esActual && !esSuperior && "opacity-40 grayscale"
-                  )}
-                >
-                  {esActual && (
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sav-accent to-sav-secondary" />
-                  )}
-                  
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500",
-                        esActual ? "bg-sav-accent text-white shadow-accent-glow scale-110" : "bg-white/5 text-sav-muted border border-white/5"
-                      )}>
-                        <Crown size={24} strokeWidth={2.5} />
-                      </div>
-                      <div className="space-y-0.5">
-                        <h3 className="text-lg font-bold text-white tracking-tight">{nivel.nombre}</h3>
-                        <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">Costo: {formatBs(nivel.deposito)} Bs</p>
-                      </div>
-                    </div>
-                    {esActual && (
-                       <Badge variant="success">ACTIVO</Badge>
+            <div className="space-y-6">
+              {Array.isArray(niveles) && niveles.filter(n => (n.deposito || n.costo) > 0).map((nivel, i) => {
+                const esActual = nivel.id === user?.nivel_id;
+                const esSuperior = esNivelSuperior(nivel);
+                const bloqueado = nivel.activo === false;
+
+                return (
+                  <Card 
+                    key={nivel.id} 
+                    className={cn(
+                      "p-8 transition-all duration-500 relative overflow-hidden group",
+                      esActual ? "bg-white border-sav-primary shadow-m3-3" : "bg-white border-black/[0.03] shadow-m3-1",
+                      !esActual && !esSuperior && "opacity-50 grayscale"
                     )}
-                  </div>
+                  >
+                    {esActual && (
+                      <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-sav-primary to-sav-accent" />
+                    )}
+                    
+                    <div className="flex justify-between items-start mb-8">
+                      <div className="flex items-center gap-5">
+                        <div className={cn(
+                          "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm",
+                          esActual ? "bg-sav-primary text-white shadow-accent-glow" : "bg-sav-surface text-sav-muted border border-black/[0.03]"
+                        )}>
+                          <Crown size={28} strokeWidth={2.5} />
+                        </div>
+                        <div className="space-y-0.5">
+                          <h3 className="text-xl font-black text-sav-text-main tracking-tight uppercase">{nivel.nombre}</h3>
+                          <div className="flex items-center gap-1.5">
+                             <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">Inversión:</p>
+                             <p className="text-xs font-black text-sav-primary">{formatBs(nivel.deposito)} Bs</p>
+                          </div>
+                        </div>
+                      </div>
+                      {esActual && (
+                         <Badge variant="success" className="shadow-sm">ACTUAL</Badge>
+                      )}
+                    </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] group-hover:bg-white/[0.05] transition-colors">
-                      <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest mb-1">Retorno Diario</p>
-                      <p className="text-base font-bold text-emerald-400 tracking-tight">+{formatBs(nivel.ingreso_diario)} Bs</p>
+                    <div className="grid grid-cols-2 gap-5 mb-8">
+                      <div className="p-5 rounded-3xl bg-sav-surface border border-black/[0.02] group-hover:bg-emerald-50/50 transition-colors">
+                        <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest mb-1.5">Renta Diaria</p>
+                        <p className="text-lg font-black text-emerald-600 tracking-tight">+{formatBs(nivel.ingreso_diario)} Bs</p>
+                      </div>
+                      <div className="p-5 rounded-3xl bg-sav-surface border border-black/[0.02] group-hover:bg-indigo-50/50 transition-colors">
+                        <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest mb-1.5">Capacidad</p>
+                        <p className="text-lg font-black text-sav-primary tracking-tight">{nivel.num_tareas_diarias} Misiones</p>
+                      </div>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] group-hover:bg-white/[0.05] transition-colors">
-                      <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest mb-1">Capacidad</p>
-                      <p className="text-base font-bold text-sav-accent tracking-tight">{nivel.num_tareas_diarias} Tareas</p>
-                    </div>
-                  </div>
 
-                  {esSuperior && !bloqueado && (
-                    <Button 
-                      onClick={() => handleUpgrade(nivel)}
-                      variant="primary"
-                      className="w-full h-13 text-[11px]"
-                    >
-                      ADQUIRIR MEMBRESÍA
-                    </Button>
-                  )}
-                  
-                  {bloqueado && (
-                    <div className="flex items-center justify-center gap-2 py-4 bg-white/5 rounded-xl text-zinc-500 text-[10px] font-bold uppercase tracking-widest border border-dashed border-white/10">
-                      <Lock size={14} /> Próximamente
-                    </div>
-                  )}
-                </Card>
-              );
-            })}
-          </div>
+                    {esSuperior && !bloqueado && (
+                      <Button 
+                        onClick={() => handleUpgrade(nivel)}
+                        variant="primary"
+                        className="w-full h-14 shadow-accent-glow"
+                        icon={Zap}
+                      >
+                        ACTIVAR MEMBRESÍA
+                      </Button>
+                    )}
+                    
+                    {bloqueado && (
+                      <div className="flex items-center justify-center gap-3 py-4 bg-sav-surface rounded-2xl text-sav-muted text-[10px] font-bold uppercase tracking-[0.2em] border border-dashed border-black/[0.05]">
+                        <Lock size={14} strokeWidth={2.5} /> Próximamente
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
         </main>
       </div>
     </Layout>

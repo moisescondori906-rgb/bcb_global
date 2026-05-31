@@ -9,7 +9,10 @@ import {
   Users, UserPlus, TrendingUp, Info, 
   ShieldAlert, ChevronRight, Copy, Check,
   Target, Zap, Gem, Trash2, Star, PieChart as PieChartIcon,
-  Loader2
+  Loader2,
+  Award,
+  Sparkles,
+  User
 } from 'lucide-react';
 
 // UI Components
@@ -40,11 +43,11 @@ const PieChart = ({ data }) => {
 
   let cumulativePercent = 0;
   const colors = [
-    { from: '#3b82f6', to: '#2563eb' }, // Azul
-    { from: '#10b981', to: '#059669' }, // Verde
-    { from: '#f59e0b', to: '#d97706' }, // Ámbar
-    { from: '#ef4444', to: '#dc2626' }, // Rojo
-    { from: '#8b5cf6', to: '#7c3aed' }, // Violeta
+    { from: '#6366F1', to: '#4F46E5' }, // Indigo
+    { from: '#10B981', to: '#059669' }, // Emerald
+    { from: '#F59E0B', to: '#D97706' }, // Amber
+    { from: '#EF4444', to: '#DC2626' }, // Red
+    { from: '#8B5CF6', to: '#7C3AED' }, // Violet
   ];
 
   const getCoordinatesForPercent = (percent) => {
@@ -54,8 +57,8 @@ const PieChart = ({ data }) => {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-8 p-2">
-      <div className="relative w-40 h-40 group">
+    <div className="flex flex-col sm:flex-row items-center gap-10 p-4">
+      <div className="relative w-44 h-44 group">
         <svg viewBox="-1.1 -1.1 2.2 2.2" className="transform -rotate-90 w-full h-full drop-shadow-sm">
           <defs>
             {chartData.map((_, idx) => (
@@ -91,34 +94,35 @@ const PieChart = ({ data }) => {
         
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="flex flex-col items-center justify-center text-center">
-            <p className="text-[8px] font-black text-sav-muted uppercase tracking-[0.2em] mb-0.5">Total</p>
-            <p className="text-lg font-black text-sav-primary tracking-tighter">
-              {formatCurrency(total, 'Bs').trim()}
+            <p className="text-[10px] font-extrabold text-sav-muted uppercase tracking-[0.2em] mb-0.5">Total</p>
+            <p className="text-xl font-black text-sav-text-main tracking-tighter">
+              {formatCurrency(total, 'Bs').replace('Bs', '').trim()}
             </p>
+            <p className="text-[9px] font-black text-sav-primary uppercase tracking-widest">Bs</p>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 w-full space-y-4">
+      <div className="flex-1 w-full space-y-5">
         {chartData.filter(item => Number(item.value) > 0).map((item, idx) => {
           const val = Number(item.value) || 0;
           const percent = (val / total) * 100;
           return (
-            <div key={idx} className="space-y-1.5">
+            <div key={idx} className="space-y-2">
               <div className="flex justify-between items-end">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: colors[idx % colors.length].from }} />
-                  <span className="text-[9px] font-black text-sav-muted uppercase tracking-widest">{item.name}</span>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-3 h-3 rounded-full" style={{ background: colors[idx % colors.length].from }} />
+                  <span className="text-[10px] font-extrabold text-sav-text-dim uppercase tracking-widest">{item.name}</span>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-[11px] font-black text-sav-primary">{percent.toFixed(1)}%</span>
+                  <span className="text-[12px] font-black text-sav-primary tracking-tight">{percent.toFixed(1)}%</span>
                 </div>
               </div>
-              <div className="h-1.5 w-full bg-sav-surface rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-sav-surface rounded-full overflow-hidden p-0.5 border border-black/[0.03]">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${percent}%` }}
-                  className="h-full rounded-full"
+                  className="h-full rounded-full shadow-sm"
                   style={{ background: colors[idx % colors.length].from }}
                 />
               </div>
@@ -173,19 +177,19 @@ export default function Team() {
 
   useEffect(() => {
     fetchTeam();
-    const interval = setInterval(() => fetchTeam(true), 5000);
+    const interval = setInterval(() => fetchTeam(true), 15000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     fetchReferrals();
-    const interval = setInterval(() => fetchReferrals(true), 5000);
+    const interval = setInterval(() => fetchReferrals(true), 15000);
     return () => clearInterval(interval);
   }, [selectedNivel]);
 
   const handleCopy = () => {
     if (!user?.codigo_invitacion) return;
-    const invitationLink = `${CONFIG.WEB_URL}/invitar?code=${user.codigo_invitacion}`;
+    const invitationLink = `${CONFIG.WEB_URL}/register?ref=${user.codigo_invitacion}`;
     navigator.clipboard.writeText(invitationLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -209,129 +213,170 @@ export default function Team() {
   if (loading && !data) {
     return (
       <Layout>
-        <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] space-y-6 bg-sav-dark">
-          <div className="w-16 h-16 border-4 border-slate-200 border-t-sav-primary rounded-full animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">Sincronizando Equipo</p>
+        <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] space-y-6">
+          <div className="w-16 h-16 border-4 border-sav-surface border-t-sav-primary rounded-full animate-spin" />
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-sav-muted animate-pulse">Sincronizando Red</p>
         </div>
       </Layout>
     );
   }
 
   const resumen = data?.resumen || {};
-  const niveles = Array.isArray(data?.niveles) ? data.niveles : [];
   const isInternar = user?.nivel_codigo === 'internar';
 
   return (
     <Layout>
-      <Header title="Equipo" />
-      
-      <main className="px-4 sm:px-6 py-6 space-y-6 pb-32 animate-in">
-        {/* Referral Card - Modern Flutter Style */}
-        <Card className="p-6 bg-sav-primary border-none shadow-m3-3 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
-          <div className="relative z-10 space-y-6">
+      <div className="bg-sav-bg min-h-screen pb-32">
+        <Header title="Gestión de Equipo" />
+        
+        <main className="px-6 py-8 space-y-10 max-w-lg mx-auto animate-in">
+          {/* Invitation Banner Card */}
+          <Card variant="premium" className="p-8 space-y-8">
             <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">Código de Invitación</p>
-                <p className="text-3xl font-black text-white tracking-tighter uppercase">{user?.codigo_invitacion || '------'}</p>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                   <div className="w-6 h-6 rounded-lg bg-sav-primary/10 flex items-center justify-center text-sav-primary">
+                      <UserPlus size={12} strokeWidth={3} />
+                   </div>
+                   <p className="text-[11px] font-extrabold text-sav-muted uppercase tracking-[0.2em]">Invitación Directa</p>
+                </div>
+                <h2 className="text-4xl font-black text-sav-text-main tracking-tighter uppercase">{user?.codigo_invitacion || '------'}</h2>
               </div>
               <button 
                 onClick={handleCopy}
-                className="p-3 rounded-m3 bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all shadow-lg active:scale-95"
+                className={cn(
+                  "p-4 rounded-2xl transition-all duration-500 shadow-sm active:scale-90",
+                  copied ? "bg-emerald-500 text-white" : "bg-sav-primary text-white shadow-accent-glow"
+                )}
               >
-                {copied ? <Check size={20} /> : <Copy size={20} />}
+                {copied ? <Check size={24} strokeWidth={2.5} /> : <Copy size={24} strokeWidth={2.5} />}
               </button>
             </div>
             
-            <div className="flex items-center gap-2 px-3 py-2 rounded-m3-sm bg-white/5 border border-white/10">
-              <UserPlus size={14} className="text-white/60" />
-              <p className="text-[9px] font-black text-white/80 uppercase tracking-widest truncate">Comparte tu enlace para ganar comisiones</p>
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-sav-surface border border-black/[0.02]">
+              <Sparkles size={16} className="text-sav-primary" />
+              <p className="text-[10px] font-bold text-sav-text-dim uppercase tracking-widest leading-none">Copia tu enlace y expande tus ganancias diarias</p>
             </div>
-          </div>
-        </Card>
-
-        {/* Team Statistics - Rediseñado */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <PieChartIcon size={14} className="text-sav-primary" />
-            <h3 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em]">Resumen de Comisiones</h3>
-          </div>
-
-          <Card className="p-6 bg-white border-sav-border shadow-m3-2">
-            <PieChart data={[
-              { name: 'Nivel A', value: resumen.comisiones_a || 0 },
-              { name: 'Nivel B', value: resumen.comisiones_b || 0 },
-              { name: 'Nivel C', value: resumen.comisiones_c || 0 }
-            ]} />
           </Card>
-        </section>
 
-        {/* Levels Grid */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: 'Nivel A', count: resumen.total_a || 0, icon: Gem, color: 'text-sav-primary', bg: 'bg-sav-surface' },
-            { label: 'Nivel B', count: resumen.total_b || 0, icon: Zap, color: 'text-amber-500', bg: 'bg-amber-50' },
-            { label: 'Nivel C', count: resumen.total_c || 0, icon: Star, color: 'text-rose-500', bg: 'bg-rose-50' }
-          ].map((item, idx) => (
-            <button
-              key={idx}
-              onClick={() => setSelectedNivel(item.label.split(' ')[1])}
-              className={cn(
-                "p-4 rounded-m3-lg border transition-all flex flex-col items-center gap-2 text-center",
-                selectedNivel === item.label.split(' ')[1]
-                  ? "bg-sav-primary border-sav-primary shadow-m3-2 text-white"
-                  : "bg-white border-sav-border shadow-m3-1 text-sav-primary"
+          {/* Comisiones Chart Section */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 px-1">
+              <div className="w-1.5 h-4 bg-sav-primary rounded-full" />
+              <h3 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em]">Rendimiento de Comisiones</h3>
+            </div>
+
+            <Card className="p-8 bg-white border-black/[0.03] shadow-m3-2">
+              <PieChart data={[
+                { name: 'Nivel A', value: resumen.comisiones_a || 0 },
+                { name: 'Nivel B', value: resumen.comisiones_b || 0 },
+                { name: 'Nivel C', value: resumen.comisiones_c || 0 }
+              ]} />
+            </Card>
+          </section>
+
+          {/* Level Switcher Grid */}
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { label: 'Nivel A', count: resumen.total_a || 0, icon: Gem, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+              { label: 'Nivel B', count: resumen.total_b || 0, icon: Zap, color: 'text-amber-500', bg: 'bg-amber-50' },
+              { label: 'Nivel C', count: resumen.total_c || 0, icon: Star, color: 'text-emerald-600', bg: 'bg-emerald-50' }
+            ].map((item, idx) => {
+              const levelKey = item.label.split(' ')[1];
+              const isActive = selectedNivel === levelKey;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedNivel(levelKey)}
+                  className={cn(
+                    "p-5 rounded-[2rem] border-2 transition-all duration-500 flex flex-col items-center gap-3 text-center group shadow-sm",
+                    isActive
+                      ? "bg-white border-sav-primary shadow-m3-2 -translate-y-1"
+                      : "bg-white border-black/[0.03] hover:border-black/[0.1]"
+                  )}
+                >
+                  <div className={cn(
+                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:rotate-6",
+                    isActive ? "bg-sav-primary text-white shadow-accent-glow" : cn(item.bg, item.color)
+                  )}>
+                    <item.icon size={24} strokeWidth={2.5} />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className={cn("text-[9px] font-black uppercase tracking-widest", isActive ? "text-sav-primary" : "text-sav-muted")}>{item.label}</p>
+                    <p className="text-xl font-black text-sav-text-main tracking-tight">{item.count}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Members List */}
+          <section className="space-y-6 pb-12">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-4 bg-sav-primary rounded-full" />
+                <h3 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em]">Miembros Activos</h3>
+              </div>
+              <Badge variant="info">NIVEL {selectedNivel}</Badge>
+            </div>
+
+            <div className="space-y-4">
+              {referralsLoading ? (
+                <div className="py-20 flex flex-col items-center justify-center gap-4">
+                  <Loader2 className="animate-spin text-sav-primary" size={32} />
+                  <p className="text-[10px] font-extrabold text-sav-muted uppercase tracking-[0.3em]">Sincronizando Lista...</p>
+                </div>
+              ) : referrals.length > 0 ? (
+                referrals.map((ref, i) => (
+                  <motion.div
+                    key={ref.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <Card className="p-5 flex items-center justify-between group hover:border-sav-primary/30 transition-all shadow-m3-1">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="w-12 h-12 rounded-2xl bg-sav-surface flex items-center justify-center text-sav-muted group-hover:bg-sav-primary/10 group-hover:text-sav-primary transition-all border border-black/[0.02]">
+                          <User size={24} strokeWidth={2.5} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-[14px] font-extrabold text-sav-text-main uppercase tracking-tight truncate">{ref.nombre_usuario}</h4>
+                            <Badge variant="info" className="text-[8px] py-0 px-2">{displayLevelCode(ref.nivel_codigo)}</Badge>
+                          </div>
+                          <p className="text-[11px] font-bold text-sav-muted tracking-widest">{ref.telefono}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {selectedNivel === 'A' && ref.nivel_codigo === 'internar' && (
+                          <button 
+                            onClick={() => handleDeleteReferral(ref.id)}
+                            disabled={deletingId === ref.id}
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-rose-400 hover:bg-rose-50 hover:text-rose-600 transition-all border border-transparent hover:border-rose-100"
+                          >
+                            {deletingId === ref.id ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} strokeWidth={2.5} />}
+                          </button>
+                        )}
+                        <ChevronRight size={18} className="text-sav-muted group-hover:text-sav-primary transition-colors" strokeWidth={2.5} />
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="py-24 text-center space-y-6">
+                   <div className="w-20 h-20 rounded-full border-2 border-dashed border-black/[0.05] flex items-center justify-center mx-auto text-sav-muted/30">
+                      <Users size={32} />
+                   </div>
+                   <div className="space-y-2">
+                      <p className="text-[12px] font-extrabold text-sav-text-main uppercase tracking-widest">Sin miembros registrados</p>
+                      <p className="text-[10px] font-bold text-sav-muted uppercase tracking-tight leading-relaxed max-w-[180px] mx-auto">Invita a nuevos socios para comenzar a construir tu equipo.</p>
+                   </div>
+                </div>
               )}
-            >
-              <div className={cn(
-                "w-10 h-10 rounded-m3 flex items-center justify-center mb-1",
-                selectedNivel === item.label.split(' ')[1] ? "bg-white/10" : item.bg
-              )}>
-                <item.icon size={20} className={selectedNivel === item.label.split(' ')[1] ? "text-white" : item.color} />
-              </div>
-              <p className="text-[8px] font-black uppercase tracking-widest opacity-60">{item.label}</p>
-              <p className="text-lg font-black tracking-tight">{item.count}</p>
-            </button>
-          ))}
-        </div>
-
-        {/* Referrals List - Clean Material Table */}
-        <section className="space-y-4 pb-12">
-          <div className="flex items-center justify-between px-1">
-             <h3 className="text-[11px] font-black text-sav-primary uppercase tracking-[0.2em]">Integrantes Nivel {selectedNivel}</h3>
-             <Badge variant="info" className="bg-sav-surface text-sav-primary border-sav-border">Sincronizado</Badge>
-          </div>
-
-          <div className="space-y-3">
-            {referralsLoading ? (
-              <div className="py-12 flex justify-center"><Loader2 size={24} className="animate-spin text-sav-primary/30" /></div>
-            ) : referrals.length > 0 ? (
-              referrals.map((ref) => (
-                <Card key={ref.id} className="p-4 flex items-center justify-between bg-white border-sav-border shadow-m3-1">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-10 h-10 rounded-m3 bg-sav-surface border border-sav-border flex items-center justify-center text-sav-primary font-black text-xs">
-                      {ref.nombre_usuario?.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-black text-sav-primary uppercase truncate">{ref.nombre_usuario}</p>
-                      <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest">{ref.telefono}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-sav-primary">{ref.nivel_nombre || 'Pasante'}</p>
-                    <p className="text-[8px] font-bold text-sav-muted uppercase tracking-widest">{new Date(ref.created_at).toLocaleDateString()}</p>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              <div className="py-20 text-center opacity-40 flex flex-col items-center gap-3">
-                <Users size={40} className="text-sav-muted" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-sav-muted">No hay integrantes registrados</p>
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
+            </div>
+          </section>
+        </main>
+      </div>
     </Layout>
   );
 }

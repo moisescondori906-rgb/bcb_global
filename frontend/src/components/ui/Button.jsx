@@ -10,16 +10,17 @@ export function Button({
   ...props 
 }) {
   const variants = {
-    primary: 'bg-gradient-to-r from-sav-accent to-sav-secondary text-white shadow-accent-glow hover:shadow-[0_0_30px_rgba(59,130,246,0.4)]',
-    secondary: 'bg-white/5 border border-white/10 text-white hover:bg-white/10 backdrop-blur-md',
-    ghost: 'bg-transparent hover:bg-white/5 text-sav-muted hover:text-white',
-    danger: 'bg-gradient-to-r from-sav-error to-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]'
+    primary: 'bg-sav-primary text-white shadow-accent-glow hover:bg-sav-primary/90 active:scale-[0.97]',
+    secondary: 'bg-sav-surface text-sav-text-main border border-black/[0.03] hover:bg-slate-200 active:scale-[0.97]',
+    ghost: 'bg-transparent hover:bg-sav-surface text-sav-muted hover:text-sav-text-main',
+    danger: 'bg-sav-error/10 text-sav-error border border-sav-error/20 hover:bg-sav-error/20 active:scale-[0.97]',
+    success: 'bg-sav-success text-white shadow-success-glow hover:bg-sav-success/90 active:scale-[0.97]'
   };
 
   return (
     <button
       className={cn(
-        'h-12 sm:h-13 px-6 rounded-m3 flex items-center justify-center gap-2.5 font-bold text-[13px] sm:text-[14px] uppercase tracking-[0.1em] transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none',
+        'h-12 sm:h-14 px-8 rounded-m3 flex items-center justify-center gap-3 font-bold text-[13px] sm:text-[14px] uppercase tracking-[0.12em] transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none group',
         variants[variant],
         loading && 'opacity-70',
         className
@@ -28,10 +29,10 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
       ) : (
         <>
-          {Icon && <Icon size={18} className="transition-transform group-hover:scale-110" />}
+          {Icon && <Icon size={18} className="transition-transform group-hover:scale-110 group-active:scale-95" strokeWidth={2.5} />}
           {children}
         </>
       )}

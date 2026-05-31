@@ -8,17 +8,18 @@ export function Badge({
   ...props 
 }) {
   const variants = {
-    success: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]',
-    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]',
-    error: 'bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]',
-    info: 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]',
-    muted: 'bg-white/5 text-zinc-400 border-white/10'
+    success: 'bg-emerald-100 text-emerald-600 border-emerald-200/50',
+    warning: 'bg-amber-100 text-amber-600 border-amber-200/50',
+    error: 'bg-red-100 text-red-600 border-red-200/50',
+    info: 'bg-indigo-100 text-indigo-600 border-indigo-200/50',
+    muted: 'bg-slate-100 text-slate-500 border-slate-200/50',
+    secondary: 'bg-sav-surface text-sav-text-main border-black/[0.03]'
   };
 
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm',
+        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider',
         variants[variant],
         className
       )}

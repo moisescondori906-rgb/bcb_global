@@ -1,50 +1,46 @@
 @import "tailwindcss";
 
 @theme {
-  /* 2026 Future Vision - Premium Fintech Theme */
-  --color-sav-primary: #0A0A0B;    /* Obsidian Deep */
-  --color-sav-accent: #3B82F6;     /* Electric Blue */
-  --color-sav-secondary: #8B5CF6;  /* Royal Violet */
-  --color-sav-dark: #000000;       /* Pure Black */
-  --color-sav-card: #121214;       /* Zinc Dark */
-  --color-sav-surface: #1C1C1E;    /* Elevated Surface */
-  --color-sav-muted: #A1A1AA;      /* Zinc 400 */
+  /* Flutter Premium - Modern Light Theme */
+  --color-sav-primary: #6366F1;    /* Indigo 500 */
+  --color-sav-accent: #8B5CF6;     /* Violet 500 */
+  --color-sav-secondary: #06B6D4;  /* Cyan 500 */
+  --color-sav-bg: #F8FAFC;         /* Slate 50 */
+  --color-sav-card: #FFFFFF;       /* Pure White */
+  --color-sav-surface: #F1F5F9;    /* Slate 100 */
+  --color-sav-muted: #64748B;      /* Slate 500 */
   --color-sav-success: #10B981;    /* Emerald 500 */
   --color-sav-error: #EF4444;      /* Red 500 */
-  --color-sav-border: rgba(255, 255, 255, 0.08);
+  --color-sav-border: rgba(0, 0, 0, 0.05);
+  --color-sav-text-main: #0F172A;  /* Slate 900 */
+  --color-sav-text-dim: #475569;   /* Slate 600 */
   
-  /* Futuristic Radii */
-  --radius-m3-sm: 10px;
-  --radius-m3: 16px;
-  --radius-m3-lg: 24px;
+  /* Flutter Radii - Smooth and Large */
+  --radius-m3-sm: 12px;
+  --radius-m3: 20px;
+  --radius-m3-lg: 32px;
 
-  /* Premium Shadows */
-  --shadow-m3-1: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
-  --shadow-m3-2: 0 12px 24px -4px rgba(0, 0, 0, 0.5);
-  --shadow-m3-3: 0 20px 40px -8px rgba(0, 0, 0, 0.6);
-  --shadow-accent-glow: 0 0 20px rgba(59, 130, 246, 0.3);
-  --shadow-violet-glow: 0 0 20px rgba(139, 92, 246, 0.3);
+  /* Soft Flutter Shadows */
+  --shadow-m3-1: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --shadow-m3-2: 0 12px 30px -4px rgba(0, 0, 0, 0.08);
+  --shadow-m3-3: 0 24px 50px -10px rgba(0, 0, 0, 0.12);
+  --shadow-accent-glow: 0 8px 25px -5px rgba(99, 102, 241, 0.4);
+  --shadow-success-glow: 0 8px 25px -5px rgba(16, 185, 129, 0.3);
 
   /* Gradients */
-  --bg-gradient-premium: linear-gradient(135deg, #0A0A0B 0%, #121214 100%);
-  --bg-gradient-accent: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-  --bg-gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  --bg-gradient-premium: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+  --bg-gradient-accent: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  --bg-gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%);
 
-  /* Admin Theme - Kept for consistency but upgraded */
-  --color-admin-bg: #000000;
-  --color-admin-card: #0A0A0B;
-  --color-admin-border: rgba(255, 255, 255, 0.1);
-  --color-admin-accent: #3B82F6;
-  --color-admin-accent-glow: rgba(59, 130, 246, 0.2);
+  /* Admin Theme - Kept but adapted to light-ish dark or refined */
+  --color-admin-bg: #0F172A;
+  --color-admin-card: #1E293B;
+  --color-admin-border: rgba(255, 255, 255, 0.05);
+  --color-admin-accent: #6366F1;
+  --color-admin-accent-glow: rgba(99, 102, 241, 0.2);
   --color-admin-text: #FFFFFF;
-  --color-admin-muted: #71717A;
-  --color-admin-surface: #121214;
-
-  --shadow-admin-glow: 0 0 30px rgba(59, 130, 246, 0.15);
-  --shadow-admin-glow-strong: 0 0 50px rgba(59, 130, 246, 0.25);
-  
-  --radius-admin: 1.25rem;
-  --radius-admin-lg: 2rem;
+  --color-admin-muted: #94A3B8;
+  --color-admin-surface: #334155;
 
   --animate-marquee-slow: marquee 40s linear infinite;
   --animate-pulse-subtle: pulse-subtle 3s ease-in-out infinite;
@@ -52,7 +48,7 @@
 
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50% { opacity: 0.8; }
 }
 
 @keyframes marquee {
@@ -62,17 +58,17 @@
 
 @layer base {
   html, body {
-    @apply w-full overflow-x-hidden bg-sav-dark text-white;
+    @apply w-full overflow-x-hidden bg-sav-bg text-sav-text-main;
     height: -webkit-fill-available;
-    color-scheme: dark;
+    color-scheme: light;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   #root {
-    @apply min-h-screen bg-sav-dark;
+    @apply min-h-screen bg-sav-bg;
   }
 
-  /* Custom Scrollbar for Modern Feel */
+  /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -81,13 +77,13 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
+    @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-m3-2;
+    @apply bg-white/80 backdrop-blur-xl border border-white/40 shadow-m3-2;
   }
   
   .premium-gradient {
@@ -99,12 +95,12 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-sav-accent to-sav-secondary;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-sav-primary to-sav-accent;
   }
 
   .btn-premium {
-    @apply relative overflow-hidden px-6 py-3 rounded-m3 font-semibold transition-all duration-300
-           hover:scale-[1.02] active:scale-[0.98] shadow-accent-glow;
+    @apply relative overflow-hidden px-6 py-3 rounded-m3 font-bold transition-all duration-300
+           hover:scale-[1.02] active:scale-[0.98] shadow-accent-glow text-white;
     background: var(--bg-gradient-accent);
   }
 
@@ -115,35 +111,19 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-}
 
-/* Admin Styles - Forced High Contrast */
-.admin-layout {
-  color-scheme: dark;
-  background-color: var(--color-admin-bg);
-  color: white !important;
-}
-
-.admin-layout label {
-  color: #ffffff !important;
-  font-weight: 900 !important;
-  text-transform: uppercase !important;
-}
-
-.admin-layout input, 
-.admin-layout select, 
-.admin-layout textarea {
-  color: white !important;
-  background-color: rgba(255, 255, 255, 0.03) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  .flutter-input {
+    @apply w-full bg-sav-surface border-none rounded-m3 px-5 py-4 text-sav-text-main font-medium
+           placeholder:text-sav-muted focus:ring-2 focus:ring-sav-primary/20 transition-all;
+  }
 }
 
 /* Animations */
 .animate-in {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(15px); }
   to { opacity: 1; transform: translateY(0); }
 }
