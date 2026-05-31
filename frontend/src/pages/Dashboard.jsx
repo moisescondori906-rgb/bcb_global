@@ -191,26 +191,25 @@ export default function Dashboard() {
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.03)_0%,transparent_70%)] -z-10" />
       
       <main className="px-4 sm:px-5 space-y-6 sm:space-y-7 pb-12 pt-4 animate-in">
-        {/* Modal de Comunicado Diario Estilo Pantalla Completa (Nuevo) */}
+        {/* Modal de Comunicado Diario Estilo Limpio (Sin contenedor) */}
         <AnimatePresence>
           {showDailyAnnouncement && comunicados.length > 0 && (
             <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6">
               <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 50 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 50 }}
-                className="relative w-[92%] max-h-[85vh] sm:max-w-lg bg-white rounded-[2.5rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] flex flex-col"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowDailyAnnouncement(false)}
+                className="absolute inset-0 bg-white/90 backdrop-blur-xl"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="relative w-full max-w-lg flex flex-col items-center space-y-8"
               >
-                {/* Botón Cerrar Flotante */}
-                <button 
-                  onClick={() => setShowDailyAnnouncement(false)}
-                  className="absolute top-6 right-6 z-50 p-3 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white transition-all active:scale-90"
-                >
-                  <CloseIcon size={24} className="text-white" />
-                </button>
-
-                {/* Imagen del Comunicado (Si existe) */}
-                <div className="w-full aspect-[9/16] sm:aspect-video bg-slate-950 overflow-hidden relative">
+                {/* Imagen del Comunicado Limpia */}
+                <div className="w-full aspect-video overflow-hidden">
                   <AnimatePresence mode="wait">
                     <motion.img 
                       key={currentAnnouncementIndex}
@@ -223,57 +222,78 @@ export default function Dashboard() {
                       alt="Comunicado"
                     />
                   </AnimatePresence>
-                  
-                  {/* Indicadores de Carrusel en el Modal */}
-                  {comunicados.length > 1 && (
-                    <div className="absolute top-6 left-6 flex gap-1.5 z-50">
-                      {comunicados.map((_, i) => (
-                        <div 
-                          key={i} 
-                          className={cn(
-                            "h-1 rounded-full transition-all duration-500",
-                            i === currentAnnouncementIndex ? "w-6 bg-sav-primary" : "w-2 bg-white/30"
-                          )}
-                        />
-                      ))}
-                    </div>
-                  )}
                 </div>
 
-                <div className="flex-1 p-8 sm:p-10 space-y-6 overflow-y-auto">
+                <div className="text-center space-y-4 px-6">
                   <AnimatePresence mode="wait">
                     <motion.div 
                       key={currentAnnouncementIndex}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.5 }}
-                      className="space-y-4"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="space-y-2"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-sav-primary/10 rounded-xl flex items-center justify-center text-sav-primary border border-sav-primary/10">
-                          <BellIcon size={20} className="text-sav-primary" />
-                        </div>
-                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter">
-                          {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
-                        </h2>
-                      </div>
-                      
-                      <div className="space-y-4 text-[13px] sm:text-sm font-bold uppercase tracking-widest leading-relaxed text-slate-600">
-                        <p className="whitespace-pre-wrap text-black">
-                          {comunicados[currentAnnouncementIndex].mensaje}
-                        </p>
-                      </div>
+                      <h2 className="text-xl sm:text-2xl font-black text-black uppercase tracking-tighter">
+                        {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
+                      </h2>
+                      <p className="text-[13px] sm:text-sm font-bold uppercase tracking-widest leading-relaxed text-black/70 whitespace-pre-wrap">
+                        {comunicados[currentAnnouncementIndex].mensaje}
+                      </p>
                     </motion.div>
                   </AnimatePresence>
-
-                  <Button 
-                    onClick={() => setShowDailyAnnouncement(false)}
-                    className="w-full h-14 rounded-2xl bg-sav-primary text-white font-black uppercase tracking-[0.2em] shadow-xl shadow-sav-primary/20 hover:scale-[1.02] active:scale-95 transition-all mt-auto"
-                  >
-                    <span className="text-white">ENTENDIDO</span>
-                  </Button>
                 </div>
+
+                <Button 
+                  onClick={() => setShowDailyAnnouncement(false)}
+                  className="w-48 h-12 rounded-full bg-black text-white font-black uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all"
+                >
+                  <span className="text-white">CERRAR</span>
+                </Button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Modal de Mantenimiento Domingo - Restaurado de forma limpia */}
+        <AnimatePresence>
+          {isSunday && showSundayModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowSundayModal(false)}
+                className="absolute inset-0 bg-white/90 backdrop-blur-xl"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="relative w-full max-w-lg flex flex-col items-center text-center space-y-8"
+              >
+                <div className="w-24 h-24 bg-sav-primary/10 rounded-full flex items-center justify-center text-sav-primary border border-sav-primary/10 shadow-inner">
+                  <CoffeeIcon size={48} />
+                </div>
+                
+                <div className="space-y-4 px-6">
+                  <h2 className="text-2xl sm:text-3xl font-black text-black uppercase tracking-tighter leading-tight">
+                    ¡Buen domingo <br/> <span className="text-sav-primary">para todos!</span> 😊
+                  </h2>
+                  
+                  <div className="space-y-4 text-[11px] sm:text-xs font-bold uppercase tracking-widest leading-relaxed text-black/60">
+                    <p>Mantenimiento semanal para optimizar tu experiencia.</p>
+                    <p className="text-black font-black pt-4 border-t border-black/5">
+                      ¡Feliz descanso les desea <br/> BCB Global! 🚀
+                    </p>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => setShowSundayModal(false)}
+                  className="w-64 h-14 rounded-full bg-sav-primary text-white font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
+                >
+                  <span className="text-white">CONTINUAR AL PANEL</span>
+                </Button>
               </motion.div>
             </div>
           )}
