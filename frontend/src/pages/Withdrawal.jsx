@@ -492,7 +492,6 @@ export default function Withdrawal() {
                         {isInternar ? 'NIVEL INSUFICIENTE' : 'ENVIAR SOLICITUD'}
                       </Button>
                    </Card>
-                </section>
               </form>
 
               {/* Info Image */}
