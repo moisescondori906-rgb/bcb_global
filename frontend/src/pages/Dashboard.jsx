@@ -34,6 +34,7 @@ import { formatCurrency, formatDate } from '../lib/utils/format';
 import Layout from '../components/Layout';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { cn } from '../lib/utils/cn';
