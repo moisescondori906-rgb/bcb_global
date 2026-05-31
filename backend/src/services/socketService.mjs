@@ -12,14 +12,12 @@ export function initSocket(server) {
     cors: {
       origin: (origin, callback) => {
         // En producción, permitir orígenes específicos o "*"
-        // socket.io v4 con credentials: true requiere un origen específico
         callback(null, true);
       },
       methods: ["GET", "POST"],
       credentials: true
     },
-    transports: ['polling', 'websocket'], // Asegurar ambos para compatibilidad
-    allowEIO3: true, // Compatibilidad con versiones anteriores si es necesario
+    transports: ['websocket'], // Forzar websocket para evitar errores 400 en cluster PM2
     pingTimeout: 60000,
     pingInterval: 25000,
     connectTimeout: 45000

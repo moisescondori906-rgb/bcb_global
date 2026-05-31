@@ -89,7 +89,15 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket support
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+        proxy_connect_timeout 75s;
+        
+        # Disable cache for socket.io
         proxy_cache_bypass $http_upgrade;
+        proxy_no_cache $http_upgrade;
     }
 
     location /api/ {
@@ -128,8 +136,8 @@ server {
     'nginx -t && systemctl reload nginx',
     'mkdir -p /var/www/bcb_global/storage/uploads/metodos_qr',
     'chmod -R 777 /var/www/bcb_global/storage/uploads',
-    'nproc --all', # Mostrar núcleos totales
-    'free -m',      # Mostrar memoria libre
+    'nproc --all', 
+    'free -m',      
     'pm2 restart all --update-env'
   ];
 
