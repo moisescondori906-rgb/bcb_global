@@ -25,7 +25,7 @@ export default function ActionGrid({ items }) {
       className="grid grid-cols-3 gap-4 sm:gap-6"
     >
       {items.map((item, idx) => {
-        const { to, icon: Icon, label, badge, color, bg } = item;
+        const { to, icon: Icon, label, badge, color, bg, className } = item;
         return (
           <motion.div key={idx} variants={itemAnim}>
             <Link
@@ -40,7 +40,10 @@ export default function ActionGrid({ items }) {
                 <Icon size={26} strokeWidth={2.5} />
               </div>
               <div className="flex flex-col items-center gap-1">
-                <span className="text-[11px] font-extrabold uppercase tracking-widest text-sav-text-dim group-hover:text-sav-primary transition-colors text-center leading-none">
+                <span className={cn(
+                  "text-[11px] font-extrabold uppercase tracking-widest text-sav-text-dim group-hover:text-sav-primary transition-colors text-center leading-none",
+                  className
+                )}>
                   {label}
                 </span>
                 {badge && (

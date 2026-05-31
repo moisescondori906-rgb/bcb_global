@@ -52,7 +52,7 @@ export default function Layout({ children }) {
                   <Icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={isActive ? 3 : 2} />
                 </div>
                 <span className={cn(
-                  "text-[8px] sm:text-[9px] font-black uppercase tracking-widest mt-1.5 transition-colors",
+                  "text-[7px] sm:text-[9px] font-black uppercase tracking-widest mt-1 transition-colors leading-none text-center",
                   isActive ? "text-indigo-900 opacity-100" : "text-slate-600 opacity-90"
                 )}>
                   {item.label}

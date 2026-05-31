@@ -62,7 +62,19 @@ export default function Dashboard() {
   const [showSupportMenu, setShowSupportMenu] = useState(false);
   const [securityAlert, setSecurityAlert] = useState(null);
   const [showSundayModal, setShowSundayModal] = useState(true);
+  const [showDailyAnnouncement, setShowDailyAnnouncement] = useState(false);
   const isSunday = now.getDay() === 0;
+
+  useEffect(() => {
+    // Lógica para mostrar comunicado diario una vez al día
+    const lastShow = localStorage.getItem('last_announcement_show');
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (lastShow !== today && comunicados.length > 0) {
+      setShowDailyAnnouncement(true);
+      localStorage.setItem('last_announcement_show', today);
+    }
+  }, [comunicados]);
 
   useEffect(() => {
     if (user?.security_alert) {
@@ -142,6 +154,7 @@ export default function Dashboard() {
       label: 'Mi Equipo', 
       color: 'text-blue-700', 
       bg: 'bg-blue-100',
+      className: 'text-[8px] sm:text-[9px] scale-90',
       badge: teamSummary?.niveles ? (
         <div className="flex gap-1 mt-1">
           {teamSummary.niveles.map(n => (
@@ -167,6 +180,71 @@ export default function Dashboard() {
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.03)_0%,transparent_70%)] -z-10" />
       
       <main className="px-4 sm:px-5 space-y-6 sm:space-y-7 pb-12 pt-4 animate-in">
+        {/* Modal de Comunicado Diario Estilo Pantalla Completa (Nuevo) */}
+        <AnimatePresence>
+          {showDailyAnnouncement && comunicados.length > 0 && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 sm:p-6">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowDailyAnnouncement(false)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 50 }}
+                className="relative w-full h-full sm:h-auto sm:max-w-lg bg-white sm:rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
+              >
+                {/* Botón Cerrar Flotante */}
+                <button 
+                  onClick={() => setShowDailyAnnouncement(false)}
+                  className="absolute top-6 right-6 z-50 p-3 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white transition-all active:scale-90"
+                >
+                  <CloseIcon size={24} />
+                </button>
+
+                {/* Imagen del Comunicado (Si existe) */}
+                <div className="w-full aspect-[9/16] sm:aspect-video bg-slate-900 overflow-hidden relative">
+                  <img 
+                    src={comunicados[0].imagen_url ? api.getMediaUrl(comunicados[0].imagen_url) : '/imag/logo-carrusel.webp'} 
+                    className="w-full h-full object-contain"
+                    alt="Comunicado"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                </div>
+
+                <div className="flex-1 p-8 sm:p-10 space-y-6 overflow-y-auto">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-sav-primary/10 rounded-xl flex items-center justify-center text-sav-primary border border-sav-primary/10">
+                        <BellIcon size={20} />
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                        {comunicados[0].titulo || 'Comunicado Oficial'}
+                      </h2>
+                    </div>
+                    
+                    <div className="space-y-4 text-[13px] sm:text-sm font-bold uppercase tracking-widest leading-relaxed text-slate-600">
+                      <p className="whitespace-pre-wrap">
+                        {comunicados[0].mensaje}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button 
+                    onClick={() => setShowDailyAnnouncement(false)}
+                    className="w-full h-14 rounded-2xl bg-sav-primary text-white font-black uppercase tracking-[0.2em] shadow-xl shadow-sav-primary/20 hover:scale-[1.02] active:scale-95 transition-all mt-auto"
+                  >
+                    ENTENDIDO
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* Modal de Mantenimiento Domingo (v13.0.0) */}
         <AnimatePresence>
           {isSunday && showSundayModal && (

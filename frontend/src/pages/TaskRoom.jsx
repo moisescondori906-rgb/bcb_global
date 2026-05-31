@@ -237,6 +237,8 @@ export default function TaskRoom() {
                 onEnded={() => setVideoFinished(true)}
                 playsInline
                 autoPlay
+                preload="auto"
+                muted={false}
               />
               {!surveyVisible && !showResult && (
                 <div className="absolute top-4 right-4 px-3 py-1.5 bg-sav-dark/60 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-2">
