@@ -217,7 +217,7 @@ export default function Dashboard() {
                 </button>
 
                 {/* Imagen del Comunicado (Si existe) */}
-                <div className="w-full aspect-[9/16] sm:aspect-video bg-slate-900 overflow-hidden relative">
+                <div className="w-full aspect-[9/16] sm:aspect-video bg-slate-950 overflow-hidden relative">
                   <AnimatePresence mode="wait">
                     <motion.img 
                       key={currentAnnouncementIndex}
@@ -230,7 +230,6 @@ export default function Dashboard() {
                       alt="Comunicado"
                     />
                   </AnimatePresence>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   
                   {/* Indicadores de Carrusel en el Modal */}
                   {comunicados.length > 1 && (

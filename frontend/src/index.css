@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-sav-primary: #be123c; /* Rose 700 - Red institucional */
-  --color-sav-dark: #f8fafc;    /* Slate 50 */
+  --color-sav-primary: #312e81; /* Restaurado a Indigo 900 (Azul) */
+  --color-sav-dark: #ffffff;    /* Fondo blanco puro */
   --color-sav-card: #ffffff;    
-  --color-sav-surface: #f1f5f9; 
+  --color-sav-surface: #f8fafc; 
   --color-sav-accent: #9f1239;  
   --color-sav-accent-hot: #5b21b6; 
-  --color-sav-muted: #334155;   
+  --color-sav-muted: #1e293b;   /* Slate 800 para texto secundario */
   --color-sav-success: #064e3b; 
   --color-sav-error: #991b1b;   
-  --color-sav-border: #cbd5e1;  
+  --color-sav-border: #e2e8f0;  
 
   /* Admin Theme - Premium Dark */
   --color-admin-bg: #030303;
@@ -44,9 +44,23 @@
 
 @layer base {
   html, body {
-    @apply w-full overflow-x-hidden bg-sav-dark;
+    @apply w-full overflow-x-hidden bg-white text-slate-950 font-bold;
     height: -webkit-fill-available;
     color-scheme: light;
+  }
+
+  /* Forzar que todo el texto sea negro/oscuro por defecto */
+  p, span, h1, h2, h3, h4, h5, h6, label {
+    @apply text-slate-950;
+  }
+
+  /* Excepción para botones con fondo oscuro */
+  .bg-sav-primary p, 
+  .bg-sav-primary span,
+  button.bg-sav-primary,
+  .bg-indigo-900 p,
+  .bg-indigo-900 span {
+    color: white !important;
   }
 
   /* Si estamos en el layout de admin, cambiar el color-scheme y forzar texto blanco */

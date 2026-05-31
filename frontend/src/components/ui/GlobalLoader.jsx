@@ -15,32 +15,33 @@ export default function GlobalLoader() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-sav-dark space-y-8 p-6 text-center relative overflow-hidden">
-      {/* Premium Ambient Background */}
-      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-sav-accent/10 rounded-full blur-[120px]" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white space-y-10 p-8 text-center relative overflow-hidden">
+      {/* Ambient Soft Glow Background (Matching Reference) */}
+      <div className="absolute top-[30%] left-[20%] w-[100%] h-[100%] bg-rose-100/30 rounded-full blur-[100px] animate-pulse" />
+      <div className="absolute top-[10%] right-[10%] w-[60%] h-[60%] bg-blue-100/20 rounded-full blur-[80px]" />
       
-      <div className="relative z-10">
-        <div className="relative mb-8">
-          <div className="w-20 h-20 border-4 border-white/5 border-t-sav-accent rounded-full animate-spin"></div>
-          <div className="absolute inset-0 bg-sav-accent/20 blur-2xl rounded-full animate-pulse"></div>
+      <div className="relative z-10 flex flex-col items-center">
+        {/* Spinner Minimalista (Matching Reference) */}
+        <div className="relative mb-12">
+          <div className="w-20 h-20 border-[1px] border-slate-200 border-t-slate-400 rounded-full animate-spin"></div>
         </div>
         
         <div className="space-y-4">
-          <div>
-            <p className="text-white font-bold uppercase tracking-[0.4em] text-[11px] animate-pulse">Sincronizando Sistema</p>
-            <p className="text-sav-muted text-[9px] font-medium uppercase tracking-[0.2em] mt-2 opacity-60">BCB Global Tech 2026</p>
+          <div className="space-y-2">
+            <p className="text-slate-900 font-black uppercase tracking-[0.3em] text-[12px] opacity-80">Sincronizando Sistema</p>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">BCB Global Tech 2026</p>
           </div>
           
           {showError && (
-            <div className="animate-in fade-in slide-in-from-top-2 space-y-4 max-w-xs mx-auto pt-6">
-              <p className="text-red-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed px-4">
-                La conexión está tardando más de lo habitual. Por favor, verifica tu red.
+            <div className="animate-in fade-in slide-in-from-top-2 space-y-4 max-w-xs mx-auto pt-8">
+              <p className="text-red-500 text-[11px] font-black uppercase tracking-widest leading-relaxed">
+                Revisa tu conexión a internet
               </p>
               <button 
                 onClick={handleRetry}
-                className="px-8 py-3.5 rounded-xl bg-white/5 text-white text-[10px] font-bold uppercase tracking-[0.2em] border border-white/10 active:scale-95 transition-all hover:bg-white/10 shadow-lg"
+                className="px-10 py-4 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all"
               >
-                REINTENTAR ACCESO
+                REINTENTAR
               </button>
             </div>
           )}

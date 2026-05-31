@@ -56,11 +56,8 @@ export default function BannerCarousel({ banners = [] }) {
               }
             }}
           />
-          {/* Overlay gradiente más sofisticado y oscuro para legibilidad */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
           
-          <div className="absolute bottom-8 left-8 right-8">
+          <div className="absolute bottom-8 left-8 right-8 z-20">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}

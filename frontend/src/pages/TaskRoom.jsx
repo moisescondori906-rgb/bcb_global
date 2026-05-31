@@ -37,8 +37,28 @@ export default function TaskRoom() {
   const [showResult, setShowResult] = useState(false);
   const [earnedAmount, setEarnedAmount] = useState(0);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [correctAnswerFromServer, setCorrectAnswerFromServer] = useState('');
+  const [quizStep, setQuizStep] = useState(false);
+  const [quizOptions, setQuizOptions] = useState([]);
+  const [correctAnswer, setCorrectAnswer] = useState('');
+  const [quizError, setQuizError] = useState(false);
   const videoRef = useRef(null);
+
+  // Generar opciones aleatorias para el cuestionario
+  const generateQuiz = (task) => {
+    const correct = task.nombre || 'Campaña';
+    const fakeOptions = [
+      'BCB Global Marketing',
+      'Inversión Digital 2026',
+      'Plataforma de Tareas',
+      'Campaña Institucional',
+      'Publicidad Blockchain'
+    ].filter(o => o !== correct).sort(() => 0.5 - Math.random()).slice(0, 2);
+    
+    const options = [correct, ...fakeOptions].sort(() => 0.5 - Math.random());
+    setQuizOptions(options);
+    setCorrectAnswer(correct);
+    setQuizStep(true);
+  };
 
   const fetchTasks = async () => {
     setLoading(true);
@@ -104,7 +124,23 @@ export default function TaskRoom() {
     window.scrollTo(0, 0);
   };
 
-  const onConfirmResponse = async () => {
+  const handleVideoEnd = () => {
+    setVideoFinished(true);
+    generateQuiz(activeTask);
+  };
+
+  const handleQuizAnswer = (option) => {
+    if (option === correctAnswer) {
+      setQuizError(false);
+      completeTask();
+    } else {
+      setQuizError(true);
+      // Resetear el error después de un momento
+      setTimeout(() => setQuizError(false), 2000);
+    }
+  };
+
+  const completeTask = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
@@ -234,16 +270,21 @@ export default function TaskRoom() {
                 ref={videoRef}
                 src={api.getMediaUrl(activeTask.video_url)}
                 className="w-full h-full object-cover"
-                onEnded={() => setVideoFinished(true)}
+                onEnded={handleVideoEnd}
                 playsInline
                 autoPlay
                 preload="auto"
                 muted={false}
               />
-              {!surveyVisible && !showResult && (
+              {!videoFinished && !showResult && (
                 <div className="absolute top-4 right-4 px-3 py-1.5 bg-sav-dark/60 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-sav-primary rounded-full animate-ping" />
                   <span className="text-xs font-black text-white">{timer}s</span>
+                </div>
+              )}
+              {!videoFinished && (
+                <div className="absolute top-6 right-6 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                  <p className="text-[10px] font-black text-white uppercase tracking-widest">Visualización en curso</p>
                 </div>
               )}
             </div>
@@ -267,30 +308,43 @@ export default function TaskRoom() {
                   </div>
                   <Button onClick={() => { setActiveTask(null); fetchTasks(); }}>Continuar</Button>
                 </Card>
-              ) : surveyVisible ? (
-                <Card className="p-8 space-y-8 animate-in text-center">
-                  <div className="space-y-4">
-                    <div className="w-16 h-16 bg-sav-success/10 rounded-3xl flex items-center justify-center text-sav-success mx-auto shadow-lg">
-                      <Sparkles size={32} />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight leading-tight">
-                        Tarea Finalizada
-                      </h3>
-                      <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">
-                        ¡Has visualizado el contenido con éxito!
-                      </p>
-                    </div>
+              ) : videoFinished && quizStep ? (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-6 p-8 bg-white rounded-3xl border border-slate-100 shadow-xl"
+                >
+                  <div className="text-center space-y-2">
+                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter">Cuestionario de Verificación</h3>
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">¿Qué marca o campaña acabas de visualizar?</p>
                   </div>
-                  
-                  <Button 
-                    onClick={onConfirmResponse} 
-                    loading={isSubmitting} 
-                    className="h-16 shadow-sav-glow text-xs"
-                  >
-                    Reclamar Premio
-                  </Button>
-                </Card>
+
+                  <div className="grid gap-3">
+                    {quizOptions.map((option, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleQuizAnswer(option)}
+                        className={cn(
+                          "w-full p-4 rounded-2xl text-[12px] font-black uppercase tracking-widest transition-all border-2",
+                          "hover:scale-[1.02] active:scale-98",
+                          "bg-slate-50 border-slate-100 text-slate-900 hover:border-sav-primary/30"
+                        )}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+
+                  {quizError && (
+                    <motion.p 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center text-[10px] font-black text-red-600 uppercase tracking-widest"
+                    >
+                      Respuesta incorrecta. Inténtalo de nuevo.
+                    </motion.p>
+                  )}
+                </motion.div>
               ) : (
                 <Card variant="flat" className="p-6 flex items-center gap-4 animate-in">
                   <div className="w-12 h-12 bg-sav-primary/10 rounded-2xl flex items-center justify-center text-sav-primary animate-pulse">
