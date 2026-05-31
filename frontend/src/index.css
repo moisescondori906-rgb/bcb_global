@@ -54,6 +54,11 @@
     @apply text-black;
   }
 
+  /* Forzar específicamente h3 a negro con !important para sobreescribir clases de Tailwind */
+  h3 {
+    color: #000000 !important;
+  }
+
   /* Excepciones para elementos que DEBEN ser blancos o de color */
   .text-white, 
   .text-white p, 
