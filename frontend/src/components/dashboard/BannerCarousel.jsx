@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { api } from '../../lib/api';
+import { cn } from '../../lib/utils/cn';
 
 export default function BannerCarousel({ banners = [] }) {
   const [slide, setSlide] = useState(0);
@@ -89,15 +90,6 @@ export default function BannerCarousel({ banners = [] }) {
               "h-1 rounded-full transition-all duration-500",
               slide === idx ? "w-6 bg-sav-accent" : "w-2 bg-white/20"
             )}
-          />
-        ))}
-      </div>
-    </div>
-  );
-        {validBanners.map((_, i) => (
-          <div 
-            key={i} 
-            className={`h-1.5 rounded-full transition-all duration-500 ${i === slide ? 'w-6 bg-sav-primary' : 'w-1.5 bg-white/20'}`}
           />
         ))}
       </div>
