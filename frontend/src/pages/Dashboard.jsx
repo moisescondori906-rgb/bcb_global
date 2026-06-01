@@ -191,7 +191,7 @@ export default function Dashboard() {
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.03)_0%,transparent_70%)] -z-10" />
       
       <main className="px-4 sm:px-5 space-y-6 sm:space-y-7 pb-12 pt-4 animate-in">
-        {/* Modal de Comunicado Diario Estilo Limpio (Sin contenedor) */}
+        {/* Modal de Comunicado Diario Estilo Limpio (Ajustado) */}
         <AnimatePresence>
           {showDailyAnnouncement && comunicados.length > 0 && (
             <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6">
@@ -206,55 +206,61 @@ export default function Dashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="relative w-full max-w-lg flex flex-col items-center space-y-8"
+                className="relative w-[95%] max-w-md max-h-[85vh] bg-white rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-slate-100 flex flex-col overflow-hidden"
               >
-                {/* Imagen del Comunicado Limpia */}
-                <div className="w-full aspect-video overflow-hidden">
-                  <AnimatePresence mode="wait">
-                    <motion.img 
-                      key={currentAnnouncementIndex}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 1.5 }}
-                      src={comunicados[currentAnnouncementIndex].imagen_url ? api.getMediaUrl(comunicados[currentAnnouncementIndex].imagen_url) : '/imag/logo-carrusel.webp'} 
-                      className="w-full h-full object-contain"
-                      alt="Comunicado"
-                    />
-                  </AnimatePresence>
+                {/* Contenedor Scrollable */}
+                <div className="flex-1 overflow-y-auto">
+                  {/* Imagen del Comunicado Limpia */}
+                  <div className="w-full aspect-video bg-slate-50 relative overflow-hidden">
+                    <AnimatePresence mode="wait">
+                      <motion.img 
+                        key={currentAnnouncementIndex}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.5 }}
+                        src={comunicados[currentAnnouncementIndex].imagen_url ? api.getMediaUrl(comunicados[currentAnnouncementIndex].imagen_url) : '/imag/logo-carrusel.webp'} 
+                        className="w-full h-full object-contain"
+                        alt="Comunicado"
+                      />
+                    </AnimatePresence>
+                  </div>
+
+                  <div className="text-center space-y-4 p-8">
+                    <AnimatePresence mode="wait">
+                      <motion.div 
+                        key={currentAnnouncementIndex}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="space-y-3"
+                      >
+                        <h2 className="text-xl sm:text-2xl font-black text-black uppercase tracking-tighter !text-black">
+                          {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
+                        </h2>
+                        <p className="text-[13px] sm:text-sm font-bold uppercase tracking-widest leading-relaxed text-black/70 whitespace-pre-wrap">
+                          {comunicados[currentAnnouncementIndex].mensaje}
+                        </p>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
                 </div>
 
-                <div className="text-center space-y-4 px-6">
-                  <AnimatePresence mode="wait">
-                    <motion.div 
-                      key={currentAnnouncementIndex}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="space-y-2"
-                    >
-                      <h2 className="text-xl sm:text-2xl font-black text-black uppercase tracking-tighter">
-                        {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
-                      </h2>
-                      <p className="text-[13px] sm:text-sm font-bold uppercase tracking-widest leading-relaxed text-black/70 whitespace-pre-wrap">
-                        {comunicados[currentAnnouncementIndex].mensaje}
-                      </p>
-                    </motion.div>
-                  </AnimatePresence>
+                {/* Botón Fijo al Final */}
+                <div className="p-6 pt-2 bg-gradient-to-t from-white via-white to-transparent">
+                  <Button 
+                    onClick={() => setShowDailyAnnouncement(false)}
+                    className="w-full h-14 rounded-2xl bg-black text-white font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
+                  >
+                    <span className="text-white">CERRAR ANUNCIO</span>
+                  </Button>
                 </div>
-
-                <Button 
-                  onClick={() => setShowDailyAnnouncement(false)}
-                  className="w-48 h-12 rounded-full bg-black text-white font-black uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all"
-                >
-                  <span className="text-white">CERRAR</span>
-                </Button>
               </motion.div>
             </div>
           )}
         </AnimatePresence>
 
-        {/* Modal de Mantenimiento Domingo - Restaurado de forma limpia */}
+        {/* Modal de Mantenimiento Domingo - Restaurado y Ajustado */}
         <AnimatePresence>
           {isSunday && showSundayModal && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
@@ -269,14 +275,14 @@ export default function Dashboard() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="relative w-full max-w-lg flex flex-col items-center text-center space-y-8"
+                className="relative w-[95%] max-w-sm max-h-[80vh] bg-white rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-slate-100 flex flex-col overflow-hidden p-8 space-y-6 items-center text-center"
               >
-                <div className="w-24 h-24 bg-sav-primary/10 rounded-full flex items-center justify-center text-sav-primary border border-sav-primary/10 shadow-inner">
-                  <CoffeeIcon size={48} />
+                <div className="w-20 h-20 bg-sav-primary/10 rounded-full flex items-center justify-center text-sav-primary border border-sav-primary/10">
+                  <CoffeeIcon size={40} />
                 </div>
                 
-                <div className="space-y-4 px-6">
-                  <h2 className="text-2xl sm:text-3xl font-black text-black uppercase tracking-tighter leading-tight">
+                <div className="flex-1 overflow-y-auto w-full space-y-4">
+                  <h2 className="text-2xl font-black text-black uppercase tracking-tighter leading-tight !text-black">
                     ¡Buen domingo <br/> <span className="text-sav-primary">para todos!</span> 😊
                   </h2>
                   
@@ -290,9 +296,9 @@ export default function Dashboard() {
 
                 <Button 
                   onClick={() => setShowSundayModal(false)}
-                  className="w-64 h-14 rounded-full bg-sav-primary text-white font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
+                  className="w-full h-14 rounded-2xl bg-sav-primary text-white font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
                 >
-                  <span className="text-white">CONTINUAR AL PANEL</span>
+                  <span className="text-white">ENTRAR AL PANEL</span>
                 </Button>
               </motion.div>
             </div>
