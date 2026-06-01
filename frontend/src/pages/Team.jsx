@@ -242,18 +242,6 @@ export default function Team() {
       <Header title="Informe del equipo" />
       
       <main className="px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-32 animate-fade">
-        {/* Aviso para Internar */}
-        {isInternar && (
-          <div className="px-1">
-            <Card className="p-4 bg-amber-50 border-amber-100 flex items-center gap-3 rounded-2xl">
-              <Info size={18} className="text-amber-600 shrink-0" />
-              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-tight">
-                Como usuario Pasante, puedes visualizar el crecimiento de tu red en tiempo real.
-              </p>
-            </Card>
-          </div>
-        )}
-
         {/* Invitation Banner */}
         <Card className="p-6 sm:p-8 bg-sav-primary text-white shadow-xl shadow-sav-primary/20 relative overflow-hidden rounded-[2rem] sm:rounded-[3rem] group">
           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">

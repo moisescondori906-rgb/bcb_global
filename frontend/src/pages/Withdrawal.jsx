@@ -47,7 +47,7 @@ export default function Withdrawal() {
   const [tarjetas, setTarjetas] = useState([]);
   const [tarjetaId, setTarjetaId] = useState('');
   const [tipoBilletera, setTipoBilletera] = useState('principal');
-  const [monto, setMonto] = useState(500);
+  const [monto, setMonto] = useState(0);
   const [password, setPassword] = useState('');
   const [comprobanteFile, setComprobanteFile] = useState(null);
   const [comprobantePreview, setComprobantePreview] = useState(null);
@@ -59,6 +59,10 @@ export default function Withdrawal() {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [hasWithdrawalToday, setHasWithdrawalToday] = useState(false);
   const [hasSignature, setHasSignature] = useState(true); // Ya viene por defecto
+
+  const COMISION_RETIRO = 0.15; // 15% de comisión
+  const montoRecibir = monto > 0 ? (monto * (1 - COMISION_RETIRO)).toFixed(2) : '0.00';
+  const comisionMonto = monto > 0 ? (monto * COMISION_RETIRO).toFixed(2) : '0.00';
   
   // Security Status State
   const [securityStatus, setSecurityStatus] = useState({
@@ -631,27 +635,59 @@ export default function Withdrawal() {
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sav-accent/10 flex items-center justify-center text-sav-accent border border-sav-accent/20 shadow-lg">
                         <BanknoteIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
                       </div>
-                      <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">2. Monto</h2>
+                      <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">2. Monto a Retirar</h2>
                     </div>
-                    <Badge variant="info" className="bg-slate-100 border-slate-200 text-slate-600 text-[9px] sm:text-[10px] font-black tracking-widest px-2 sm:px-3">Bs</Badge>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
-                    {montos.map(m => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => setMonto(m)}
-                        className={cn(
-                          "h-12 sm:h-16 rounded-xl sm:rounded-[1.5rem] border text-[10px] sm:text-[11px] font-black uppercase tracking-widest transition-all duration-300",
-                          monto === m 
-                            ? "bg-sav-primary border-sav-primary text-white shadow-lg sm:shadow-[0_15px_30px_rgba(220,38,38,0.2)] scale-[1.05]" 
-                            : "bg-white border-black/5 text-sav-muted hover:bg-black/5 shadow-sm"
-                        )}
-                      >
-                        {m}
-                      </button>
-                    ))}
+                  <div className="space-y-4">
+                    <div className="relative group">
+                      <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-lg">Bs</div>
+                      <input
+                        type="number"
+                        value={monto || ''}
+                        onChange={(e) => setMonto(Number(e.target.value))}
+                        placeholder="Ingresa la cantidad"
+                        className="w-full h-16 pl-14 pr-6 rounded-2xl border-2 border-slate-100 bg-white text-lg font-black text-black outline-none focus:border-sav-primary/30 transition-all shadow-sm"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                      {montos.map(m => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setMonto(m)}
+                          className={cn(
+                            "h-12 sm:h-16 rounded-xl sm:rounded-[1.5rem] border text-[10px] sm:text-[11px] font-black uppercase tracking-widest transition-all duration-300",
+                            monto === m 
+                              ? "bg-sav-primary border-sav-primary text-white shadow-lg sm:shadow-[0_15px_30px_rgba(220,38,38,0.2)] scale-[1.05]" 
+                              : "bg-white border-black/5 text-sav-muted hover:bg-black/5 shadow-sm"
+                          )}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Resumen de Comisión */}
+                    <AnimatePresence>
+                      {monto > 0 && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2"
+                        >
+                          <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
+                            <span className="text-slate-400">Comisión de Retiro (15%)</span>
+                            <span className="text-red-500">-{comisionMonto} Bs</span>
+                          </div>
+                          <div className="flex justify-between items-center text-[11px] font-black uppercase tracking-widest pt-2 border-t border-slate-200">
+                            <span className="text-slate-900">Monto Neto a Recibir</span>
+                            <span className="text-sav-primary text-lg tracking-tighter">{montoRecibir} Bs</span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </section>
 
