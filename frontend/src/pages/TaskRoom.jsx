@@ -46,18 +46,24 @@ export default function TaskRoom() {
   // Generar opciones aleatorias para el cuestionario
   const generateQuiz = (task) => {
     const correct = task.nombre || 'Campaña';
-    const fakeOptions = [
-      'BCB Global Marketing',
-      'Inversión Digital 2026',
-      'Plataforma de Tareas',
-      'Campaña Institucional',
-      'Publicidad Blockchain'
-    ].filter(o => o !== correct).sort(() => 0.5 - Math.random()).slice(0, 2);
+    // Opciones muy fáciles y relacionadas con marcas populares
+    const easyOptions = [
+      'Adidas', 'Nike', 'Coca-Cola', 'Ferrari', 
+      'Tesla', 'Puma', 'Gucci', 'Chanel', 
+      'Rolex', 'McDonald\'s', 'Lamborghini', 'Dior'
+    ];
+    
+    // Filtrar la correcta y tomar 2 falsas
+    const fakeOptions = easyOptions
+      .filter(o => o.toLowerCase() !== correct.toLowerCase())
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 2);
     
     const options = [correct, ...fakeOptions].sort(() => 0.5 - Math.random());
     setQuizOptions(options);
     setCorrectAnswer(correct);
     setQuizStep(true);
+    setSurveyVisible(true); // Asegurar que sea visible
   };
 
   const fetchTasks = async () => {
@@ -121,6 +127,8 @@ export default function TaskRoom() {
     setSelectedOption('');
     setShowResult(false);
     setVideoFinished(false);
+    setQuizStep(false); // Resetear quiz step
+    setQuizError(false); // Resetear quiz error
     window.scrollTo(0, 0);
   };
 
@@ -299,23 +307,23 @@ export default function TaskRoom() {
                     {isCorrect ? <Trophy size={40} /> : <AlertCircle size={40} />}
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-2xl font-black uppercase tracking-tight text-gray-900">
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-black">
                       {isCorrect ? '¡Felicidades!' : 'Reintenta'}
                     </h3>
-                    <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">
+                    <p className="text-[10px] font-bold text-black uppercase tracking-widest">
                       {isCorrect ? `Has ganado ${earnedAmount} Bs` : errorMessage}
                     </p>
                   </div>
-                  <Button onClick={() => { setActiveTask(null); fetchTasks(); }}>Continuar</Button>
+                  <Button onClick={() => { setActiveTask(null); fetchTasks(); }} className="bg-sav-primary text-white">Continuar</Button>
                 </Card>
-              ) : videoFinished && quizStep ? (
+              ) : (videoFinished || surveyVisible) ? (
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-6 p-8 bg-white rounded-3xl border border-slate-100 shadow-xl"
                 >
                   <div className="text-center space-y-2">
-                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter">Cuestionario de Verificación</h3>
+                    <h3 className="text-lg font-black text-black uppercase tracking-tighter">Cuestionario de Verificación</h3>
                     <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">¿Qué marca o campaña acabas de visualizar?</p>
                   </div>
 
@@ -327,7 +335,7 @@ export default function TaskRoom() {
                         className={cn(
                           "w-full p-4 rounded-2xl text-[12px] font-black uppercase tracking-widest transition-all border-2",
                           "hover:scale-[1.02] active:scale-98",
-                          "bg-slate-50 border-slate-100 text-slate-900 hover:border-sav-primary/30"
+                          "bg-slate-50 border-slate-100 text-black hover:border-sav-primary/30"
                         )}
                       >
                         {option}
@@ -351,8 +359,8 @@ export default function TaskRoom() {
                     <Clock size={24} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-[10px] font-black text-sav-muted uppercase tracking-widest">Analizando contenido...</p>
-                    <p className="text-xs font-black text-gray-900 uppercase tracking-tight mt-1">Espera {timer} segundos</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest">Analizando contenido...</p>
+                    <p className="text-xs font-black text-black uppercase tracking-tight mt-1">Espera {timer} segundos</p>
                   </div>
                 </Card>
               )}
