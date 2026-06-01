@@ -40,7 +40,6 @@ import { displayLevelCode } from '../lib/displayLevel.js';
 import BannerCarousel from '../components/dashboard/BannerCarousel';
 import ActionGrid from '../components/dashboard/ActionGrid';
 import GuideSection from '../components/dashboard/GuideSection';
-import FloatingQuestionnaire from '../components/FloatingQuestionnaire';
 import GlobalLoader from '../components/ui/GlobalLoader';
 import DownloadButton from '../components/DownloadButton';
 
@@ -213,10 +212,13 @@ export default function Dashboard() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.85, y: 30 }}
               transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              className="relative w-[85%] max-w-[320px] max-h-[75vh] bg-gradient-to-b from-white to-slate-50 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_0_0_1px_rgba(79,70,229,0.1)] flex flex-col overflow-hidden z-[100000]"
+              className="relative w-[85%] max-w-[320px] max-h-[75vh] bg-gradient-to-b from-white to-slate-50 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_0_0_2px_rgba(79,70,229,0.2)] flex flex-col overflow-hidden z-[100000] border-4 border-white"
             >
+              {/* Glow Effect pulsante */}
+              <div className="absolute inset-0 bg-sav-primary/5 animate-pulse pointer-events-none" />
+
               {/* Header/Imagen: Altura fija o aspect ratio */}
-              <div className="w-full aspect-[4/3] bg-slate-900 relative overflow-hidden shrink-0">
+              <div className="w-full aspect-[4/3] bg-slate-900 relative overflow-hidden shrink-0 border-b-2 border-slate-100">
                 <AnimatePresence mode="wait">
                   <motion.img 
                     key={currentAnnouncementIndex}
@@ -255,7 +257,7 @@ export default function Dashboard() {
               </div>
 
               {/* Contenido: Scrollable Internamente */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8 space-y-5 text-center">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8 space-y-5 text-center relative z-10">
                 <AnimatePresence mode="wait">
                   <motion.div 
                     key={currentAnnouncementIndex}
@@ -274,7 +276,7 @@ export default function Dashboard() {
                       </h2>
                     </div>
                     
-                    <p className="text-[12px] sm:text-[13px] font-bold uppercase tracking-widest leading-relaxed text-slate-600 whitespace-pre-wrap">
+                    <p className="text-[12px] sm:text-[13px] font-black uppercase tracking-widest leading-relaxed text-black whitespace-pre-wrap">
                       {comunicados[currentAnnouncementIndex].mensaje}
                     </p>
                   </motion.div>
@@ -282,10 +284,10 @@ export default function Dashboard() {
               </div>
 
               {/* Footer del Modal: Botón Fijo */}
-              <div className="p-6 sm:p-8 pt-0 mt-auto">
+              <div className="p-6 sm:p-8 pt-0 mt-auto relative z-10">
                 <Button 
                   onClick={() => setShowDailyAnnouncement(false)}
-                  className="w-full h-12 rounded-2xl bg-sav-primary text-white font-black uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-[10px]"
+                  className="w-full h-12 rounded-2xl bg-sav-primary text-white font-black uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-[10px] border-b-4 border-indigo-950"
                 >
                   ENTENDIDO
                 </Button>
@@ -606,8 +608,6 @@ export default function Dashboard() {
           <img src="/images/institutional-security.webp" alt="Seguridad Institucional Garantizada" className="w-full h-auto max-w-md object-contain" />
         </div>
       </main>
-
-      <FloatingQuestionnaire />
 
       {/* Floating Action Menu - Fixed positioning for mobile safe areas */}
       <div className="fixed bottom-[calc(95px+env(safe-area-inset-bottom))] right-4 sm:right-6 flex flex-col gap-3 sm:gap-4 z-[60] items-end">
