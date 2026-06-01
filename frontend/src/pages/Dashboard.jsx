@@ -71,6 +71,7 @@ export default function Dashboard() {
     const lastShow = localStorage.getItem('last_announcement_show');
     const today = new Date().toISOString().split('T')[0];
     
+    // Si no se ha mostrado hoy O si acabamos de actualizar el sistema (forzamos una vez para que el usuario vea el cambio)
     if (lastShow !== today && comunicados.length > 0) {
       setShowDailyAnnouncement(true);
       localStorage.setItem('last_announcement_show', today);
@@ -191,70 +192,81 @@ export default function Dashboard() {
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.03)_0%,transparent_70%)] -z-10" />
       
       <main className="px-4 sm:px-5 space-y-6 sm:space-y-7 pb-12 pt-4 animate-in">
-        {/* Modal de Comunicado Diario Estilo Limpio (Ajustado) */}
+        {/* Modal de Comunicado Diario Estilo Notificación Flotante (Ajustado) */}
         <AnimatePresence>
           {showDailyAnnouncement && comunicados.length > 0 && (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6">
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 pointer-events-none">
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setShowDailyAnnouncement(false)}
-                className="absolute inset-0 bg-white/90 backdrop-blur-xl"
+                className="absolute inset-0 bg-black/40 backdrop-blur-[2px] pointer-events-auto"
               />
               <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="relative w-[95%] max-w-md max-h-[85vh] bg-white rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-slate-100 flex flex-col overflow-hidden"
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                className="relative w-full max-w-[340px] bg-white rounded-[2.5rem] shadow-[0_25px_80px_rgba(0,0,0,0.3)] border border-slate-200 flex flex-col overflow-hidden pointer-events-auto"
               >
-                {/* Contenedor Scrollable */}
-                <div className="flex-1 overflow-y-auto">
-                  {/* Imagen del Comunicado Limpia */}
-                  <div className="w-full aspect-video bg-slate-50 relative overflow-hidden">
-                    <AnimatePresence mode="wait">
-                      <motion.img 
-                        key={currentAnnouncementIndex}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1.5 }}
-                        src={comunicados[currentAnnouncementIndex].imagen_url ? api.getMediaUrl(comunicados[currentAnnouncementIndex].imagen_url) : '/imag/logo-carrusel.webp'} 
-                        className="w-full h-full object-contain"
-                        alt="Comunicado"
-                      />
-                    </AnimatePresence>
-                  </div>
+                {/* Imagen del Comunicado Flotante */}
+                <div className="w-full aspect-video bg-slate-50 relative overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.img 
+                      key={currentAnnouncementIndex}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 1.5 }}
+                      src={comunicados[currentAnnouncementIndex].imagen_url ? api.getMediaUrl(comunicados[currentAnnouncementIndex].imagen_url) : '/imag/logo-carrusel.webp'} 
+                      className="w-full h-full object-contain"
+                      alt="Comunicado"
+                    />
+                  </AnimatePresence>
+                </div>
 
-                  <div className="text-center space-y-4 p-8">
-                    <AnimatePresence mode="wait">
-                      <motion.div 
-                        key={currentAnnouncementIndex}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="space-y-3"
-                      >
-                        <h2 className="text-xl sm:text-2xl font-black text-black uppercase tracking-tighter !text-black">
-                          {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
-                        </h2>
-                        <p className="text-[13px] sm:text-sm font-bold uppercase tracking-widest leading-relaxed text-black/70 whitespace-pre-wrap">
+                <div className="text-center p-6 space-y-3">
+                  <AnimatePresence mode="wait">
+                    <motion.div 
+                      key={currentAnnouncementIndex}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="space-y-2"
+                    >
+                      <h2 className="text-lg font-black text-black uppercase tracking-tighter !text-black leading-tight">
+                        {comunicados[currentAnnouncementIndex].titulo || 'Comunicado'}
+                      </h2>
+                      <div className="max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
+                        <p className="text-[12px] font-bold uppercase tracking-widest leading-relaxed text-black/70 whitespace-pre-wrap">
                           {comunicados[currentAnnouncementIndex].mensaje}
                         </p>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </div>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
 
-                {/* Botón Fijo al Final */}
-                <div className="p-6 pt-2 bg-gradient-to-t from-white via-white to-transparent">
                   <Button 
                     onClick={() => setShowDailyAnnouncement(false)}
-                    className="w-full h-14 rounded-2xl bg-black text-white font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
+                    className="w-full h-12 rounded-2xl bg-black text-white font-black uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all text-[10px]"
                   >
-                    <span className="text-white">CERRAR ANUNCIO</span>
+                    <span className="text-white">CERRAR AVISO</span>
                   </Button>
                 </div>
+
+                {/* Indicadores Minimalistas */}
+                {comunicados.length > 1 && (
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-1 z-50">
+                    {comunicados.map((_, i) => (
+                      <div 
+                        key={i} 
+                        className={cn(
+                          "h-1 rounded-full transition-all duration-500",
+                          i === currentAnnouncementIndex ? "w-4 bg-sav-primary" : "w-1 bg-black/20"
+                        )}
+                      />
+                    ))}
+                  </div>
+                )}
               </motion.div>
             </div>
           )}
