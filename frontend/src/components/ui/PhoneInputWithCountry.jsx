@@ -101,7 +101,6 @@ export function PhoneInputWithCountry({
           className="h-full w-full border-none bg-transparent px-6 text-sm font-black text-black outline-none placeholder:text-slate-400"
         />
       </div>
-    </div> 
  
       {error && ( 
         <p className="mt-2 px-1 text-[10px] font-bold uppercase tracking-widest text-sav-error animate-in fade-in slide-in-from-top-1"> 
