@@ -4,8 +4,8 @@ import './index.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ui/ErrorBoundary'
 
-// --- MECANISMO DE LIMPIEZA NUCLEAR v11.4.2 ---
-const APP_VERSION = '11.4.2';
+// --- MECANISMO DE LIMPIEZA NUCLEAR v11.5.0 ---
+const APP_VERSION = '11.5.0';
 const currentVersion = localStorage.getItem('global_app_version');
 
 if (currentVersion !== APP_VERSION) {
