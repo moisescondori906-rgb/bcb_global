@@ -67,14 +67,12 @@ export default function Dashboard() {
   const isSunday = now.getDay() === 0;
 
   useEffect(() => {
-    // Lógica para mostrar comunicado diario una vez al día
-    const lastShow = localStorage.getItem('last_announcement_show');
-    const today = new Date().toISOString().split('T')[0];
+    // Lógica para mostrar comunicado diario al INICIAR la aplicación (por sesión)
+    const sessionShow = sessionStorage.getItem('announcement_shown_session');
     
-    // Si no se ha mostrado hoy O si acabamos de actualizar el sistema (forzamos una vez para que el usuario vea el cambio)
-    if (lastShow !== today && comunicados.length > 0) {
+    if (!sessionShow && comunicados.length > 0) {
       setShowDailyAnnouncement(true);
-      localStorage.setItem('last_announcement_show', today);
+      sessionStorage.setItem('announcement_shown_session', 'true');
     }
   }, [comunicados]);
 
@@ -195,19 +193,19 @@ export default function Dashboard() {
         {/* Modal de Comunicado Diario Estilo Notificación Flotante (Ajustado) */}
         <AnimatePresence>
           {showDailyAnnouncement && comunicados.length > 0 && (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 pointer-events-none">
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setShowDailyAnnouncement(false)}
-                className="absolute inset-0 bg-black/40 backdrop-blur-[2px] pointer-events-auto"
+                className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
               />
               <motion.div 
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                className="relative w-full max-w-[340px] bg-white rounded-[2.5rem] shadow-[0_25px_80px_rgba(0,0,0,0.3)] border border-slate-200 flex flex-col overflow-hidden pointer-events-auto"
+                className="relative w-full max-w-[340px] bg-white rounded-[2.5rem] shadow-[0_25px_80px_rgba(0,0,0,0.4)] border border-slate-200 flex flex-col overflow-hidden"
               >
                 {/* Imagen del Comunicado Flotante */}
                 <div className="w-full aspect-video bg-slate-50 relative overflow-hidden">
