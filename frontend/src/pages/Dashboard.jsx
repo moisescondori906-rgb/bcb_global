@@ -186,6 +186,7 @@ export default function Dashboard() {
       ) : null
     },
     { to: '/movimientos', icon: FileTextIcon, label: 'Movimientos', color: 'text-emerald-700', bg: 'bg-emerald-100' },
+    { to: '/anuncios', icon: BellIcon, label: 'Anuncios', color: 'text-blue-700', bg: 'bg-blue-100' },
     { to: '/acerca-de', icon: InfoIcon, label: 'Nosotros', color: 'text-cyan-700', bg: 'bg-cyan-100' },
   ];
 
@@ -208,47 +209,48 @@ export default function Dashboard() {
             
             {/* Modal Container: Independiente del scroll del fondo */}
             <motion.div 
-              initial={{ opacity: 0, scale: 0.85, y: 40 }}
+              initial={{ opacity: 0, scale: 0.8, y: 40 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.85, y: 30 }}
-              transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              className="relative w-[85%] max-w-[320px] max-h-[75vh] bg-gradient-to-b from-white to-slate-50 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_0_0_2px_rgba(79,70,229,0.2)] flex flex-col overflow-hidden z-[100000] border-4 border-white"
+              exit={{ opacity: 0, scale: 0.8, y: 30 }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              className="relative w-[88%] max-w-[340px] max-h-[70vh] bg-white rounded-[3.5rem] shadow-[0_60px_150px_-30px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,1)] flex flex-col overflow-hidden z-[100000] border-[6px] border-white"
             >
-              {/* Glow Effect pulsante */}
-              <div className="absolute inset-0 bg-sav-primary/5 animate-pulse pointer-events-none" />
+              {/* Luxury Glow Background */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(79,70,229,0.08)_0%,transparent_70%)] pointer-events-none" />
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-sav-primary/5 blur-[60px] rounded-full pointer-events-none" />
 
-              {/* Header/Imagen: Altura fija o aspect ratio */}
-              <div className="w-full aspect-[4/3] bg-slate-900 relative overflow-hidden shrink-0 border-b-2 border-slate-100">
+              {/* Header/Imagen: Ultra Clean */}
+              <div className="w-full aspect-square bg-slate-950 relative overflow-hidden shrink-0">
                 <AnimatePresence mode="wait">
                   <motion.img 
                     key={currentAnnouncementIndex}
-                    initial={{ opacity: 0, scale: 1.15 }}
+                    initial={{ opacity: 0, scale: 1.2 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.7 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                     src={comunicados[currentAnnouncementIndex].imagen_url ? api.getMediaUrl(comunicados[currentAnnouncementIndex].imagen_url) : '/imag/logo-carrusel.webp'} 
-                    className="w-full h-full object-contain p-6"
+                    className="w-full h-full object-contain p-8"
                     alt="Comunicado"
                   />
                 </AnimatePresence>
                 
-                {/* Botón Cerrar Minimalista sobre la imagen */}
+                {/* Botón Cerrar: Estilo Neumórfico Dark */}
                 <button 
                   onClick={() => setShowDailyAnnouncement(false)}
-                  className="absolute top-5 right-5 z-50 p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white transition-all active:scale-90 border border-white/20 shadow-lg"
+                  className="absolute top-6 right-6 z-50 w-10 h-10 bg-black/50 hover:bg-black/80 backdrop-blur-xl rounded-2xl text-white transition-all active:scale-90 flex items-center justify-center border border-white/10 shadow-2xl"
                 >
-                  <CloseIcon size={18} />
+                  <CloseIcon size={20} />
                 </button>
 
-                {/* Indicadores Flotantes */}
+                {/* Indicadores: Minimalistas Premium */}
                 {comunicados.length > 1 && (
-                  <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 z-50">
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-50">
                     {comunicados.map((_, i) => (
                       <div 
                         key={i} 
                         className={cn(
-                          "h-1 rounded-full transition-all duration-500",
-                          i === currentAnnouncementIndex ? "w-6 bg-sav-primary" : "w-1.5 bg-white/40"
+                          "h-1.5 rounded-full transition-all duration-700",
+                          i === currentAnnouncementIndex ? "w-10 bg-sav-primary shadow-[0_0_15px_rgba(79,70,229,0.5)]" : "w-2 bg-white/30"
                         )}
                       />
                     ))}
@@ -256,38 +258,39 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* Contenido: Scrollable Internamente */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8 space-y-5 text-center relative z-10">
+              {/* Contenido: Tipografía Refinada */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-8 sm:p-10 space-y-6 text-center relative z-10">
                 <AnimatePresence mode="wait">
                   <motion.div 
                     key={currentAnnouncementIndex}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.4 }}
-                    className="space-y-3"
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.5 }}
+                    className="space-y-4"
                   >
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-10 h-10 bg-sav-primary/10 rounded-2xl flex items-center justify-center text-sav-primary border border-sav-primary/10 mb-1">
-                        <BellIcon size={20} />
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-12 h-12 bg-sav-primary/10 rounded-[1.2rem] flex items-center justify-center text-sav-primary border border-sav-primary/10 shadow-inner mb-2">
+                        <BellIcon size={24} strokeWidth={2.5} />
                       </div>
-                      <h2 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tighter leading-tight !text-black">
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter leading-none !text-black">
                         {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
                       </h2>
+                      <div className="h-1 w-10 bg-sav-primary/20 rounded-full" />
                     </div>
                     
-                    <p className="text-[12px] sm:text-[13px] font-black uppercase tracking-widest leading-relaxed text-black whitespace-pre-wrap">
+                    <p className="text-[13px] sm:text-sm font-black uppercase tracking-widest leading-relaxed text-black whitespace-pre-wrap opacity-80">
                       {comunicados[currentAnnouncementIndex].mensaje}
                     </p>
                   </motion.div>
                 </AnimatePresence>
               </div>
 
-              {/* Footer del Modal: Botón Fijo */}
-              <div className="p-6 sm:p-8 pt-0 mt-auto relative z-10">
+              {/* Footer: Botón de Alta Visibilidad */}
+              <div className="p-8 pt-0 mt-auto relative z-10">
                 <Button 
                   onClick={() => setShowDailyAnnouncement(false)}
-                  className="w-full h-12 rounded-2xl bg-sav-primary text-white font-black uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-[10px] border-b-4 border-indigo-950"
+                  className="w-full h-14 rounded-2xl bg-sav-primary text-white font-black uppercase tracking-[0.25em] shadow-[0_20px_40px_-10px_rgba(79,70,229,0.4)] hover:scale-[1.02] active:scale-95 transition-all text-xs border-b-4 border-indigo-950"
                 >
                   ENTENDIDO
                 </Button>
@@ -406,7 +409,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <Link to="/mensajes" className="relative group">
+          <Link to="/anuncios" className="relative group">
             <div className="absolute -inset-3 bg-sav-primary/10 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
             <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-sav-muted hover:text-white transition-all duration-300 shadow-sm group-hover:border-sav-primary/30 group-hover:bg-sav-primary/5">
               <BellIcon size={20} className="group-hover:animate-bounce" />
@@ -448,36 +451,6 @@ export default function Dashboard() {
                 </div>
               </div>
             </Card>
-          </div>
-        )}
-
-        {/* Módulo 2: Comunicados de Inicio */}
-        {comunicados.length > 0 && (
-          <div className="px-1 space-y-4">
-            <div className="flex items-center gap-2 px-1">
-              <BellIcon size={14} className="text-sav-primary" />
-              <h3 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Comunicados</h3>
-            </div>
-            <div className="space-y-4">
-              {comunicados.map(item => (
-                <Card key={item.id} className="p-0 overflow-hidden border-white/5 shadow-xl bg-sav-card group hover:scale-[1.01] transition-transform duration-500">
-                  {item.imagen_url && (
-                    <div className="w-full aspect-video overflow-hidden">
-                      <img src={api.getMediaUrl(item.imagen_url)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt={item.titulo} />
-                    </div>
-                  )}
-                  <div className="p-5 sm:p-6 space-y-2">
-                    {item.titulo && <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight">{item.titulo}</h4>}
-                    <p className="text-[10px] sm:text-[11px] font-medium text-slate-600 leading-relaxed">
-                      {item.mensaje}
-                    </p>
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest pt-2">
-                      {formatDate(item.created_at)}
-                    </p>
-                  </div>
-                </Card>
-              ))}
-            </div>
           </div>
         )}
 

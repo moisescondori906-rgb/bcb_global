@@ -68,6 +68,7 @@ const Recompensas = lazyWithRetry(() => import('./pages/Recompensas.jsx'));
 const HelpCenter = lazyWithRetry(() => import('./pages/HelpCenter.jsx'));
 const AboutUs = lazyWithRetry(() => import('./pages/AboutUs.jsx'));
 const Messages = lazyWithRetry(() => import('./pages/Messages.jsx'));
+const Announcements = lazyWithRetry(() => import('./pages/Announcements.jsx'));
 const Premios = lazyWithRetry(() => import('./pages/Recompensas.jsx')); 
 
 // Admin V2 (Modern Console)
@@ -148,6 +149,7 @@ function AppRoutes() {
           <Route path="/premios" element={<PrivateRoute><Premios /></PrivateRoute>} />
           <Route path="/recompensas" element={<Navigate to="/premios" replace />} />
           <Route path="/mensajes" element={<PrivateRoute><Messages /></PrivateRoute>} />
+          <Route path="/anuncios" element={<PrivateRoute><Announcements /></PrivateRoute>} />
           {/* Rutas Privadas */}
           <Route path="/tareas" element={<PrivateRoute><TaskRoom /></PrivateRoute>} />
           <Route path="/usuario" element={<PrivateRoute><Profile /></PrivateRoute>} />
