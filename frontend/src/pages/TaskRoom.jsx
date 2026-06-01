@@ -45,25 +45,27 @@ export default function TaskRoom() {
 
   // Generar opciones aleatorias para el cuestionario
   const generateQuiz = (task) => {
+    if (!task) return;
     const correct = task.nombre || 'Campaña';
     // Opciones muy fáciles y relacionadas con marcas populares
     const easyOptions = [
       'Adidas', 'Nike', 'Coca-Cola', 'Ferrari', 
       'Tesla', 'Puma', 'Gucci', 'Chanel', 
-      'Rolex', 'McDonald\'s', 'Lamborghini', 'Dior'
+      'Rolex', 'McDonald\'s', 'Lamborghini', 'Dior',
+      'Amazon', 'Apple', 'Samsung', 'Pepsi'
     ];
     
-    // Filtrar la correcta y tomar 2 falsas
-    const fakeOptions = easyOptions
-      .filter(o => o.toLowerCase() !== correct.toLowerCase())
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 2);
+    // Filtrar la correcta y tomar 2 falsas de forma aleatoria
+    const filteredFake = easyOptions.filter(o => o.toLowerCase() !== correct.toLowerCase());
+    const shuffledFake = [...filteredFake].sort(() => 0.5 - Math.random());
+    const fakeOptions = shuffledFake.slice(0, 2);
     
     const options = [correct, ...fakeOptions].sort(() => 0.5 - Math.random());
+    
     setQuizOptions(options);
     setCorrectAnswer(correct);
     setQuizStep(true);
-    setSurveyVisible(true); // Asegurar que sea visible
+    setSurveyVisible(true);
   };
 
   const fetchTasks = async () => {
@@ -108,6 +110,7 @@ export default function TaskRoom() {
       interval = setInterval(() => setTimer(t => t - 1), 1000);
     } else if (timer === 0 && activeTask && !surveyVisible) {
       setSurveyVisible(true);
+      generateQuiz(activeTask); // Generar el cuestionario cuando el tiempo termine
     }
     return () => clearInterval(interval);
   }, [activeTask, surveyVisible, timer]);
@@ -324,11 +327,11 @@ export default function TaskRoom() {
                 >
                   <div className="text-center space-y-2">
                     <h3 className="text-lg font-black text-black uppercase tracking-tighter">Cuestionario de Verificación</h3>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">¿Qué marca o campaña acabas de visualizar?</p>
+                    <p className="text-[11px] font-bold text-black uppercase tracking-widest">¿Qué marca o campaña acabas de visualizar?</p>
                   </div>
 
                   <div className="grid gap-3">
-                    {quizOptions.map((option, idx) => (
+                    {quizOptions.length > 0 ? quizOptions.map((option, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleQuizAnswer(option)}
@@ -340,7 +343,9 @@ export default function TaskRoom() {
                       >
                         {option}
                       </button>
-                    ))}
+                    )) : (
+                      <p className="text-[10px] font-black text-slate-400 uppercase text-center py-4">Generando opciones...</p>
+                    )}
                   </div>
 
                   {quizError && (
