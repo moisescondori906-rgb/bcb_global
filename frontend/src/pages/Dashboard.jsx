@@ -190,81 +190,102 @@ export default function Dashboard() {
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.03)_0%,transparent_70%)] -z-10" />
       
       <main className="px-4 sm:px-5 space-y-6 sm:space-y-7 pb-12 pt-4 animate-in">
-        {/* Modal de Comunicado Diario Estilo Notificación Flotante (Ajustado) */}
+        {/* Modal de Comunicado Diario Estilo Notificación Flotante (Refactorizado) */}
         <AnimatePresence>
           {showDailyAnnouncement && comunicados.length > 0 && (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+              {/* Backdrop Premium con Blur Intenso */}
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setShowDailyAnnouncement(false)}
-                className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+                className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
               />
+              
+              {/* Modal Container: Altura Limitada y Flex Col */}
               <motion.div 
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                initial={{ opacity: 0, scale: 0.9, y: 30 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                className="relative w-full max-w-[340px] bg-white rounded-[2.5rem] shadow-[0_25px_80px_rgba(0,0,0,0.4)] border border-slate-200 flex flex-col overflow-hidden"
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="relative w-full max-w-[400px] max-h-[80vh] bg-white rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.5)] border border-white/20 flex flex-col overflow-hidden z-10"
               >
-                {/* Imagen del Comunicado Flotante */}
-                <div className="w-full aspect-video bg-slate-50 relative overflow-hidden">
+                {/* Header/Imagen: Altura fija o aspect ratio */}
+                <div className="w-full aspect-video bg-slate-900 relative overflow-hidden shrink-0">
                   <AnimatePresence mode="wait">
                     <motion.img 
                       key={currentAnnouncementIndex}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 1.5 }}
+                      initial={{ opacity: 0, scale: 1.1 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.6 }}
                       src={comunicados[currentAnnouncementIndex].imagen_url ? api.getMediaUrl(comunicados[currentAnnouncementIndex].imagen_url) : '/imag/logo-carrusel.webp'} 
                       className="w-full h-full object-contain"
                       alt="Comunicado"
                     />
                   </AnimatePresence>
+                  
+                  {/* Botón Cerrar Minimalista sobre la imagen */}
+                  <button 
+                    onClick={() => setShowDailyAnnouncement(false)}
+                    className="absolute top-4 right-4 z-50 p-2.5 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white transition-all active:scale-90"
+                  >
+                    <CloseIcon size={18} />
+                  </button>
+
+                  {/* Indicadores Flotantes */}
+                  {comunicados.length > 1 && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-50">
+                      {comunicados.map((_, i) => (
+                        <div 
+                          key={i} 
+                          className={cn(
+                            "h-1 rounded-full transition-all duration-500",
+                            i === currentAnnouncementIndex ? "w-6 bg-sav-primary" : "w-1.5 bg-white/40"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                <div className="text-center p-6 space-y-3">
+                {/* Contenido: Scrollable Internamente */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-8 sm:p-10 space-y-6">
                   <AnimatePresence mode="wait">
                     <motion.div 
                       key={currentAnnouncementIndex}
-                      initial={{ opacity: 0, x: 10 }}
+                      initial={{ opacity: 0, x: 15 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      className="space-y-2"
+                      exit={{ opacity: 0, x: -15 }}
+                      transition={{ duration: 0.4 }}
+                      className="space-y-4"
                     >
-                      <h2 className="text-lg font-black text-black uppercase tracking-tighter !text-black leading-tight">
-                        {comunicados[currentAnnouncementIndex].titulo || 'Comunicado'}
-                      </h2>
-                      <div className="max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
-                        <p className="text-[12px] font-bold uppercase tracking-widest leading-relaxed text-black/70 whitespace-pre-wrap">
-                          {comunicados[currentAnnouncementIndex].mensaje}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-sav-primary/10 rounded-xl flex items-center justify-center text-sav-primary border border-sav-primary/10">
+                          <BellIcon size={20} />
+                        </div>
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter leading-tight !text-black">
+                          {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
+                        </h2>
                       </div>
+                      
+                      <p className="text-[13px] sm:text-sm font-bold uppercase tracking-widest leading-relaxed text-slate-600 whitespace-pre-wrap">
+                        {comunicados[currentAnnouncementIndex].mensaje}
+                      </p>
                     </motion.div>
                   </AnimatePresence>
-
-                  <Button 
-                    onClick={() => setShowDailyAnnouncement(false)}
-                    className="w-full h-12 rounded-2xl bg-black text-white font-black uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all text-[10px]"
-                  >
-                    <span className="text-white">CERRAR AVISO</span>
-                  </Button>
                 </div>
 
-                {/* Indicadores Minimalistas */}
-                {comunicados.length > 1 && (
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-1 z-50">
-                    {comunicados.map((_, i) => (
-                      <div 
-                        key={i} 
-                        className={cn(
-                          "h-1 rounded-full transition-all duration-500",
-                          i === currentAnnouncementIndex ? "w-4 bg-sav-primary" : "w-1 bg-black/20"
-                        )}
-                      />
-                    ))}
-                  </div>
-                )}
+                {/* Footer del Modal: Botón Fijo */}
+                <div className="p-6 sm:p-8 pt-0 mt-auto bg-gradient-to-t from-white via-white to-transparent">
+                  <Button 
+                    onClick={() => setShowDailyAnnouncement(false)}
+                    className="w-full h-14 rounded-2xl bg-slate-900 text-white font-black uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+                  >
+                    ENTENDIDO
+                  </Button>
+                </div>
               </motion.div>
             </div>
           )}
