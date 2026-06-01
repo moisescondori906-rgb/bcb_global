@@ -42,10 +42,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-sav-dark relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-sav-primary/10 blur-[100px] rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-sav-accent/5 blur-[100px] rounded-full" />
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white relative overflow-hidden">
+      {/* Background Decor (Matching Reference) */}
+      <div className="absolute top-[30%] left-[20%] w-[100%] h-[100%] bg-rose-100/30 rounded-full blur-[100px]" />
+      <div className="absolute top-[10%] right-[10%] w-[60%] h-[60%] bg-blue-100/20 rounded-full blur-[80px]" />
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -56,20 +56,20 @@ export default function Login() {
           <motion.div 
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            className="inline-block mb-6 p-4 bg-white/10 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-sav-primary/10 border border-white/5"
+            className="inline-block mb-6 p-4 bg-white shadow-2xl rounded-[2rem] border border-slate-100"
           >
             <img src="/imag/logo.webp" alt="Logo" className="w-20 h-20" />
           </motion.div>
-          <h1 className="text-4xl font-black tracking-tighter text-white mb-2 uppercase">
+          <h1 className="text-4xl font-black tracking-tighter text-black mb-2 uppercase">
             Bienvenido
           </h1>
           <div className="flex items-center justify-center gap-2">
             <ShieldCheck size={14} className="text-sav-primary" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-sav-muted">Portal Seguro BCB</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60">Portal Seguro BCB</p>
           </div>
         </div>
 
-        <Card variant="premium" className="space-y-6">
+        <Card variant="premium" className="space-y-6 bg-white border-slate-100 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-5">
             <AnimatePresence mode='wait'>
               {error && (
@@ -77,7 +77,7 @@ export default function Login() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="p-4 rounded-2xl bg-sav-error/10 border border-sav-error/20 text-sav-error text-[10px] font-bold uppercase tracking-widest text-center"
+                  className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-widest text-center"
                 >
                   {error}
                 </motion.div>
@@ -109,10 +109,10 @@ export default function Login() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="hidden" 
                 />
-                <div className={`w-5 h-5 rounded-md border transition-all flex items-center justify-center ${rememberMe ? 'bg-sav-primary border-sav-primary' : 'bg-white/5 border-white/10'}`}>
+                <div className={`w-5 h-5 rounded-md border transition-all flex items-center justify-center ${rememberMe ? 'bg-sav-primary border-sav-primary' : 'bg-white border-slate-200 shadow-sm'}`}>
                   {rememberMe && <div className="w-2 h-2 bg-white rounded-sm" />}
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-white transition-colors">Recordarme</span>
+                <span className="text-[10px] font-black text-black/60 uppercase tracking-widest group-hover:text-black transition-colors">Recordarme</span>
               </label>
               <button type="button" className="text-[10px] font-black text-sav-primary uppercase tracking-widest hover:underline">¿Olvidaste?</button>
             </div>
@@ -129,12 +129,12 @@ export default function Login() {
         </Card>
 
         <div className="mt-10 text-center space-y-4">
-          <p className="text-[10px] font-bold text-sav-muted uppercase tracking-[0.2em]">
+          <p className="text-[10px] font-bold text-black/40 uppercase tracking-[0.2em]">
             ¿No tienes una cuenta?
           </p>
           <Link
             to="/register"
-            className="flex items-center justify-center gap-2 text-white font-bold uppercase tracking-widest text-xs hover:text-sav-primary transition-all group"
+            className="flex items-center justify-center gap-2 text-black font-black uppercase tracking-widest text-xs hover:text-sav-primary transition-all group"
           >
             Crear cuenta VIP
             <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />

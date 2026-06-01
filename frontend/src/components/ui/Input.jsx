@@ -23,15 +23,27 @@ export function Input({
           {label}
         </label>
       )}
-      <div className="relative group">
+      <div className={cn(
+        "relative flex items-center transition-all duration-300",
+        error ? "animate-shake" : ""
+      )}>
+        {Icon && (
+          <div className="absolute left-6 text-slate-400">
+            <Icon size={18} strokeWidth={2.5} />
+          </div>
+        )}
         <input
+          {...props}
           type={finalType}
           className={cn(
-            "h-12 sm:h-14 w-full px-4 sm:px-5 rounded-xl sm:rounded-2xl bg-white border-2 border-slate-200 text-slate-900 text-base font-bold focus:border-sav-primary focus:ring-4 focus:ring-sav-primary/10 transition-all outline-none placeholder:text-slate-400 shadow-md",
-            error && "border-sav-error bg-sav-error/5",
-            showPasswordToggle && "pr-14"
+            "w-full h-14 rounded-2xl border-2 transition-all duration-300 outline-none text-sm font-black",
+            Icon ? "pl-14 pr-6" : "px-6",
+            error 
+              ? "border-red-500 bg-red-50 text-red-900 placeholder:text-red-300" 
+              : "border-slate-100 bg-white text-black placeholder:text-slate-400 focus:border-sav-primary/30 shadow-sm",
+            showPasswordToggle && "pr-14",
+            className
           )}
-          {...props}
         />
         {showPasswordToggle && isPassword && (
           <button

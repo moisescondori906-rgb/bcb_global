@@ -75,12 +75,12 @@ export default function CambiarContrasena() {
                   type="password"
                   value={actual}
                   onChange={(e) => setActual(e.target.value)}
-                  className="w-full bg-sav-surface/50 px-6 py-4 rounded-2xl border border-sav-border focus:border-sav-primary/50 focus:outline-none transition-all text-sm font-black text-white placeholder:text-sav-muted/30"
+                  className="w-full bg-white px-6 py-4 rounded-2xl border-2 border-slate-100 focus:border-sav-primary/50 focus:outline-none transition-all text-sm font-black text-black placeholder:text-slate-400 shadow-sm"
                   required
                   placeholder="Tu clave actual"
                   autoComplete="current-password"
                 />
-                <Lock className="absolute right-5 top-1/2 -translate-y-1/2 text-sav-muted/30" size={18} />
+                <Lock className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               </div>
             </div>
 
@@ -91,13 +91,13 @@ export default function CambiarContrasena() {
                   type="password"
                   value={nueva}
                   onChange={(e) => setNueva(e.target.value)}
-                  className="w-full bg-sav-surface/50 px-6 py-4 rounded-2xl border border-sav-border focus:border-sav-primary/50 focus:outline-none transition-all text-sm font-black text-white placeholder:text-sav-muted/30"
+                  className="w-full bg-white px-6 py-4 rounded-2xl border-2 border-slate-100 focus:border-sav-primary/50 focus:outline-none transition-all text-sm font-black text-black placeholder:text-slate-400 shadow-sm"
                   required
                   minLength={6}
                   placeholder="Mínimo 6 caracteres"
                   autoComplete="new-password"
                 />
-                <ShieldCheck className="absolute right-5 top-1/2 -translate-y-1/2 text-sav-muted/30" size={18} />
+                <ShieldCheck className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               </div>
             </div>
 
@@ -108,12 +108,12 @@ export default function CambiarContrasena() {
                   type="password"
                   value={nueva2}
                   onChange={(e) => setNueva2(e.target.value)}
-                  className="w-full bg-sav-surface/50 px-6 py-4 rounded-2xl border border-sav-border focus:border-sav-primary/50 focus:outline-none transition-all text-sm font-black text-white placeholder:text-sav-muted/30"
+                  className="w-full bg-white px-6 py-4 rounded-2xl border-2 border-slate-100 focus:border-sav-primary/50 focus:outline-none transition-all text-sm font-black text-black placeholder:text-slate-400 shadow-sm"
                   required
-                  minLength={6}
                   placeholder="Repite la clave"
+                  autoComplete="new-password"
                 />
-                <ShieldCheck className="absolute right-5 top-1/2 -translate-y-1/2 text-sav-muted/30" size={18} />
+                <ShieldCheck className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               </div>
             </div>
           </Card>

@@ -68,27 +68,27 @@ export function PhoneInputWithCountry({
     <div className={cn('w-full', className)}> 
       <div 
         className={cn(
-          'flex w-full items-center overflow-hidden rounded-m3 border bg-white/[0.03] transition-all duration-300',
+          'flex h-14 w-full items-center overflow-hidden rounded-2xl border-2 transition-all duration-300',
           error 
-            ? 'border-sav-error/50 bg-sav-error/5'
-            : 'border-white/[0.08] hover:border-white/[0.15] focus-within:border-sav-accent/50 focus-within:ring-4 focus-within:ring-sav-accent/10'
+            ? 'border-red-500 bg-red-50'
+            : 'border-slate-100 bg-white focus-within:border-sav-primary/30 shadow-sm'
         )}
       >
-        <div className="relative h-13 w-[100px] shrink-0">
+        <div className="relative h-full w-[100px] shrink-0">
           <select 
             value={countryCode} 
             onChange={handleCountryChange} 
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           > 
             {COUNTRIES.map((country) => ( 
-              <option key={country.code} value={country.code} className="bg-zinc-950 text-white"> 
+              <option key={country.code} value={country.code} className="bg-white text-black"> 
                 {country.flag} {country.dial} 
               </option> 
             ))} 
           </select> 
-          <div className="flex h-full items-center justify-center gap-2 px-3 border-r border-white/[0.08] bg-white/[0.02]">
+          <div className="flex h-full items-center justify-center gap-2 px-3 border-r border-slate-100 bg-slate-50">
             <span className="text-lg">{selected.flag}</span>
-            <span className="text-[11px] font-bold text-white">{selected.dial}</span>
+            <span className="text-[11px] font-black text-black">{selected.dial}</span>
           </div>
         </div>
  
@@ -98,9 +98,10 @@ export function PhoneInputWithCountry({
           value={localValue} 
           onChange={handleLocalChange} 
           placeholder={placeholder} 
-          className="h-13 min-w-0 flex-1 border-0 bg-transparent px-5 text-[14px] font-medium text-white outline-none placeholder:text-zinc-600" 
-        /> 
-      </div> 
+          className="h-full w-full border-none bg-transparent px-6 text-sm font-black text-black outline-none placeholder:text-slate-400"
+        />
+      </div>
+    </div> 
  
       {error && ( 
         <p className="mt-2 px-1 text-[10px] font-bold uppercase tracking-widest text-sav-error animate-in fade-in slide-in-from-top-1"> 

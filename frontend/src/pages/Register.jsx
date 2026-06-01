@@ -60,28 +60,31 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 animate-fade">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white relative overflow-hidden">
+      {/* Background Decor (Matching Reference) */}
+      <div className="absolute top-[30%] left-[20%] w-[100%] h-[100%] bg-rose-100/30 rounded-full blur-[100px]" />
+      <div className="absolute top-[10%] right-[10%] w-[60%] h-[60%] bg-blue-100/20 rounded-full blur-[80px]" />
+
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm"
+        className="w-full max-w-sm relative z-10"
       >
         <div className="text-center mb-10">
           <motion.div 
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            className="inline-block mb-6 relative"
+            className="inline-block mb-6 p-4 bg-white shadow-2xl rounded-[2rem] border border-slate-100"
           >
-            <div className="absolute inset-0 bg-sav-primary/20 blur-2xl rounded-full" />
-            <img src="/imag/logo-carrusel.webp" alt="Logo" className="w-20 h-20 relative z-10" />
+            <img src="/imag/logo-carrusel.webp" alt="Logo" className="w-20 h-20" />
           </motion.div>
-          <h1 className="text-3xl font-black tracking-tight text-white mb-2 uppercase">
+          <h1 className="text-3xl font-black tracking-tight text-black mb-2 uppercase">
             Únete a BCB
           </h1>
-          <p className="text-[10px] font-bold tracking-[0.4em] text-sav-muted uppercase">Crea tu cuenta VIP</p>
+          <p className="text-[10px] font-bold tracking-[0.4em] text-black/40 uppercase">Crea tu cuenta VIP</p>
         </div>
 
-        <Card variant="premium" className="space-y-6">
+        <Card variant="premium" className="space-y-6 bg-white border-slate-100 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-4">
             <AnimatePresence mode='wait'>
               {error && (
@@ -89,7 +92,7 @@ export default function Register() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="p-4 rounded-2xl bg-sav-error/10 border border-sav-error/20 text-sav-error text-[10px] font-bold uppercase tracking-widest text-center"
+                  className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-widest text-center"
                 >
                   {error}
                 </motion.div>
@@ -153,7 +156,7 @@ export default function Register() {
         <div className="mt-8 text-center">
           <Link
             to="/login"
-            className="inline-flex items-center gap-2 text-sav-muted font-bold uppercase tracking-widest text-[10px] hover:text-white transition-colors group"
+            className="inline-flex items-center gap-2 text-black/40 font-black uppercase tracking-widest text-[10px] hover:text-black transition-colors group"
           >
             <ChevronLeft size={16} className="transition-transform group-hover:-translate-x-1" />
             Ya tengo una cuenta

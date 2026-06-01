@@ -60,15 +60,22 @@
   }
 
   /* Forzar que los inputs tengan texto negro */
-  input, textarea, select {
+  input, textarea, select, input:focus {
     color: #000000 !important;
-    background-color: #ffffff !important; /* Fondo blanco para que el texto negro se vea bien */
+    background-color: #ffffff !important;
+  }
+
+  /* Placeholders más visibles */
+  ::placeholder {
+    color: #94a3b8 !important; /* slate-400 */
+    opacity: 1 !important;
   }
 
   /* Excepciones para elementos que DEBEN ser blancos o de color */
   .text-white, 
   .text-white p, 
   .text-white span,
+  .text-white h1,
   .text-white h2,
   button.bg-sav-primary,
   button.bg-sav-primary span,
@@ -78,7 +85,9 @@
   .bg-indigo-950,
   .bg-indigo-950 span,
   .bg-sav-primary span,
-  .bg-sav-primary p {
+  .bg-sav-primary p,
+  .bg-black span,
+  .bg-black p {
     color: white !important;
   }
 
