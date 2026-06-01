@@ -61,7 +61,7 @@ export default function Profile() {
       <main className="px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-32 animate-fade">
         {/* User Identity Card */}
         <section className="relative">
-          <Card className="p-6 sm:p-8 bg-white text-slate-900 border-2 border-slate-200 shadow-2xl shadow-slate-200 rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden group">
+          <Card className="p-6 sm:p-8 bg-white text-black border-2 border-slate-200 shadow-2xl shadow-slate-200 rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden group">
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl group-hover:bg-indigo-100 transition-all duration-700" />
             
             <div className="flex items-center gap-5 sm:gap-7 relative z-10">
@@ -77,7 +77,7 @@ export default function Profile() {
               </div>
               
               <div className="space-y-1.5 min-w-0">
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight truncate uppercase text-slate-900">{user?.nombre_usuario || 'Usuario'}</h2>
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight truncate uppercase !text-black">{user?.nombre_usuario || 'Usuario'}</h2>
                 <div className="flex items-center gap-2">
                   <Badge variant="info" className="bg-indigo-100 text-indigo-900 border-indigo-200 font-black">
                     Nivel {user?.nivel_nombre || 'Pasante'}

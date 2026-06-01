@@ -19,7 +19,7 @@ export default function BannerCarousel({ banners = [] }) {
 
   useEffect(() => {
     if (validBanners.length <= 1) return;
-    const t = setInterval(() => setSlide((s) => (s + 1) % validBanners.length), 8000);
+    const t = setInterval(() => setSlide((s) => (s + 1) % validBanners.length), 5000);
     return () => clearInterval(t);
   }, [validBanners.length]);
 
