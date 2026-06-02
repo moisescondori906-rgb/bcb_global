@@ -4,26 +4,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Wallet as WalletIcon, 
   TrendingUp as TrendingUpIcon, 
-  Target as TargetIcon, 
-  ShieldCheck as ShieldCheckIcon, 
-  ArrowUpCircle as ArrowUpCircleIcon, 
   ArrowDownCircle as ArrowDownCircleIcon, 
   Bell as BellIcon,
   ChevronRight as ChevronRightIcon, 
-  PlayCircle as PlayCircleIcon, 
   Sparkles as SparklesIcon, 
-  Zap as ZapIcon, 
   Trophy as TrophyIcon, 
   Users as UsersIcon,
   FileText as FileTextIcon,
-  HelpCircle as HelpCircleIcon,
   Info as InfoIcon,
   MessageCircle as MessageIcon,
   Compass as RouletteIcon,
   Plus as PlusIcon,
   X as CloseIcon,
   ShieldAlert as ShieldAlertIcon,
-  Smartphone as SmartphoneIcon,
   Medal as MedalIcon,
   Coffee as CoffeeIcon
 } from 'lucide-react';
@@ -414,7 +407,9 @@ export default function Dashboard() {
             <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-sav-muted hover:text-white transition-all duration-300 shadow-sm group-hover:border-sav-primary/30 group-hover:bg-sav-primary/5">
               <BellIcon size={20} className="group-hover:animate-bounce" />
               {/* Notif Badge */}
-              <div className="absolute top-2 right-2 w-2 h-2 bg-sav-primary rounded-full border-2 border-sav-dark shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
+              {comunicados.length > 0 && (
+                <div className="absolute top-2 right-2 w-2 h-2 bg-sav-primary rounded-full border-2 border-sav-dark shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
+              )}
             </div>
           </Link>
         </header>
@@ -443,7 +438,7 @@ export default function Dashboard() {
                     Grado Especial: {user.grado_colaborador === 'colaborador' ? 'Colaborador' : 'Colaborador Senior'}
                   </p>
                   <p className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                    Salario Mensual: {formatCurrency(user.salario_colaborador)}
+                    Salario Mensual: {formatCurrency(user.salario_colaborador, 'Bs')}
                   </p>
                   <p className="text-[7px] font-bold text-slate-400 uppercase tracking-tight italic">
                     Beneficio exclusivo para el equipo de administración
@@ -558,7 +553,7 @@ export default function Dashboard() {
                     </div>
                     <div className="pt-2 sm:pt-3 border-t border-black/5 flex justify-between items-center">
                       <span className="text-[7px] sm:text-[8px] font-bold text-sav-muted uppercase">Inversión</span>
-                      <span className="text-[9px] sm:text-[10px] font-black text-gray-900">{formatCurrency(n.deposito)}</span>
+                      <span className="text-[9px] sm:text-[10px] font-black text-gray-900">{formatCurrency(n.deposito, 'Bs')}</span>
                     </div>
                   </div>
                 </Link>
