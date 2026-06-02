@@ -41,11 +41,13 @@ export default function FloatingAnnouncements({ announcements, onClose }) {
 
 function NotificationItem({ item, onRemove }) {
   useEffect(() => {
+    // Si es un anuncio especial (ej. domingo), dejarlo más tiempo
+    const duration = item.isSpecial ? 20000 : 12000;
     const timer = setTimeout(() => {
       onRemove();
-    }, 12000); // Auto-cerrar después de 12 segundos (un poco más para lectura premium)
+    }, duration);
     return () => clearTimeout(timer);
-  }, [onRemove]);
+  }, [onRemove, item.isSpecial]);
 
   return (
     <motion.div
@@ -55,19 +57,19 @@ function NotificationItem({ item, onRemove }) {
       exit={{ opacity: 0, scale: 0.9, x: 20, transition: { duration: 0.3 } }}
       className={cn(
         "pointer-events-auto relative w-full overflow-hidden",
-        "bg-white/90 backdrop-blur-2xl border border-white/40 shadow-[0_30px_70px_-15px_rgba(30,27,75,0.3)]",
+        "bg-white/95 backdrop-blur-2xl border border-white shadow-[0_30px_70px_-15px_rgba(30,27,75,0.4)]",
         "rounded-[2.5rem] flex flex-col group border-b-4 border-b-bcb-primary/20"
       )}
     >
       {/* Premium Image Header */}
       {item.imagen_url && (
-        <div className="w-full h-[120px] relative overflow-hidden shrink-0">
+        <div className="w-full h-[140px] relative overflow-hidden shrink-0 bg-slate-900">
           <img 
             src={api.getMediaUrl(item.imagen_url)} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
             alt="BCB Global"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/10 via-transparent to-transparent" />
           
           {/* Top Badge */}
           <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-bcb-primary text-white text-[8px] font-black uppercase tracking-[0.2em] shadow-xl border border-white/20">
@@ -80,12 +82,12 @@ function NotificationItem({ item, onRemove }) {
       {/* Close Button: Floating Minimalist */}
       <button 
         onClick={onRemove}
-        className="absolute top-3 right-3 z-50 w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 text-slate-500 hover:text-bcb-primary transition-all flex items-center justify-center backdrop-blur-md border border-white/50"
+        className="absolute top-4 right-4 z-50 w-8 h-8 rounded-full bg-black/10 hover:bg-black/20 text-white transition-all flex items-center justify-center backdrop-blur-md border border-white/20"
       >
         <X size={14} strokeWidth={3} />
       </button>
 
-      <div className="p-6 space-y-4">
+      <div className="p-7 space-y-4">
         {/* Content Layout */}
         <div className="flex gap-4 items-start">
           {!item.imagen_url && (
@@ -94,13 +96,15 @@ function NotificationItem({ item, onRemove }) {
             </div>
           )}
           
-          <div className="flex-1 min-w-0 space-y-1.5">
-            <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight leading-none !text-bcb-primary">
+          <div className="flex-1 min-w-0 space-y-2">
+            <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight leading-tight !text-bcb-primary">
               {item.titulo || 'BCB Global Institucional'}
             </h4>
-            <p className="text-[11px] font-bold text-slate-600 leading-relaxed line-clamp-4">
-              {item.mensaje}
-            </p>
+            <div className="max-h-[120px] overflow-y-auto no-scrollbar">
+              <p className="text-[11px] font-bold text-slate-600 leading-relaxed">
+                {item.mensaje}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -108,7 +112,7 @@ function NotificationItem({ item, onRemove }) {
         <div className="flex gap-2">
           <button 
             onClick={onRemove}
-            className="flex-1 h-11 rounded-xl bg-bcb-primary text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-bcb-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group/btn"
+            className="flex-1 h-12 rounded-2xl bg-bcb-primary text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-bcb-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group/btn"
           >
             Entendido
             <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
@@ -121,7 +125,7 @@ function NotificationItem({ item, onRemove }) {
         <motion.div 
           initial={{ width: "100%" }}
           animate={{ width: "0%" }}
-          transition={{ duration: 12, ease: "linear" }}
+          transition={{ duration: item.isSpecial ? 20 : 12, ease: "linear" }}
           className="h-full bg-gradient-to-r from-bcb-primary via-indigo-400 to-bcb-primary shadow-[0_0_10px_rgba(30,27,75,0.5)]"
         />
       </div>
