@@ -295,66 +295,75 @@ export default function Dashboard() {
         )}
 
         {/* Main Wallet Card */}
-        <Card variant="premium" className="p-5 sm:p-8 border-none bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900 relative overflow-hidden group shadow-2xl shadow-indigo-200 active:scale-[0.99] transition-transform duration-500">
-          <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-white/10 blur-[80px] rounded-full transition-all group-hover:bg-white/20 duration-1000" />
-          <div className="absolute -top-20 -right-20 w-40 h-40 bg-indigo-400/20 blur-[60px] rounded-full" />
+        <Card variant="premium" className="p-6 sm:p-10 border-none bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 relative overflow-hidden group shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] active:scale-[0.99] transition-transform duration-500 rounded-[2.5rem]">
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-indigo-500/10 blur-[100px] rounded-full transition-all group-hover:bg-indigo-500/20 duration-1000" />
+          <div className="absolute -top-20 -right-20 w-60 h-60 bg-rose-500/5 blur-[80px] rounded-full" />
           
-          <div className="relative z-10 flex flex-col h-full justify-between gap-6">
+          <div className="relative z-10 flex flex-col h-full justify-between gap-8">
             <div className="flex justify-between items-start">
-              <div className="space-y-4 flex-1">
+              <div className="space-y-6 flex-1">
                 <div className="space-y-1">
-                  <p className="text-[10px] sm:text-[11px] font-black text-white/90 uppercase tracking-[0.3em] drop-shadow-sm">Balance de Capital</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <WalletIcon size={14} className="text-indigo-400" />
+                    <p className="text-[10px] sm:text-[11px] font-black text-white/70 uppercase tracking-[0.3em] drop-shadow-sm">Balance de Capital</p>
+                  </div>
                   <div className="flex items-baseline gap-2 overflow-hidden">
-                    <p className="text-4xl sm:text-6xl font-black text-white tracking-tighter truncate drop-shadow-lg">
+                    <p className="text-5xl sm:text-7xl font-black text-white tracking-tighter truncate drop-shadow-2xl">
                       {formatCurrency(user?.saldo_principal || 0, 'Bs').trim()}
                     </p>
                   </div>
                 </div>
                 
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl shadow-lg inline-block">
-                  <p className="text-[8px] sm:text-[9px] font-black text-white/80 uppercase tracking-[0.2em] text-center mb-0.5">Membresía</p>
-                  <p className="text-xs sm:text-sm font-black text-white uppercase tracking-widest text-center drop-shadow-sm">{displayLevelCode(user?.nivel_codigo)}</p>
+                <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-xl border border-white/10 px-5 py-2.5 rounded-2xl shadow-2xl">
+                  <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                  <p className="text-xs sm:text-sm font-black text-white uppercase tracking-widest drop-shadow-sm">{displayLevelCode(user?.nivel_codigo)}</p>
                 </div>
               </div>
 
               <Link to="/recargar" className="shrink-0">
-                <Button variant="ghost" className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 shadow-xl" icon={PlusIcon} />
+                <motion.div 
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Button variant="ghost" className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-white/10 hover:bg-white/20 text-white border border-white/10 shadow-2xl backdrop-blur-md" icon={PlusIcon} />
+                </motion.div>
               </Link>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <Link to="/recargar" className="flex-1">
-                <Button variant="secondary" className="w-full h-12 sm:h-14 text-[10px] sm:text-[11px] font-black tracking-[0.2em] sm:tracking-[0.25em] bg-white text-indigo-900 hover:bg-slate-50 shadow-lg active:scale-[0.98] transition-all" icon={PlusIcon}>RECARGAR</Button>
+                <Button variant="secondary" className="w-full h-14 sm:h-16 text-[10px] sm:text-[11px] font-black tracking-[0.25em] bg-white text-indigo-950 hover:bg-slate-50 shadow-2xl active:scale-[0.98] transition-all rounded-2xl" icon={PlusIcon}>RECARGAR</Button>
               </Link>
               <Link to="/retiro" className="flex-1">
-                <Button variant="secondary" className="w-full h-12 sm:h-14 text-[10px] sm:text-[11px] font-black tracking-[0.2em] sm:tracking-[0.25em] bg-indigo-700/50 border-white/30 text-white hover:bg-indigo-700/60 backdrop-blur-md shadow-lg active:scale-[0.98] transition-all" icon={ArrowDownCircleIcon}>RETIRAR</Button>
+                <Button variant="secondary" className="w-full h-14 sm:h-16 text-[10px] sm:text-[11px] font-black tracking-[0.25em] bg-indigo-600/30 border-white/20 text-white hover:bg-indigo-600/40 backdrop-blur-md shadow-2xl active:scale-[0.98] transition-all rounded-2xl" icon={ArrowDownCircleIcon}>RETIRAR</Button>
               </Link>
             </div>
           </div>
         </Card>
 
         {/* Quick Stats Grid */}
-        <div className="bg-white rounded-[1.5rem] sm:rounded-[2.5rem] shadow-2xl shadow-slate-200 p-6 sm:p-8 space-y-7 border-2 border-slate-200 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-900 via-indigo-600 to-indigo-900" />
-          <div className="flex items-center justify-between px-1">
+        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)] p-8 sm:p-10 space-y-8 border border-slate-100 relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 opacity-50" />
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-indigo-100 text-indigo-900 shadow-sm border border-indigo-200">
-                <TrophyIcon size={16} strokeWidth={3} />
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm border border-indigo-100 group-hover:rotate-12 transition-transform">
+                <TrendingUpIcon size={20} strokeWidth={2.5} />
               </div>
-              <h3 className="text-[11px] sm:text-[12px] font-black text-slate-900 uppercase tracking-[0.2em]">Resumen Financiero</h3>
+              <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Rendimiento Financiero</h3>
             </div>
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full">Hoy</div>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:gap-10 relative">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-10 sm:h-12 bg-slate-300" />
-            <div className="space-y-1.5">
-              <p className="text-[9px] sm:text-[10px] font-black text-slate-600 uppercase tracking-widest">Ingresos Hoy</p>
-              <p className="text-2xl sm:text-3xl font-black text-emerald-700 tracking-tighter drop-shadow-sm">
+          <div className="grid grid-cols-2 gap-8 sm:gap-12 relative">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-12 bg-slate-100" />
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Ingresos del Día</p>
+              <p className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tighter">
                 +{formatCurrency(stats?.ingresos_hoy || 0, 'Bs').trim()}
               </p>
             </div>
-            <div className="space-y-1.5 text-right">
-              <p className="text-[9px] sm:text-[10px] font-black text-slate-600 uppercase tracking-widest">Total Acumulado</p>
-              <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter drop-shadow-sm">
+            <div className="space-y-2 text-right">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Acumulado Total</p>
+              <p className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tighter">
                 {formatCurrency(stats?.total_acumulado || 0, 'Bs').trim()}
               </p>
             </div>

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import Layout from '../components/Layout.jsx';
+import RouletteWheel from '../components/dashboard/RouletteWheel.jsx';
 import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { 
@@ -28,8 +29,8 @@ export default function Recompensas() {
   const [config, setConfig] = useState(null);
   const [teamStats, setTeamStats] = useState(null);
   const [spinning, setSpinning] = useState(false);
+  const [targetIndex, setTargetIndex] = useState(-1);
   const [result, setResult] = useState(null);
-  const [rotation, setRotation] = useState(0);
   const [loading, setLoading] = useState(true);
   const [punished, setPunished] = useState(false);
   const [error, setError] = useState(null);
@@ -77,9 +78,6 @@ export default function Recompensas() {
     };
   }, [spinning]);
 
-  const cumulativeRotationRef = useRef(0);
-  const wheelControls = useAnimation();
-
   const spinWheel = async () => {
     if (spinning || premios.length === 0 || (Number(user?.tickets_ruleta) || 0) < 1) return;
     
@@ -91,63 +89,36 @@ export default function Recompensas() {
       const res = await api.sorteo.girar({ idempotency_key });
       
       if (res.ok) {
-        setSpinning(true);
-        
-        const count = premios.length || 1;
         const premioIndex = premios.findIndex(p => p.id === res.premio.id);
-        
-        // Calculamos la rotación final acumulativa:
-        const extraRounds = 8;
-        const segmentAngle = 360 / count;
-        
-        // 1. Calculamos el ángulo central del premio
-        // Como ahora los segmentos empiezan en el TOP (12 o'clock), 
-        // el centro del premio i está en (i * angle + angle/2)
-        const targetAngle = (premioIndex * segmentAngle) + (segmentAngle / 2);
-        
-        // Queremos que targetAngle termine en 0 grados (TOP)
-        // La distancia es (360 - targetAngle)
-        const currentRotation = cumulativeRotationRef.current % 360;
-        const finalTarget = (360 - targetAngle) % 360;
-        
-        let distance = finalTarget - currentRotation;
-        if (distance < 0) distance += 360;
-        
-        const totalNewRotation = cumulativeRotationRef.current + (extraRounds * 360) + distance;
-        
-        cumulativeRotationRef.current = totalNewRotation;
-
-        await wheelControls.start({
-          rotate: totalNewRotation,
-          transition: { 
-            duration: 6, 
-            ease: [0.2, 0, 0.1, 1]
-          }
-        });
-
-        setSpinning(false);
+        setTargetIndex(premioIndex);
+        setSpinning(true);
+        // Guardar el premio temporalmente para mostrarlo al final de la animación
         setResult(res.premio);
-        setRotation(totalNewRotation % 360); 
-        
-        // Lanzar confeti si es un premio bueno
-        if (Number(res.premio.valor) > 0) {
-          confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#4f46e5', '#10b981', '#f59e0b', '#ec4899']
-          });
-        }
-
-        refreshUser();
-        api.sorteo.historial().then(data => {
-           if (data) setHistorial(data);
-        });
       }
     } catch (err) {
       setError(err.message || 'Error al girar la ruleta');
       setSpinning(false);
     }
+  };
+
+  const handleSpinComplete = () => {
+    setSpinning(false);
+    setTargetIndex(-1);
+    
+    // Lanzar confeti si es un premio bueno
+    if (result && Number(result.valor) > 0) {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#4f46e5', '#10b981', '#f59e0b', '#ec4899']
+      });
+    }
+
+    refreshUser();
+    api.sorteo.historial().then(data => {
+       if (data) setHistorial(data);
+    });
   };
 
   if (loading) {
@@ -249,195 +220,56 @@ export default function Recompensas() {
         <div className="px-6 -mt-20 max-w-4xl mx-auto space-y-8">
           {/* Wheel Container */}
           <div className="relative flex flex-col items-center">
-            {/* Base de la ruleta */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] md:w-[420px] md:h-[420px] bg-indigo-500/5 rounded-full blur-3xl -z-10" />
+            <RouletteWheel 
+              premios={premios}
+              spinning={spinning}
+              targetIndex={targetIndex}
+              onSpinComplete={handleSpinComplete}
+            />
 
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-6 z-30">
-              {/* Nuevo diseño del puntero Pro */}
-              <div className="relative">
-                <div className="w-10 h-12 bg-gradient-to-b from-amber-300 to-amber-600 rounded-b-2xl shadow-[0_10px_30px_rgba(245,158,11,0.5)] flex items-center justify-center border-2 border-white/20">
-                  <div className="w-1 h-6 bg-white/30 rounded-full" />
-                </div>
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-200 rounded-full blur-sm animate-pulse" />
-              </div>
-            </div>
-
-            <div className="relative w-80 h-80 md:w-[400px] md:h-[400px] rounded-full p-3 bg-gradient-to-br from-slate-800 to-slate-900 shadow-[0_0_100px_rgba(79,70,229,0.3)] border-8 border-slate-800/50 backdrop-blur-md">
-              <div className="absolute inset-0 rounded-full border-[12px] border-white/5 pointer-events-none z-10" />
-              <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,transparent_40%,rgba(0,0,0,0.3)_100%)] pointer-events-none z-10" />
-              
-              <motion.div 
-                animate={wheelControls}
-                className="w-full h-full rounded-full overflow-hidden shadow-inner"
-                style={{ rotate: rotation }}
-              >
-                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl">
-                  <defs>
-                    <linearGradient id="gradPremium1" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#4f46e5" />
-                      <stop offset="100%" stopColor="#3730a3" />
-                    </linearGradient>
-                    <linearGradient id="gradPremium2" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="100%" stopColor="#065f46" />
-                    </linearGradient>
-                    <linearGradient id="gradPremium3" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#f59e0b" />
-                      <stop offset="100%" stopColor="#92400e" />
-                    </linearGradient>
-                    <linearGradient id="gradPremium4" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#ec4899" />
-                      <stop offset="100%" stopColor="#9d174d" />
-                    </linearGradient>
-                    <linearGradient id="gradPremium5" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#8b5cf6" />
-                      <stop offset="100%" stopColor="#5b21b6" />
-                    </linearGradient>
-                    <filter id="shadowText">
-                      <feDropShadow dx="0.5" dy="0.5" stdDeviation="0.8" floodColor="rgba(0,0,0,0.8)" />
-                    </filter>
-                  </defs>
-                  {Array.isArray(premios) && premios.map((premio, i) => {
-                    const count = premios.length || 1;
-                    const angle = 360 / count;
-                    const rotationAngle = i * angle;
-                    
-                    // Ajustamos las coordenadas para que el primer premio (i=0) empiece en el TOP (12 o'clock)
-                    // En Math, 0 es a las 3 o'clock, restamos 90 para ir a las 12 o'clock.
-                    const x1 = 50 + 50 * Math.cos(((rotationAngle - 90) * Math.PI) / 180);
-                    const y1 = 50 + 50 * Math.sin(((rotationAngle - 90) * Math.PI) / 180);
-                    const x2 = 50 + 50 * Math.cos(((rotationAngle + angle - 90) * Math.PI) / 180);
-                    const y2 = 50 + 50 * Math.sin(((rotationAngle + angle - 90) * Math.PI) / 180);
-
-                    const getGradient = (index) => {
-                      const gradients = ['url(#gradPremium1)', 'url(#gradPremium2)', 'url(#gradPremium3)', 'url(#gradPremium4)', 'url(#gradPremium5)'];
-                      return gradients[index % gradients.length];
-                    };
-                    
-                    return (
-                      <g key={premio.id} className="cursor-pointer group/segment">
-                        <path 
-                          d={`M 50 50 L ${x1} ${y1} A 50 50 0 0 1 ${x2} ${y2} Z`}
-                          fill={premio.color && premio.color !== '' ? premio.color : getGradient(i)}
-                          stroke="rgba(255,255,255,0.2)"
-                          strokeWidth="0.3"
-                          className="transition-opacity group-hover/segment:opacity-90"
-                        />
-                        {/* La rotación de SVG ya empieza desde el TOP (0 grados = 12 o'clock) */}
-                        <g transform={`rotate(${rotationAngle + angle/2}, 50, 50)`}>
-                          {/* Nombre del Premio (Arriba) */}
-                          <text
-                            x="50"
-                            y="12"
-                            fill="white"
-                            fontSize="2.2"
-                            fontWeight="900"
-                            textAnchor="middle"
-                            style={{ 
-                              textTransform: 'uppercase', 
-                              letterSpacing: '0.05em',
-                              opacity: 0.9,
-                              paintOrder: 'stroke',
-                              stroke: 'rgba(0,0,0,0.3)',
-                              strokeWidth: '0.1px'
-                            }}
-                          >
-                            {premio.nombre.length > 15 ? premio.nombre.substring(0, 15) + '..' : premio.nombre}
-                          </text>
-
-                          {/* Imagen del Premio (Centro) */}
-                          {premio.imagen_url && premio.imagen_url !== 'null' ? (
-                            <image
-                              href={api.getMediaUrl(premio.imagen_url)}
-                              x="44"
-                              y="15"
-                              width="12"
-                              height="12"
-                              preserveAspectRatio="xMidYMid slice"
-                              crossOrigin="anonymous"
-                              style={{ clipPath: 'circle(50%)' }}
-                            />
-                          ) : (
-                            <Gift x="45" y="16" size={10} className="text-white/20" />
-                          )}
-
-                          {/* Valor del Premio (Abajo) */}
-                          <text
-                            x="50"
-                            y="32"
-                            fill="white"
-                            fontSize="3.2"
-                            fontWeight="900"
-                            textAnchor="middle"
-                            filter="url(#shadowText)"
-                            style={{ 
-                              textTransform: 'uppercase', 
-                              paintOrder: 'stroke', 
-                              stroke: 'rgba(0,0,0,0.6)', 
-                              strokeWidth: '0.3px'
-                            }}
-                          >
-                            {premio.valor > 0 ? `${premio.valor} Bs` : 'NADA'}
-                          </text>
-                        </g>
-                      </g>
-                    );
-                  })}
-                  {(!Array.isArray(premios) || premios.length === 0) && (
-                    <circle cx="50" cy="50" r="50" fill="url(#gradSilver)" stroke="#333" strokeWidth="0.5" />
-                  )}
-                </svg>
-              </motion.div>
-              
-              {premios.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center text-center p-10 bg-white/80 backdrop-blur-sm z-20">
-                  <div className="max-w-[200px]">
-                    <AlertCircle className="text-gray-300 mx-auto mb-4" size={48} />
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">
-                      Ruleta en mantenimiento. Contacta con soporte.
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-slate-900 border-4 border-slate-800 shadow-[0_0_40px_rgba(245,158,11,0.3)] flex items-center justify-center z-20 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-tr from-amber-400/20 to-transparent" />
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center shadow-lg relative z-10">
-                  <Coins className={`text-white ${spinning ? 'animate-spin' : ''}`} size={20} />
-                </div>
-              </div>
-            </div>
-
-            {/* Spin Button */}
-            <div className="mt-12 text-center w-full max-w-xs">
+            {/* Spin Button Section */}
+            <div className="mt-12 text-center space-y-6 w-full max-w-sm">
               <button
                 onClick={spinWheel}
                 disabled={spinning || premios.length === 0 || (Number(user?.tickets_ruleta) || 0) < 1}
                 className={`
-                  w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] transition-all duration-300
+                  w-full h-16 rounded-[2rem] font-black uppercase tracking-[0.2em] transition-all duration-500 relative overflow-hidden group
                   ${spinning || premios.length === 0 || (Number(user?.tickets_ruleta) || 0) < 1
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-bcb-primary text-white shadow-[0_20px_40px_rgba(220,38,38,0.2)] hover:scale-[1.02] active:scale-[0.98]'
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    : 'bg-bcb-primary text-white shadow-[0_20px_50px_-10px_rgba(30,27,75,0.5)] hover:scale-[1.02] active:scale-[0.98]'
                   }
                 `}
               >
-                {spinning ? 'Girando...' : 'Girar Ahora'}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                <span className="relative z-10 flex items-center justify-center gap-3">
+                  {spinning ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Girando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={20} className="text-amber-400" />
+                      Girar Ahora
+                    </>
+                  )}
+                </span>
               </button>
 
-              <div className="mt-6 flex items-center justify-center gap-6">
+              <div className="flex items-center justify-center gap-8 py-4 bg-white/50 backdrop-blur-sm rounded-3xl border border-white/20">
                 <div className="text-center">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Costo</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Costo</p>
                   <div className="flex items-center gap-1.5 justify-center">
                     <Trophy size={14} className="text-amber-500" />
-                    <span className="text-sm font-black text-gray-900">1 Ticket</span>
+                    <span className="text-sm font-black text-slate-900">1 Ticket</span>
                   </div>
                 </div>
-                <div className="w-px h-8 bg-gray-200" />
+                <div className="w-px h-8 bg-slate-200" />
                 <div className="text-center">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Tus Tickets</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tus Tickets</p>
                   <div className="flex items-center gap-1.5 justify-center">
-                    <Sparkles size={14} className="text-amber-500" />
-                    <span className="text-sm font-black text-gray-900">{user?.tickets_ruleta || 0}</span>
+                    <Sparkles size={14} className="text-amber-500 animate-pulse" />
+                    <span className="text-sm font-black text-slate-900">{user?.tickets_ruleta || 0}</span>
                   </div>
                 </div>
               </div>
@@ -450,6 +282,47 @@ export default function Recompensas() {
               </div>
             )}
           </div>
+
+          {/* Winner Result Overlay */}
+          <AnimatePresence>
+            {result && !spinning && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl"
+              >
+                <motion.div 
+                  className="bg-white rounded-[3rem] p-10 max-w-sm w-full text-center space-y-6 shadow-2xl relative overflow-hidden"
+                  initial={{ y: 50 }}
+                  animate={{ y: 0 }}
+                >
+                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 via-indigo-500 to-emerald-400" />
+                  <div className="w-24 h-24 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto shadow-inner border-4 border-white">
+                    <Trophy size={48} />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">¡FELICIDADES!</h2>
+                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest leading-tight">Has ganado un premio de:</p>
+                    <p className="text-5xl font-black text-bcb-primary tracking-tighter">{result.nombre}</p>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Acreditado a:</p>
+                    <p className="text-sm font-black text-slate-900 flex items-center justify-center gap-2">
+                      <Wallet size={16} className="text-indigo-500" />
+                      SALDO DE COMISIONES
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => setResult(null)}
+                    className="w-full h-14 rounded-2xl bg-bcb-primary text-white font-black uppercase tracking-widest"
+                  >
+                    CONTINUAR
+                  </Button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* User Stats Card */}
           <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-black/5 border border-gray-100 flex items-center justify-between">

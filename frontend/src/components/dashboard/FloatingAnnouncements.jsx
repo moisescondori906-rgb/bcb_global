@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, X, Sparkles } from 'lucide-react';
+import { Bell, X, Sparkles, Megaphone, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils/cn';
+import { api } from '../../lib/api';
 
 export default function FloatingAnnouncements({ announcements, onClose }) {
   const [visibleItems, setVisibleItems] = useState([]);
@@ -24,9 +25,9 @@ export default function FloatingAnnouncements({ announcements, onClose }) {
   };
 
   return (
-    <div className="fixed top-4 right-4 md:top-6 md:right-6 z-[100000] flex flex-col gap-3 w-[90%] max-w-[380px] pointer-events-none left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0">
+    <div className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-[100000] flex flex-col-reverse gap-4 w-[95%] max-w-[380px] pointer-events-none left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0">
       <AnimatePresence mode="popLayout">
-        {visibleItems.map((item, index) => (
+        {visibleItems.map((item) => (
           <NotificationItem 
             key={item.id} 
             item={item} 
@@ -42,60 +43,88 @@ function NotificationItem({ item, onRemove }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onRemove();
-    }, 8000); // Auto-cerrar después de 8 segundos
+    }, 12000); // Auto-cerrar después de 12 segundos (un poco más para lectura premium)
     return () => clearTimeout(timer);
   }, [onRemove]);
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: -20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+      initial={{ opacity: 0, y: 50, scale: 0.9, filter: 'blur(10px)' }}
+      animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, scale: 0.9, x: 20, transition: { duration: 0.3 } }}
       className={cn(
         "pointer-events-auto relative w-full overflow-hidden",
-        "bg-white/80 backdrop-blur-xl border border-white/20 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)]",
-        "rounded-2xl p-4 flex gap-4 group"
+        "bg-white/90 backdrop-blur-2xl border border-white/40 shadow-[0_30px_70px_-15px_rgba(30,27,75,0.3)]",
+        "rounded-[2.5rem] flex flex-col group border-b-4 border-b-bcb-primary/20"
       )}
     >
-      {/* Glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-bcb-primary/5 via-transparent to-transparent pointer-events-none" />
-      
-      {/* Icon */}
-      <div className="relative shrink-0">
-        <div className="w-10 h-10 rounded-xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary">
-          <Bell size={20} strokeWidth={2.5} className="animate-pulse" />
+      {/* Premium Image Header */}
+      {item.imagen_url && (
+        <div className="w-full h-[120px] relative overflow-hidden shrink-0">
+          <img 
+            src={api.getMediaUrl(item.imagen_url)} 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            alt="BCB Global"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent" />
+          
+          {/* Top Badge */}
+          <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-bcb-primary text-white text-[8px] font-black uppercase tracking-[0.2em] shadow-xl border border-white/20">
+            <Sparkles size={10} className="animate-pulse" />
+            Nuevo Comunicado
+          </div>
         </div>
-        <div className="absolute -top-1 -right-1">
-           <Sparkles size={10} className="text-amber-500 animate-bounce" />
-        </div>
-      </div>
+      )}
 
-      {/* Content */}
-      <div className="flex-1 min-w-0 space-y-1">
-        <h4 className="text-[13px] font-black text-slate-900 uppercase tracking-tight truncate">
-          {item.titulo || 'Comunicado Oficial'}
-        </h4>
-        <p className="text-[11px] font-bold text-slate-600 leading-relaxed line-clamp-3">
-          {item.mensaje}
-        </p>
-      </div>
-
-      {/* Close Button */}
+      {/* Close Button: Floating Minimalist */}
       <button 
         onClick={onRemove}
-        className="shrink-0 w-8 h-8 rounded-lg bg-slate-100/50 hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-all flex items-center justify-center"
+        className="absolute top-3 right-3 z-50 w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 text-slate-500 hover:text-bcb-primary transition-all flex items-center justify-center backdrop-blur-md border border-white/50"
       >
-        <X size={16} strokeWidth={3} />
+        <X size={14} strokeWidth={3} />
       </button>
 
-      {/* Progress Bar */}
-      <motion.div 
-        initial={{ width: "100%" }}
-        animate={{ width: "0%" }}
-        transition={{ duration: 8, ease: "linear" }}
-        className="absolute bottom-0 left-0 h-0.5 bg-bcb-primary/20"
-      />
+      <div className="p-6 space-y-4">
+        {/* Content Layout */}
+        <div className="flex gap-4 items-start">
+          {!item.imagen_url && (
+            <div className="shrink-0 w-12 h-12 rounded-2xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary border border-bcb-primary/5">
+              <Megaphone size={22} strokeWidth={2.5} className="animate-bounce-slow" />
+            </div>
+          )}
+          
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight leading-none !text-bcb-primary">
+              {item.titulo || 'BCB Global Institucional'}
+            </h4>
+            <p className="text-[11px] font-bold text-slate-600 leading-relaxed line-clamp-4">
+              {item.mensaje}
+            </p>
+          </div>
+        </div>
+
+        {/* Action Button: Premium Style */}
+        <div className="flex gap-2">
+          <button 
+            onClick={onRemove}
+            className="flex-1 h-11 rounded-xl bg-bcb-primary text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-bcb-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group/btn"
+          >
+            Entendido
+            <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
+
+      {/* Progress Bar: Luxury Shimmer */}
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100/50 overflow-hidden">
+        <motion.div 
+          initial={{ width: "100%" }}
+          animate={{ width: "0%" }}
+          transition={{ duration: 12, ease: "linear" }}
+          className="h-full bg-gradient-to-r from-bcb-primary via-indigo-400 to-bcb-primary shadow-[0_0_10px_rgba(30,27,75,0.5)]"
+        />
+      </div>
     </motion.div>
   );
 }
