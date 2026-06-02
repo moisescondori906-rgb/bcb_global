@@ -12,11 +12,11 @@ const config = {
   password: '14738941lp'
 };
 
-const LOCAL_DIST_PATH = 'C:/Users/Lenovo/Documents/SAV-main/frontend/dist';
+const LOCAL_DIST_PATH = 'C:/Users/Lenovo/Documents/bcb-main/frontend/dist';
 const REMOTE_DIST_PATH = '/var/www/bcb_global/frontend/dist';
-const LOCAL_BACKEND_PATH = 'C:/Users/Lenovo/Documents/SAV-main/backend/src';
+const LOCAL_BACKEND_PATH = 'C:/Users/Lenovo/Documents/bcb-main/backend/src';
 const REMOTE_BACKEND_PATH = '/var/www/bcb_global/backend/src';
-const LOCAL_DB_CONFIG = 'C:/Users/Lenovo/Documents/SAV-main/backend/src/config/db.js';
+const LOCAL_DB_CONFIG = 'C:/Users/Lenovo/Documents/bcb-main/backend/src/config/db.js';
 const REMOTE_DB_CONFIG = '/var/www/bcb_global/backend/src/config/db.js';
 
 console.log('🚀 Iniciando sincronización final con el servidor VPS...');
@@ -107,3 +107,4 @@ conn.on('ready', () => {
 }).on('error', (err) => {
   console.error('❌ Error de conexión SSH:', err.message);
 }).connect(config);
+

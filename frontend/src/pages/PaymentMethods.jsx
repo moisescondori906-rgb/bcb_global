@@ -106,12 +106,12 @@ export default function PaymentMethods() {
   if (success) {
     return (
       <Layout>
-        <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-sav-dark">
+        <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-bcb-dark">
           <div className="w-24 h-24 rounded-[2.5rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-8 border border-emerald-500/20 shadow-2xl">
             <CheckCircle2 size={48} />
           </div>
           <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">¡Pago Recibido!</h2>
-          <p className="text-sav-muted font-bold text-sm leading-relaxed mb-10 max-w-xs">
+          <p className="text-bcb-muted font-bold text-sm leading-relaxed mb-10 max-w-xs">
             Tu solicitud para <span className="text-white">{selectedLevel?.nombre}</span> está siendo verificada.
           </p>
           <Button onClick={() => navigate('/')} className="w-full max-w-xs h-14 uppercase tracking-widest">
@@ -149,7 +149,7 @@ export default function PaymentMethods() {
           {/* Paso 1: Seleccionar Método */}
           <section className="space-y-4">
             <div className="flex items-center gap-3 px-1">
-              <div className="w-8 h-8 rounded-xl bg-sav-primary/10 flex items-center justify-center text-sav-primary border border-sav-primary/20">
+              <div className="w-8 h-8 rounded-xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary border border-bcb-primary/20">
                 <CreditCard size={16} />
               </div>
               <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.3em]">1. Selecciona Método</h3>
@@ -164,13 +164,13 @@ export default function PaymentMethods() {
                     className={cn(
                       "w-full p-5 rounded-3xl border flex items-center gap-4 transition-all",
                       selectedMethod?.id === m.id 
-                        ? "bg-sav-primary border-sav-primary shadow-lg" 
-                        : "bg-white border-slate-200 hover:border-sav-primary/30 shadow-sm"
+                        ? "bg-bcb-primary border-bcb-primary shadow-lg" 
+                        : "bg-white border-slate-200 hover:border-bcb-primary/30 shadow-sm"
                     )}
                   >
                     <div className={cn(
                       "w-12 h-12 rounded-2xl flex items-center justify-center",
-                      selectedMethod?.id === m.id ? "bg-white/20 text-white" : "bg-slate-100 text-sav-primary"
+                      selectedMethod?.id === m.id ? "bg-white/20 text-white" : "bg-slate-100 text-bcb-primary"
                     )}>
                       {m.tipo === 'qr' ? <QrCode size={24} /> : m.tipo === 'transferencia' ? <Smartphone size={24} /> : <Banknote size={24} />}
                     </div>
@@ -185,8 +185,8 @@ export default function PaymentMethods() {
                   </button>
                 ))
               ) : (
-                <Card className="p-8 text-center border-sav-error/20 bg-sav-error/5">
-                  <Clock className="mx-auto text-sav-error mb-4 opacity-50" size={32} />
+                <Card className="p-8 text-center border-bcb-error/20 bg-bcb-error/5">
+                  <Clock className="mx-auto text-bcb-error mb-4 opacity-50" size={32} />
                   <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-2">No hay métodos disponibles</h4>
                   <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide">
                     En este momento no hay nodos de pago habilitados. Por favor, intenta más tarde dentro del horario de atención.
@@ -205,7 +205,7 @@ export default function PaymentMethods() {
                 className="space-y-6"
               >
                 <div className="flex items-center gap-3 px-1">
-                  <div className="w-8 h-8 rounded-xl bg-sav-accent/10 flex items-center justify-center text-sav-accent border border-sav-accent/20">
+                  <div className="w-8 h-8 rounded-xl bg-bcb-accent/10 flex items-center justify-center text-bcb-accent border border-bcb-accent/20">
                     <QrCode size={16} />
                   </div>
                   <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.3em]">2. Escanea y Sube Voucher</h3>
@@ -231,15 +231,15 @@ export default function PaymentMethods() {
                     disabled={isOptimizing}
                     className={cn(
                       "w-full h-40 rounded-[2.5rem] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 relative overflow-hidden",
-                      comprobante ? "border-sav-primary/50 bg-sav-primary/5" : "border-slate-200 bg-slate-50 hover:bg-slate-100"
+                      comprobante ? "border-bcb-primary/50 bg-bcb-primary/5" : "border-slate-200 bg-slate-50 hover:bg-slate-100"
                     )}
                   >
                     {isOptimizing ? (
-                      <Loader2 className="animate-spin text-sav-primary" size={32} />
+                      <Loader2 className="animate-spin text-bcb-primary" size={32} />
                     ) : comprobante ? (
                       <>
                         <img src={comprobante} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-20" />
-                        <CheckCircle2 size={32} className="text-sav-primary relative z-10" />
+                        <CheckCircle2 size={32} className="text-bcb-primary relative z-10" />
                         <span className="text-[9px] font-black uppercase text-slate-900 relative z-10">Imagen Cargada</span>
                       </>
                     ) : (
@@ -251,7 +251,7 @@ export default function PaymentMethods() {
                   </button>
 
                   {error && (
-                    <div className="flex items-center gap-2 p-4 rounded-2xl bg-sav-error/10 text-sav-error text-[10px] font-black uppercase">
+                    <div className="flex items-center gap-2 p-4 rounded-2xl bg-bcb-error/10 text-bcb-error text-[10px] font-black uppercase">
                       <AlertCircle size={16} /> {error}
                     </div>
                   )}
@@ -259,7 +259,7 @@ export default function PaymentMethods() {
                   <Button 
                     onClick={handleSubmit}
                     disabled={loading || !comprobante}
-                    className="w-full h-16 rounded-3xl uppercase tracking-[0.2em] text-[11px] font-black shadow-xl shadow-sav-primary/20"
+                    className="w-full h-16 rounded-3xl uppercase tracking-[0.2em] text-[11px] font-black shadow-xl shadow-bcb-primary/20"
                   >
                     {loading ? <Loader2 className="animate-spin" size={20} /> : 'Confirmar Recarga'}
                   </Button>
@@ -272,3 +272,4 @@ export default function PaymentMethods() {
     </Layout>
   );
 }
+

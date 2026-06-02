@@ -41,7 +41,7 @@ export default function AdminMetodosQrV2() {
   const [editingMetodo, setEditingMetodo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isBCB GLOBALing, setIsBCB GLOBALing] = useState(false);
   const [loadingId, setLoadingId] = useState(null);
   const fileRef = useRef(null);
 
@@ -102,7 +102,7 @@ export default function AdminMetodosQrV2() {
     if (!formData.nombre.trim()) return alert('Ingresa el titular');
     if (!formData.imagen) return alert('Sube un QR');
     
-    setIsSaving(true);
+    setIsBCB GLOBALing(true);
     try {
       await api.admin.crearMetodoQr({ 
         nombre_titular: formData.nombre, 
@@ -118,13 +118,13 @@ export default function AdminMetodosQrV2() {
     } catch (err) {
       alert(err.message);
     } finally {
-      setIsSaving(false);
+      setIsBCB GLOBALing(false);
     }
   };
 
   const handleUpdate = async () => {
      if (!editingMetodo) return;
-     setIsSaving(true);
+     setIsBCB GLOBALing(true);
      try {
        await api.admin.actualizarMetodoQr(editingMetodo.id, {
          nombre_titular: editingMetodo.nombre_titular,
@@ -141,7 +141,7 @@ export default function AdminMetodosQrV2() {
      } catch (err) {
        alert(err.message);
      } finally {
-       setIsSaving(false);
+       setIsBCB GLOBALing(false);
      }
    };
 
@@ -185,13 +185,13 @@ export default function AdminMetodosQrV2() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
         <div className="space-y-2">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-sav-primary to-rose-600 text-white shadow-xl shadow-sav-primary/20">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-bcb-primary to-rose-600 text-white shadow-xl shadow-bcb-primary/20">
               <QrCode size={24} />
             </div>
             <div>
               <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Nodos de Pago QR</h1>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                <ShieldCheck size={14} className="text-sav-primary" /> Gestión de puntos de recaudo BCB Global
+                <ShieldCheck size={14} className="text-bcb-primary" /> Gestión de puntos de recaudo BCB Global
               </p>
             </div>
           </div>
@@ -217,7 +217,7 @@ export default function AdminMetodosQrV2() {
           </div>
 
           <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 rounded-2xl bg-sav-primary/10 text-sav-primary border border-sav-primary/20">
+            <div className="p-3 rounded-2xl bg-bcb-primary/10 text-bcb-primary border border-bcb-primary/20">
               <Zap size={20} />
             </div>
             <h3 className="text-xl font-black text-white uppercase tracking-tighter italic">Nuevo Punto de Pago</h3>
@@ -227,7 +227,7 @@ export default function AdminMetodosQrV2() {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Operador Responsable (Opcional)</label>
               <div className="relative group">
-                <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-sav-primary transition-colors" size={18} />
+                <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-bcb-primary transition-colors" size={18} />
                 <select 
                   value={selectedAdminId}
                   onChange={(e) => setSelectedAdminId(e.target.value)}
@@ -284,11 +284,11 @@ export default function AdminMetodosQrV2() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => fileRef.current?.click()}
-                  disabled={isProcessing || isSaving}
+                  disabled={isProcessing || isBCB GLOBALing}
                   className={`h-40 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-all active:scale-95 shadow-inner ${
                     formData.imagen 
                       ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-500' 
-                      : 'border-white/5 bg-black/40 text-slate-600 hover:border-sav-primary/30 hover:bg-sav-primary/5'
+                      : 'border-white/5 bg-black/40 text-slate-600 hover:border-bcb-primary/30 hover:bg-bcb-primary/5'
                   }`}
                 >
                   {isProcessing ? <Loader2 size={32} className="animate-spin" /> : <Upload size={32} />}
@@ -307,10 +307,10 @@ export default function AdminMetodosQrV2() {
 
             <button 
               onClick={handleCreate}
-              disabled={isSaving || isProcessing}
+              disabled={isBCB GLOBALing || isProcessing}
               className="admin-button-primary w-full !h-14 !text-[11px] uppercase tracking-[0.2em] disabled:opacity-50"
             >
-              {isSaving ? 'Registrando Nodo...' : 'Registrar Punto de Cobro'}
+              {isBCB GLOBALing ? 'Registrando Nodo...' : 'Registrar Punto de Cobro'}
             </button>
           </div>
         </motion.div>
@@ -329,16 +329,16 @@ export default function AdminMetodosQrV2() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: index * 0.05 }}
-                className={`admin-card p-8 shadow-2xl relative overflow-hidden group transition-all duration-500 ${m.seleccionada ? 'border-sav-primary/40 bg-white/[0.03]' : 'border-white/5 hover:border-sav-primary/20'}`}
+                className={`admin-card p-8 shadow-2xl relative overflow-hidden group transition-all duration-500 ${m.seleccionada ? 'border-bcb-primary/40 bg-white/[0.03]' : 'border-white/5 hover:border-bcb-primary/20'}`}
               >
                 <div className="flex flex-col h-full justify-between gap-6 relative z-10">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-inner ${m.seleccionada ? 'bg-sav-primary/10 border-sav-primary/20 text-sav-primary' : 'bg-white/5 border-white/5 text-slate-500'}`}>
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-inner ${m.seleccionada ? 'bg-bcb-primary/10 border-bcb-primary/20 text-bcb-primary' : 'bg-white/5 border-white/5 text-slate-500'}`}>
                         <QrCode size={24} />
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={() => setEditingMetodo(m)} className="p-3 rounded-xl bg-sav-primary/10 text-sav-primary border border-sav-primary/20 hover:bg-sav-primary hover:text-white transition-all">
+                        <button onClick={() => setEditingMetodo(m)} className="p-3 rounded-xl bg-bcb-primary/10 text-bcb-primary border border-bcb-primary/20 hover:bg-bcb-primary hover:text-white transition-all">
                           <Edit2 size={16} />
                         </button>
                         <button onClick={() => handleDelete(m.id)} className="p-3 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all shadow-lg shadow-rose-500/5">
@@ -356,10 +356,10 @@ export default function AdminMetodosQrV2() {
                           </div>
                         )}
                       </div>
-                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Responsable: <span className="text-sav-primary">{admins.find(a => a.id === m.admin_id)?.nombre_usuario || admins.find(a => a.id === m.admin_id)?.nombre || 'Sistema / General'}</span></p>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Responsable: <span className="text-bcb-primary">{admins.find(a => a.id === m.admin_id)?.nombre_usuario || admins.find(a => a.id === m.admin_id)?.nombre || 'Sistema / General'}</span></p>
                       <div className="flex items-center gap-2 mt-2">
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-[9px] font-black text-slate-400 uppercase">
-                          <Clock size={12} className="text-sav-primary" />
+                          <Clock size={12} className="text-bcb-primary" />
                           {m.hora_inicio?.slice(0, 5) || '00:00'} - {m.hora_fin?.slice(0, 5) || '23:59'}
                         </div>
                       </div>
@@ -383,7 +383,7 @@ export default function AdminMetodosQrV2() {
                     <button 
                       disabled={m.seleccionada}
                       onClick={() => toggleSeleccionada(m.id, m.admin_id)}
-                      className={`flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${m.seleccionada ? 'bg-sav-primary text-white border border-sav-primary shadow-lg shadow-sav-primary/20' : 'bg-white/5 text-slate-500 border border-white/5 hover:bg-sav-primary/10 hover:text-sav-primary'}`}
+                      className={`flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${m.seleccionada ? 'bg-bcb-primary text-white border border-bcb-primary shadow-lg shadow-bcb-primary/20' : 'bg-white/5 text-slate-500 border border-white/5 hover:bg-bcb-primary/10 hover:text-bcb-primary'}`}
                     >
                       {m.seleccionada ? <><Check size={14} /> Default</> : 'Set Default'}
                     </button>
@@ -413,7 +413,7 @@ export default function AdminMetodosQrV2() {
               </button>
 
               <div className="flex items-center gap-4 mb-10">
-                <div className="p-3.5 rounded-2xl bg-sav-primary/10 text-sav-primary border border-sav-primary/20">
+                <div className="p-3.5 rounded-2xl bg-bcb-primary/10 text-bcb-primary border border-bcb-primary/20">
                   <Edit2 size={24} />
                 </div>
                 <div>
@@ -436,7 +436,7 @@ export default function AdminMetodosQrV2() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Operador Responsable (Opcional)</label>
                   <div className="relative group">
-                    <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-sav-primary transition-colors" size={18} />
+                    <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-bcb-primary transition-colors" size={18} />
                     <select 
                       value={editingMetodo.admin_id || ''}
                       onChange={(e) => setEditingMetodo(prev => ({ ...prev, admin_id: e.target.value }))}
@@ -494,7 +494,7 @@ export default function AdminMetodosQrV2() {
                   <div className="grid grid-cols-2 gap-4">
                     <button
                       onClick={() => fileRef.current?.click()}
-                      className="h-32 rounded-2xl border-2 border-dashed border-white/5 bg-black/40 text-slate-600 hover:border-sav-primary/30 hover:bg-sav-primary/5 transition-all flex flex-col items-center justify-center gap-2"
+                      className="h-32 rounded-2xl border-2 border-dashed border-white/5 bg-black/40 text-slate-600 hover:border-bcb-primary/30 hover:bg-bcb-primary/5 transition-all flex flex-col items-center justify-center gap-2"
                     >
                       <Upload size={24} />
                       <span className="text-[8px] font-black uppercase tracking-widest">Cambiar QR</span>
@@ -515,10 +515,10 @@ export default function AdminMetodosQrV2() {
                   </button>
                   <button 
                     onClick={handleUpdate}
-                    disabled={isSaving}
+                    disabled={isBCB GLOBALing}
                     className="admin-button-primary flex-2 !h-14 !text-[11px] uppercase tracking-[0.2em] disabled:opacity-50"
                   >
-                    {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                    {isBCB GLOBALing ? 'Guardando...' : 'Guardar Cambios'}
                   </button>
                 </div>
               </div>
@@ -529,3 +529,5 @@ export default function AdminMetodosQrV2() {
     </div>
   );
 }
+
+

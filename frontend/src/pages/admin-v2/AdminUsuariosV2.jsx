@@ -724,7 +724,7 @@ export default function AdminUsuariosV2() {
               exit={{ scale: 0.9, y: 30 }}
               className="bg-admin-card border border-white/20 p-12 rounded-[50px] max-w-2xl w-full shadow-2xl relative overflow-hidden"
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sav-primary to-rose-600 shadow-lg shadow-sav-primary/50" />
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-bcb-primary to-rose-600 shadow-lg shadow-bcb-primary/50" />
               
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
@@ -806,7 +806,7 @@ export default function AdminUsuariosV2() {
               exit={{ scale: 0.9, y: 30 }}
               className="bg-[#161926] border border-white/10 p-12 rounded-[50px] max-w-lg w-full shadow-2xl relative overflow-hidden"
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sav-primary to-indigo-600 shadow-lg shadow-sav-primary/50" />
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-bcb-primary to-indigo-600 shadow-lg shadow-bcb-primary/50" />
               
               <div className="flex items-center gap-5 mb-10">
                 <div className="p-3.5 rounded-2xl bg-admin-accent/10 text-admin-accent border border-admin-accent/20">
@@ -850,7 +850,7 @@ export default function AdminUsuariosV2() {
                   <button 
                     type="submit"
                     disabled={isUpdatingLevel}
-                    className="flex-1 py-4 rounded-2xl bg-sav-primary text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-sav-primary/20 flex items-center justify-center gap-2"
+                    className="flex-1 py-4 rounded-2xl bg-bcb-primary text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-bcb-primary/20 flex items-center justify-center gap-2"
                   >
                     {isUpdatingLevel ? <RefreshCw className="animate-spin" size={14} /> : <CheckCircle2 size={14} />}
                     Actualizar Nivel
@@ -864,3 +864,4 @@ export default function AdminUsuariosV2() {
     </div>
   );
 }
+

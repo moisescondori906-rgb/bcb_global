@@ -91,8 +91,8 @@ export default function Movimientos() {
     return (
       <Layout>
         <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] space-y-6">
-          <div className="w-16 h-16 border-4 border-sav-primary/10 border-t-sav-primary rounded-full animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-sav-muted animate-pulse">Cargando Historial</p>
+          <div className="w-16 h-16 border-4 border-bcb-primary/10 border-t-bcb-primary rounded-full animate-spin" />
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-bcb-muted animate-pulse">Cargando Historial</p>
         </div>
       </Layout>
     );
@@ -106,7 +106,7 @@ export default function Movimientos() {
           <Badge variant="info">AUDITORÍA</Badge>
         </div>
 
-        <div className="flex bg-sav-surface p-1.5 rounded-2xl border border-sav-border shadow-inner">
+        <div className="flex bg-bcb-surface p-1.5 rounded-2xl border border-bcb-border shadow-inner">
           {[
             { id: 'todo', label: 'Todos', icon: History },
             { id: 'recargas', label: 'Recargas', icon: ArrowUpCircle },
@@ -118,8 +118,8 @@ export default function Movimientos() {
               className={cn(
                 "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
                 tab === t.id 
-                  ? "bg-sav-primary text-white shadow-lg shadow-sav-primary/20 scale-[1.02]" 
-                  : "text-sav-muted hover:text-white"
+                  ? "bg-bcb-primary text-white shadow-lg shadow-bcb-primary/20 scale-[1.02]" 
+                  : "text-bcb-muted hover:text-white"
               )}
             >
               <t.icon size={14} />
@@ -137,12 +137,12 @@ export default function Movimientos() {
               <Card 
                 key={item.id} 
                 variant="flat" 
-                className="p-5 flex items-center gap-4 animate-in group border-sav-primary/5"
+                className="p-5 flex items-center gap-4 animate-in group border-bcb-primary/5"
                 delay={i * 0.03}
               >
                 <div className={cn(
                   "w-12 h-12 rounded-2xl flex items-center justify-center border transition-transform group-hover:scale-105",
-                  isRecarga ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-sav-accent/10 border-sav-accent/20 text-sav-accent"
+                  isRecarga ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-bcb-accent/10 border-bcb-accent/20 text-bcb-accent"
                 )}>
                   {isRecarga ? <ArrowUpCircle size={24} /> : <ArrowDownCircle size={24} />}
                 </div>
@@ -153,7 +153,7 @@ export default function Movimientos() {
                       <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate leading-none">
                         {isRecarga ? 'Depósito Bancario' : 'Retiro a Cuenta'}
                       </h4>
-                      <p className="text-[8px] text-sav-muted font-mono tracking-widest mt-1">
+                      <p className="text-[8px] text-bcb-muted font-mono tracking-widest mt-1">
                         ID: {item.id?.slice(0, 12).toUpperCase()}
                       </p>
                     </div>
@@ -164,13 +164,13 @@ export default function Movimientos() {
                       )}>
                         {isRecarga ? '+' : '-'}{Number(item.monto).toLocaleString()}
                       </p>
-                      <span className="text-[8px] font-black text-sav-muted uppercase tracking-widest">Bs</span>
+                      <span className="text-[8px] font-black text-bcb-muted uppercase tracking-widest">Bs</span>
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center pt-3 border-t border-sav-border">
+                  <div className="flex justify-between items-center pt-3 border-t border-bcb-border">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 text-[8px] font-bold text-sav-muted uppercase tracking-widest">
+                      <div className="flex items-center gap-1 text-[8px] font-bold text-bcb-muted uppercase tracking-widest">
                         <Clock size={10} />
                         {formatDate(item.created_at)}
                       </div>
@@ -193,3 +193,4 @@ export default function Movimientos() {
     </Layout>
   );
 }
+

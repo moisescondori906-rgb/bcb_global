@@ -13,7 +13,7 @@ const toastStyles = {
   success: 'bg-zinc-950/80 backdrop-blur-2xl text-emerald-400 border-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.15)]',
   error: 'bg-zinc-950/80 backdrop-blur-2xl text-rose-400 border-rose-500/20 shadow-[0_0_40px_rgba(244,63,94,0.15)]',
   warning: 'bg-zinc-950/80 backdrop-blur-2xl text-amber-400 border-amber-500/20 shadow-[0_0_40px_rgba(245,158,11,0.15)]',
-  info: 'bg-zinc-950/80 backdrop-blur-2xl text-sav-accent border-sav-accent/20 shadow-[0_0_40px_rgba(59,130,246,0.15)]',
+  info: 'bg-zinc-950/80 backdrop-blur-2xl text-bcb-accent border-bcb-accent/20 shadow-[0_0_40px_rgba(59,130,246,0.15)]',
 };
 
 export function ToastProvider({ children }) {
@@ -54,7 +54,7 @@ export function ToastProvider({ children }) {
                 toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20' :
                 toast.type === 'error' ? 'bg-rose-500/10 border-rose-500/20' :
                 toast.type === 'warning' ? 'bg-amber-500/10 border-amber-500/20' :
-                'bg-sav-accent/10 border-sav-accent/20'
+                'bg-bcb-accent/10 border-bcb-accent/20'
               )}>
                 <Icon size={20} strokeWidth={2.5} />
               </div>
@@ -122,3 +122,4 @@ export function ToastContainer({ toasts, onRemove }) {
     </div>
   );
 }
+

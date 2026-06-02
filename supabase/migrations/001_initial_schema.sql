@@ -1,4 +1,4 @@
--- SAV - Schema inicial de base de datos
+-- BCB GLOBAL - Schema inicial de base de datos
 -- Ejecutar en Supabase SQL Editor
 
 -- Extensiones
@@ -232,3 +232,4 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO anon, authenticated, service_role;
+

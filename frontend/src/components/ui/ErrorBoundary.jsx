@@ -35,14 +35,14 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-sav-dark flex items-center justify-center p-6">
+        <div className="min-h-screen bg-bcb-dark flex items-center justify-center p-6">
           <Card variant="premium" className="max-w-md w-full p-8 text-center space-y-6">
-            <div className="w-20 h-20 bg-sav-error/10 text-sav-error rounded-3xl flex items-center justify-center mx-auto animate-pulse">
+            <div className="w-20 h-20 bg-bcb-error/10 text-bcb-error rounded-3xl flex items-center justify-center mx-auto animate-pulse">
               <AlertCircle size={48} />
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-black uppercase tracking-tight text-white">Algo salió mal</h2>
-              <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest leading-relaxed">
+              <p className="text-[10px] font-bold text-bcb-muted uppercase tracking-widest leading-relaxed">
                 La aplicación ha experimentado un error inesperado de renderizado.
               </p>
             </div>
@@ -68,3 +68,4 @@ class ErrorBoundary extends React.Component {
 }
 
 export default ErrorBoundary;
+

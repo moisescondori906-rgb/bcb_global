@@ -1,4 +1,4 @@
--- SAV - Sistema de Cuestionario y Castigos
+-- BCB GLOBAL - Sistema de Cuestionario y Castigos
 -- Ejecutar en Supabase SQL Editor
 
 -- Tabla para registrar quién respondió el cuestionario hoy
@@ -15,3 +15,4 @@ ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS castigado_hasta DATE;
 
 -- Comentario explicativo
 COMMENT ON COLUMN usuarios.castigado_hasta IS 'Fecha hasta la cual el usuario tiene bloqueadas tareas y comisiones por no responder el cuestionario';
+

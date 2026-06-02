@@ -34,7 +34,7 @@ export function ConfirmModal({ isOpen, title, message, onConfirm, onCancel, conf
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className="relative z-10 max-w-md w-full bg-sav-card border border-white/10 rounded-m3-lg p-8 shadow-m3-3 overflow-hidden"
+            className="relative z-10 max-w-md w-full bg-bcb-card border border-white/10 rounded-m3-lg p-8 shadow-m3-3 overflow-hidden"
           >
             <div className={`absolute top-0 left-0 w-full h-1 ${variant === 'danger' ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-gradient-to-r from-amber-400 to-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.3)]'}`} />
             
@@ -83,3 +83,4 @@ export function ConfirmModal({ isOpen, title, message, onConfirm, onCancel, conf
     </AnimatePresence>
   );
 }
+

@@ -5,7 +5,7 @@ import {
   Plus, 
   Trash2, 
   Edit3, 
-  Save, 
+  BCB GLOBALe, 
   X, 
   Clock, 
   Bell, 
@@ -158,13 +158,13 @@ export default function AdminAdminsV2() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
         <div className="space-y-2">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-sav-primary to-indigo-600 text-white shadow-xl shadow-sav-primary/20">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-bcb-primary to-indigo-600 text-white shadow-xl shadow-bcb-primary/20">
               <ShieldCheck size={24} />
             </div>
             <div>
               <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Control de Staff</h1>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                <Shield size={14} className="text-sav-primary" /> Gestión de operadores y turnos institucionales BCB
+                <Shield size={14} className="text-bcb-primary" /> Gestión de operadores y turnos institucionales BCB
               </p>
             </div>
           </div>
@@ -248,7 +248,7 @@ export default function AdminAdminsV2() {
                             key={d.value} 
                             type="button" 
                             onClick={() => toggleDia(d.value)}
-                            className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${isSelected ? 'bg-sav-primary text-white border-sav-primary shadow-lg shadow-sav-primary/20' : 'bg-white/5 text-slate-600 border-white/5 hover:border-white/10'}`}
+                            className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${isSelected ? 'bg-bcb-primary text-white border-bcb-primary shadow-lg shadow-bcb-primary/20' : 'bg-white/5 text-slate-600 border-white/5 hover:border-white/10'}`}
                           >
                             {d.label}
                           </button>
@@ -285,7 +285,7 @@ export default function AdminAdminsV2() {
 
               <div className="flex gap-4 border-t border-white/5 pt-8">
                  <button type="submit" className="admin-button-primary flex-1 !h-14 !text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3">
-                   <Save size={18} /> {editingId ? 'Actualizar Nodo de Staff' : 'Desplegar Nuevo Operador'}
+                   <BCB GLOBALe size={18} /> {editingId ? 'Actualizar Nodo de Staff' : 'Desplegar Nuevo Operador'}
                  </button>
               </div>
             </form>
@@ -307,7 +307,7 @@ export default function AdminAdminsV2() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ delay: index * 0.05 }}
-              className="admin-card p-8 shadow-2xl relative overflow-hidden group border-white/5 hover:border-sav-primary/40 transition-all duration-500"
+              className="admin-card p-8 shadow-2xl relative overflow-hidden group border-white/5 hover:border-bcb-primary/40 transition-all duration-500"
             >
               <div className="absolute top-0 right-0 p-8 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
                 <Shield size={120} />
@@ -316,7 +316,7 @@ export default function AdminAdminsV2() {
               <div className="space-y-6 relative z-10">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center font-black text-sav-primary text-xl border border-white/5 shadow-inner">
+                    <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center font-black text-bcb-primary text-xl border border-white/5 shadow-inner">
                       {admin.nombre?.charAt(0).toUpperCase() || '?'}
                     </div>
                     <div className="min-w-0">
@@ -340,7 +340,7 @@ export default function AdminAdminsV2() {
                 <div className="bg-black/40 rounded-2xl p-5 border border-white/5 space-y-4 shadow-inner group-hover:bg-black/60 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Clock size={14} className="text-sav-primary" />
+                      <Clock size={14} className="text-bcb-primary" />
                       <p className="text-[10px] font-black text-white uppercase tracking-widest italic">{admin.hora_inicio_turno?.substring(0, 5) || '00:00'} - {admin.hora_fin_turno?.substring(0, 5) || '00:00'}</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -371,3 +371,5 @@ export default function AdminAdminsV2() {
     </div>
   );
 }
+
+

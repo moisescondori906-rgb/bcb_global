@@ -2,7 +2,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(self.skipWaiting());
 });
 
-const CACHE_NAME = 'sav-cache-v4.1.0'; // Incrementar versión para forzar actualización de caché
+const CACHE_NAME = 'bcb-cache-v7.0.0'; // BCB GLOBAL - Nueva marca y caché
 
 
 self.addEventListener('install', (event) => {

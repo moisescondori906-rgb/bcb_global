@@ -1,16 +1,18 @@
 @import "tailwindcss";
 
    @theme {
-  --color-sav-primary: #1e1b4b; /* Indigo 950 - El azul que tenían */
-  --color-sav-dark: #ffffff;    
-  --color-sav-card: #ffffff;    
-  --color-sav-surface: #f8fafc; 
-  --color-sav-accent: #312e81;  /* Otro tono de azul para acentos */
-  --color-sav-accent-hot: #4338ca; 
-  --color-sav-muted: #000000;   /* Negro puro para texto secundario */
-  --color-sav-success: #059669; 
-  --color-sav-error: #dc2626;   
-  --color-sav-border: #e2e8f0;  
+  --color-bcb-primary: #1e1b4b; /* Indigo 950 - El azul que tenían */
+  --color-bcb-dark: #ffffff;    
+  --color-bcb-card: #ffffff;    
+  --color-bcb-surface: #f8fafc; 
+  --color-bcb-accent: #312e81;  /* Otro tono de azul para acentos */
+  --color-bcb-accent-hot: #4338ca; 
+  --color-bcb-muted: #000000;   /* Negro puro para texto secundario */
+  --color-bcb-success: #059669; 
+  --color-bcb-error: #dc2626;   
+  --color-bcb-border: #e2e8f0;  
+  --color-bcb-text-main: #0f172a;
+  --color-bcb-text-dim: #64748b;
 
   /* Admin Theme - Premium Dark */
   --color-admin-bg: #030303;
@@ -77,15 +79,15 @@
   .text-white span,
   .text-white h1,
   .text-white h2,
-  button.bg-sav-primary,
-  button.bg-sav-primary span,
-  button.bg-sav-primary p,
+  button.bg-bcb-primary,
+  button.bg-bcb-primary span,
+  button.bg-bcb-primary p,
   .bg-indigo-900,
   .bg-indigo-900 span,
   .bg-indigo-950,
   .bg-indigo-950 span,
-  .bg-sav-primary span,
-  .bg-sav-primary p,
+  .bg-bcb-primary span,
+  .bg-bcb-primary p,
   .bg-black span,
   .bg-black p {
     color: white !important;
@@ -293,9 +295,9 @@
       @apply !font-black;
     }
 
-    .bg-sav-primary .text-white\/70, 
-    .bg-sav-primary .text-white\/60, 
-    .bg-sav-primary .text-white\/50 {
+    .bg-bcb-primary .text-white\/70, 
+    .bg-bcb-primary .text-white\/60, 
+    .bg-bcb-primary .text-white\/50 {
       @apply !text-white; 
     }
     
@@ -458,11 +460,11 @@
     margin: 0 auto;
     width: 100%;
     min-height: 100vh;
-    background: var(--color-sav-dark);
+    background: var(--color-bcb-dark);
   }
 
   input, select, textarea {
-    @apply h-14 w-full px-5 rounded-2xl bg-white border-2 border-slate-300 text-slate-900 text-base font-bold focus:border-sav-primary focus:ring-4 focus:ring-sav-primary/10 transition-all outline-none placeholder:text-slate-400 shadow-sm;
+    @apply h-14 w-full px-5 rounded-2xl bg-white border-2 border-slate-300 text-slate-900 text-base font-bold focus:border-bcb-primary focus:ring-4 focus:ring-bcb-primary/10 transition-all outline-none placeholder:text-slate-400 shadow-sm;
   }
 
   /* Estilos específicos para el select dentro de PhoneInputWithCountry */
@@ -496,7 +498,7 @@
 
 @layer components {
   .app-container {
-    @apply min-h-screen min-h-[100dvh] w-full flex flex-col relative bg-sav-dark text-slate-900;
+    @apply min-h-screen min-h-[100dvh] w-full flex flex-col relative bg-bcb-dark text-slate-900;
     padding-bottom: calc(85px + env(safe-area-inset-bottom));
   }
 
@@ -505,7 +507,7 @@
   }
 
   .btn-primary {
-    @apply h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-sav-primary text-white font-black text-sm transition-all shadow-lg shadow-sav-primary/30 hover:brightness-110 active:translate-y-0.5;
+    @apply h-14 w-full flex items-center justify-center gap-2 rounded-2xl bg-bcb-primary text-white font-black text-sm transition-all shadow-lg shadow-bcb-primary/30 hover:brightness-110 active:translate-y-0.5;
   }
 
   .btn-secondary {
@@ -523,20 +525,20 @@
   }
 
   .nav-item-active {
-    @apply text-sav-primary;
+    @apply text-bcb-primary;
   }
 
   /* Premium Components */
-  .sav-card {
+  .bcb-card {
     @apply bg-white border-2 border-slate-100 rounded-[2.5rem] p-4 sm:p-6 shadow-xl shadow-slate-300/40;
   }
 
-  .sav-aurora {
+  .bcb-aurora {
     @apply relative overflow-hidden;
   }
 
-  .sav-input {
-    @apply h-14 w-full px-5 rounded-2xl bg-slate-50 border border-sav-border text-slate-900 text-base focus:border-sav-primary/50 focus:ring-4 focus:ring-sav-primary/10 transition-all outline-none placeholder:text-sav-muted;
+  .bcb-input {
+    @apply h-14 w-full px-5 rounded-2xl bg-slate-50 border border-bcb-border text-slate-900 text-base focus:border-bcb-primary/50 focus:ring-4 focus:ring-bcb-primary/10 transition-all outline-none placeholder:text-bcb-muted;
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -587,3 +589,4 @@
 .animate-pulse-slow {
   animation: pulse-slow 2s infinite ease-in-out;
 }
+

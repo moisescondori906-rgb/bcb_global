@@ -28,16 +28,16 @@ export default function Header({ title, rightAction, backTo, transparent = false
         <button
           type="button"
           onClick={handleBack}
-          className="group flex items-center justify-center w-11 h-11 rounded-2xl bg-sav-surface border border-black/[0.03] text-sav-text-main active:scale-90 transition-all hover:bg-white hover:shadow-m3-1"
+          className="group flex items-center justify-center w-11 h-11 rounded-2xl bg-bcb-surface border border-black/[0.03] text-bcb-text-main active:scale-90 transition-all hover:bg-white hover:shadow-m3-1"
         >
           <ChevronLeft size={22} className="group-hover:-translate-x-0.5 transition-transform" strokeWidth={2.5} />
         </button>
         
         <div className="flex flex-col min-w-0">
-          <h1 className="font-extrabold text-sav-text-main text-[15px] sm:text-[16px] uppercase tracking-[0.1em] truncate">
+          <h1 className="font-extrabold text-bcb-text-main text-[15px] sm:text-[16px] uppercase tracking-[0.1em] truncate">
             {title}
           </h1>
-          <div className="h-0.5 w-6 bg-sav-primary rounded-full mt-0.5" />
+          <div className="h-0.5 w-6 bg-bcb-primary rounded-full mt-0.5" />
         </div>
       </div>
       
@@ -49,3 +49,5 @@ export default function Header({ title, rightAction, backTo, transparent = false
     </header>
   );
 }
+
+

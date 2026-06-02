@@ -58,13 +58,13 @@ export default function AdminDispositivosV2() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
         <div className="space-y-2">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-sav-primary to-rose-600 text-white shadow-xl shadow-sav-primary/20">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-bcb-primary to-rose-600 text-white shadow-xl shadow-bcb-primary/20">
               <Lock size={24} />
             </div>
             <div>
               <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Seguridad de Acceso</h1>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                <ShieldCheck size={14} className="text-sav-primary" /> Control de dispositivos BCB Global
+                <ShieldCheck size={14} className="text-bcb-primary" /> Control de dispositivos BCB Global
               </p>
             </div>
           </div>
@@ -72,7 +72,7 @@ export default function AdminDispositivosV2() {
 
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative group flex-1 min-w-[200px] sm:min-w-[300px]">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-sav-primary transition-colors" />
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-bcb-primary transition-colors" />
             <input 
               type="text" 
               placeholder="Buscar por usuario, teléfono o ID..." 
@@ -105,12 +105,12 @@ export default function AdminDispositivosV2() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: index * 0.05 }}
-                className="admin-card p-6 flex flex-col justify-between group border-white/5 hover:border-sav-primary/40 transition-all duration-500 shadow-xl"
+                className="admin-card p-6 flex flex-col justify-between group border-white/5 hover:border-bcb-primary/40 transition-all duration-500 shadow-xl"
               >
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-black text-sav-primary border border-white/5 shadow-inner">
+                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-black text-bcb-primary border border-white/5 shadow-inner">
                         <Smartphone size={20} />
                       </div>
                       <div className="min-w-0">
@@ -127,7 +127,7 @@ export default function AdminDispositivosV2() {
                     </div>
                     <div>
                       <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Device ID</p>
-                      <p className="text-[9px] font-bold text-sav-primary tracking-widest truncate">{r.device_id}</p>
+                      <p className="text-[9px] font-bold text-bcb-primary tracking-widest truncate">{r.device_id}</p>
                     </div>
                     <div className="flex items-center gap-2 pt-2 border-t border-white/5 opacity-60">
                       <Clock size={12} className="text-slate-500" />
@@ -139,7 +139,7 @@ export default function AdminDispositivosV2() {
                 <div className="grid grid-cols-2 gap-3 mt-6">
                   <button 
                     onClick={() => handleProcess(r.id, 'aprobado')}
-                    className="flex items-center justify-center gap-2 py-3.5 rounded-xl bg-sav-primary text-white text-[9px] font-black uppercase tracking-widest shadow-lg shadow-sav-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                    className="flex items-center justify-center gap-2 py-3.5 rounded-xl bg-bcb-primary text-white text-[9px] font-black uppercase tracking-widest shadow-lg shadow-bcb-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
                   >
                     <CheckCircle2 size={14} /> Aprobar
                   </button>
@@ -165,3 +165,4 @@ export default function AdminDispositivosV2() {
     </div>
   );
 }
+

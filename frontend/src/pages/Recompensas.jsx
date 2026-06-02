@@ -417,7 +417,7 @@ export default function Recompensas() {
                   w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] transition-all duration-300
                   ${spinning || premios.length === 0 || (Number(user?.tickets_ruleta) || 0) < 1
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-sav-primary text-white shadow-[0_20px_40px_rgba(220,38,38,0.2)] hover:scale-[1.02] active:scale-[0.98]'
+                    : 'bg-bcb-primary text-white shadow-[0_20px_40px_rgba(220,38,38,0.2)] hover:scale-[1.02] active:scale-[0.98]'
                   }
                 `}
               >
@@ -515,7 +515,7 @@ export default function Recompensas() {
                     {retoAmigosHabilitado ? (
                       <button 
                         onClick={spinWheel}
-                        className="flex items-center gap-2 bg-sav-dark text-gray-900 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-colors group/btn"
+                        className="flex items-center gap-2 bg-bcb-dark text-gray-900 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-colors group/btn"
                       >
                         Girar Ahora
                         <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
@@ -554,7 +554,7 @@ export default function Recompensas() {
                     </div>
                   </div>
                 </div>
-                <div className="px-3 py-1.5 rounded-xl bg-sav-dark text-gray-900 border border-sav-border text-[8px] font-black uppercase tracking-[0.2em] shadow-lg">
+                <div className="px-3 py-1.5 rounded-xl bg-bcb-dark text-gray-900 border border-bcb-border text-[8px] font-black uppercase tracking-[0.2em] shadow-lg">
                   LIVE FEED
                 </div>
               </div>
@@ -669,3 +669,4 @@ export default function Recompensas() {
     </Layout>
   );
 }
+

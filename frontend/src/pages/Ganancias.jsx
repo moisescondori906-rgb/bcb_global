@@ -78,8 +78,8 @@ export default function Ganancias() {
     return (
       <Layout>
         <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] space-y-6">
-          <div className="w-16 h-16 border-4 border-sav-surface border-t-sav-primary rounded-full animate-spin" />
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-sav-muted animate-pulse">Sincronizando Billetera</p>
+          <div className="w-16 h-16 border-4 border-bcb-surface border-t-bcb-primary rounded-full animate-spin" />
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-bcb-muted animate-pulse">Sincronizando Billetera</p>
         </div>
       </Layout>
     );
@@ -94,8 +94,8 @@ export default function Ganancias() {
               <AlertCircle size={48} strokeWidth={1.5} />
             </div>
             <div className="space-y-4">
-              <h2 className="text-3xl font-extrabold text-sav-text-main uppercase tracking-tight">Acceso Restringido</h2>
-              <p className="text-sm text-sav-text-dim font-medium leading-relaxed max-w-xs mx-auto">
+              <h2 className="text-3xl font-extrabold text-bcb-text-main uppercase tracking-tight">Acceso Restringido</h2>
+              <p className="text-sm text-bcb-text-dim font-medium leading-relaxed max-w-xs mx-auto">
                 Tu sistema de ganancias ha sido <span className="text-rose-600 font-extrabold uppercase">restringido por hoy</span> debido a normativas de seguridad institucional.
               </p>
             </div>
@@ -108,7 +108,7 @@ export default function Ganancias() {
 
   return (
     <Layout>
-      <div className="bg-sav-bg min-h-screen pb-32">
+      <div className="bg-bcb-bg min-h-screen pb-32">
         <Header title="Mi Billetera Global" />
         
         <main className="px-6 py-8 space-y-10 max-w-lg mx-auto animate-in">
@@ -117,28 +117,28 @@ export default function Ganancias() {
             <Card variant="premium" className="p-8 space-y-10">
               <div className="flex justify-between items-start">
                 <div className="space-y-1.5">
-                  <p className="text-[11px] font-extrabold text-sav-muted uppercase tracking-[0.2em]">Capital Acumulado</p>
+                  <p className="text-[11px] font-extrabold text-bcb-muted uppercase tracking-[0.2em]">Capital Acumulado</p>
                   <div className="flex items-baseline gap-2">
-                    <h2 className="text-5xl font-black text-sav-text-main tracking-tighter">
+                    <h2 className="text-5xl font-black text-bcb-text-main tracking-tighter">
                       {(data?.summary?.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </h2>
-                    <span className="text-lg font-black text-sav-primary uppercase tracking-widest">Bs</span>
+                    <span className="text-lg font-black text-bcb-primary uppercase tracking-widest">Bs</span>
                   </div>
                 </div>
-                <div className="w-14 h-14 rounded-2xl bg-sav-primary/10 flex items-center justify-center text-sav-primary shadow-sm border border-sav-primary/20">
+                <div className="w-14 h-14 rounded-2xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary shadow-sm border border-bcb-primary/20">
                    <Wallet size={28} strokeWidth={1.5} />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-8 pt-8 border-t border-black/[0.03]">
                 <div className="space-y-1.5">
-                  <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">Misiones (Hoy)</p>
-                  <p className="text-2xl font-black text-sav-text-main tracking-tight">
+                  <p className="text-[10px] font-bold text-bcb-muted uppercase tracking-widest">Misiones (Hoy)</p>
+                  <p className="text-2xl font-black text-bcb-text-main tracking-tight">
                     {(data?.summary?.tareas_today || data?.summary?.tareas_hoy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div className="space-y-1.5 text-right">
-                  <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest">Red (Hoy)</p>
+                  <p className="text-[10px] font-bold text-bcb-muted uppercase tracking-widest">Red (Hoy)</p>
                   <p className="text-2xl font-black text-emerald-600 tracking-tight">
                     {(data?.summary?.comisiones_today || data?.summary?.comisiones_hoy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
@@ -150,8 +150,8 @@ export default function Ganancias() {
           {/* Filters Horizontal Scroll */}
           <section className="space-y-5">
             <div className="flex items-center gap-2 px-1">
-              <div className="w-1.5 h-4 bg-sav-primary rounded-full" />
-              <h3 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em]">Filtrar Historial</h3>
+              <div className="w-1.5 h-4 bg-bcb-primary rounded-full" />
+              <h3 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-[0.15em]">Filtrar Historial</h3>
             </div>
             <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
               {categories.map(cat => {
@@ -163,8 +163,8 @@ export default function Ganancias() {
                     className={cn(
                       "flex items-center gap-2.5 px-6 py-3.5 rounded-2xl whitespace-nowrap text-[11px] font-black uppercase tracking-widest transition-all duration-500 shadow-sm",
                       isActive 
-                        ? "bg-sav-primary text-white shadow-accent-glow -translate-y-1" 
-                        : "bg-white text-sav-muted border border-black/[0.03] hover:bg-sav-surface"
+                        ? "bg-bcb-primary text-white shadow-accent-glow -translate-y-1" 
+                        : "bg-white text-bcb-muted border border-black/[0.03] hover:bg-bcb-surface"
                     )}
                   >
                     <cat.icon size={16} strokeWidth={isActive ? 3 : 2} />
@@ -178,8 +178,8 @@ export default function Ganancias() {
           {/* Activity List */}
           <section className="space-y-6 pb-12">
             <div className="flex items-center justify-between px-1">
-              <h2 className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-[0.15em] flex items-center gap-2">
-                <History size={18} className="text-sav-primary" strokeWidth={2.5} /> Actividad Reciente
+              <h2 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-[0.15em] flex items-center gap-2">
+                <History size={18} className="text-bcb-primary" strokeWidth={2.5} /> Actividad Reciente
               </h2>
               <Badge variant="info">{historyList.length} EVENTOS</Badge>
             </div>
@@ -206,12 +206,12 @@ export default function Ganancias() {
                           {isPositive ? <ArrowUpCircle size={24} strokeWidth={2} /> : <ArrowDownCircle size={24} strokeWidth={2} />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-[12px] font-extrabold text-sav-text-main uppercase tracking-tight truncate group-hover:text-sav-primary transition-colors">
+                          <h4 className="text-[12px] font-extrabold text-bcb-text-main uppercase tracking-tight truncate group-hover:text-bcb-primary transition-colors">
                             {item.descripcion || item.tipo_movimiento?.replace(/_/g, ' ')}
                           </h4>
                           <div className="flex items-center gap-1.5 mt-1 opacity-60">
                             <Clock size={10} strokeWidth={3} />
-                            <p className="text-[9px] font-bold text-sav-muted uppercase tracking-widest truncate">
+                            <p className="text-[9px] font-bold text-bcb-muted uppercase tracking-widest truncate">
                               {new Date(item.created_at).toLocaleString()}
                             </p>
                           </div>
@@ -219,11 +219,11 @@ export default function Ganancias() {
                         <div className="text-right shrink-0">
                           <p className={cn(
                             "text-lg font-black tracking-tighter",
-                            isPositive ? "text-emerald-600" : "text-sav-text-main"
+                            isPositive ? "text-emerald-600" : "text-bcb-text-main"
                           )}>
                             {isPositive ? '+' : '-'}{Math.abs(Number(item.monto)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </p>
-                          <p className="text-[9px] font-black text-sav-muted uppercase tracking-widest">Bs</p>
+                          <p className="text-[9px] font-black text-bcb-muted uppercase tracking-widest">Bs</p>
                         </div>
                       </Card>
                     </motion.div>
@@ -233,12 +233,12 @@ export default function Ganancias() {
 
               {historyList.length === 0 && (
                 <div className="py-24 flex flex-col items-center justify-center text-center space-y-6">
-                  <div className="w-24 h-24 rounded-[3rem] bg-sav-surface border-2 border-dashed border-black/[0.05] flex items-center justify-center text-sav-muted/30">
+                  <div className="w-24 h-24 rounded-[3rem] bg-bcb-surface border-2 border-dashed border-black/[0.05] flex items-center justify-center text-bcb-muted/30">
                     <History size={48} strokeWidth={1.5} />
                   </div>
                   <div className="space-y-2">
-                    <p className="text-[13px] font-extrabold text-sav-text-main uppercase tracking-widest">Sin actividad</p>
-                    <p className="text-[11px] font-bold text-sav-muted uppercase tracking-tight leading-relaxed max-w-[180px] mx-auto">Comienza a realizar tareas para ver tus ganancias aquí.</p>
+                    <p className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-widest">Sin actividad</p>
+                    <p className="text-[11px] font-bold text-bcb-muted uppercase tracking-tight leading-relaxed max-w-[180px] mx-auto">Comienza a realizar tareas para ver tus ganancias aquí.</p>
                   </div>
                 </div>
               )}
@@ -249,3 +249,5 @@ export default function Ganancias() {
     </Layout>
   );
 }
+
+

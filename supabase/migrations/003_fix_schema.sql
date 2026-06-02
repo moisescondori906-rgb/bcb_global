@@ -1,4 +1,4 @@
--- SAV - Fix schema columns and types
+-- BCB GLOBAL - Fix schema columns and types
 -- Ejecutar en Supabase SQL Editor
 
 -- 1. Añadir columna activo a niveles si no existe
@@ -70,3 +70,4 @@ ALTER TABLE usuarios ADD CONSTRAINT unique_codigo_invitacion UNIQUE (codigo_invi
 -- ALTER TABLE tareas ALTER COLUMN id TYPE TEXT;
 -- ALTER TABLE usuarios ALTER COLUMN id TYPE TEXT;
 -- ALTER TABLE actividad_tareas ALTER COLUMN tarea_id TYPE TEXT;
+

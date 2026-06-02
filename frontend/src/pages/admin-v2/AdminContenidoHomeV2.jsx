@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, 
-  Save, 
+  BCB GLOBALe, 
   Zap, 
   ShieldCheck, 
   MessageCircle, 
@@ -43,12 +43,12 @@ function parseDias(value, fallback) {
 
 export default function AdminContenidoHomeV2() {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [BCB GLOBALing, setBCB GLOBALing] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
   const [announcementForm, setAnnouncementForm] = useState({ titulo: '', mensaje: '', activo: true, orden: 0, image: null });
-  const [announcementSaving, setAnnouncementSaving] = useState(false);
+  const [announcementBCB GLOBALing, setAnnouncementBCB GLOBALing] = useState(false);
   
   const [content, setContent] = useState({
     soporte_canal_url: '',
@@ -102,7 +102,7 @@ export default function AdminContenidoHomeV2() {
 
   const handleAnnouncementSubmit = async (e) => {
     e.preventDefault();
-    setAnnouncementSaving(true);
+    setAnnouncementBCB GLOBALing(true);
     try {
       const formData = new FormData();
       formData.append('titulo', announcementForm.titulo);
@@ -121,7 +121,7 @@ export default function AdminContenidoHomeV2() {
     } catch (err) {
       alert('Error: ' + err.message);
     } finally {
-      setAnnouncementSaving(false);
+      setAnnouncementBCB GLOBALing(false);
     }
   };
 
@@ -150,16 +150,16 @@ export default function AdminContenidoHomeV2() {
     }
   };
 
-  const handleSave = async (e) => {
+  const handleBCB GLOBALe = async (e) => {
     e.preventDefault();
-    setSaving(true);
+    setBCB GLOBALing(true);
     try {
             await api.put('/admin/config', content);
       alert('Configuración global actualizada con éxito');
     } catch (err) {
       alert('Error: ' + err.message);
     } finally {
-      setSaving(false);
+      setBCB GLOBALing(false);
     }
   };
 
@@ -180,20 +180,20 @@ export default function AdminContenidoHomeV2() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <RefreshCw className="animate-spin text-sav-primary" size={32} />
+      <RefreshCw className="animate-spin text-bcb-primary" size={32} />
     </div>
   );
 
   return (
     <div className="space-y-10 pb-20">
       <div className="flex items-center gap-4">
-        <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-sav-primary to-indigo-600 text-white shadow-xl">
+        <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-bcb-primary to-indigo-600 text-white shadow-xl">
           <Bell size={24} />
         </div>
         <div>
           <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">System Configuration</h1>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-            <ShieldCheck size={14} className="text-sav-primary" /> Ajustes globales y enlaces de comunicación
+            <ShieldCheck size={14} className="text-bcb-primary" /> Ajustes globales y enlaces de comunicación
           </p>
         </div>
       </div>
@@ -210,19 +210,19 @@ export default function AdminContenidoHomeV2() {
           </div>
           
           <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic mb-8 flex items-center gap-3">
-            <Smartphone className="text-sav-primary" size={24} /> Canales de Soporte
+            <Smartphone className="text-bcb-primary" size={24} /> Canales de Soporte
           </h3>
 
-          <form onSubmit={handleSave} className="space-y-8">
+          <form onSubmit={handleBCB GLOBALe} className="space-y-8">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Canal de Telegram (Oficial)</label>
               <div className="relative group">
-                <Send className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-sav-primary transition-colors" size={18} />
+                <Send className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-bcb-primary transition-colors" size={18} />
                 <input 
                   type="url" 
                   value={content.soporte_canal_url} 
                   onChange={e => setContent({...content, soporte_canal_url: e.target.value})}
-                  className="w-full pl-14 pr-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-sav-primary/30 transition-all shadow-inner"
+                  className="w-full pl-14 pr-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-bcb-primary/30 transition-all shadow-inner"
                   placeholder="https://t.me/tu_canal"
                 />
               </div>
@@ -236,7 +236,7 @@ export default function AdminContenidoHomeV2() {
                   type="url" 
                   value={content.soporte_gerente_url} 
                   onChange={e => setContent({...content, soporte_gerente_url: e.target.value})}
-                  className="w-full pl-14 pr-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-sav-primary/30 transition-all shadow-inner"
+                  className="w-full pl-14 pr-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-bcb-primary/30 transition-all shadow-inner"
                   placeholder="https://wa.me/591..."
                 />
               </div>
@@ -250,7 +250,7 @@ export default function AdminContenidoHomeV2() {
                   type="url" 
                   value={content.soporte_bot_url} 
                   onChange={e => setContent({...content, soporte_bot_url: e.target.value})}
-                  className="w-full pl-14 pr-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-sav-primary/30 transition-all shadow-inner"
+                  className="w-full pl-14 pr-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-bcb-primary/30 transition-all shadow-inner"
                   placeholder="https://t.me/tu_bot"
                 />
               </div>
@@ -261,7 +261,7 @@ export default function AdminContenidoHomeV2() {
               <textarea 
                 value={content.marquee_text} 
                 onChange={e => setContent({...content, marquee_text: e.target.value})}
-                className="w-full px-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-bold text-white outline-none focus:border-sav-primary/30 transition-all shadow-inner min-h-[120px] resize-none"
+                className="w-full px-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-bold text-white outline-none focus:border-bcb-primary/30 transition-all shadow-inner min-h-[120px] resize-none"
                 placeholder="Bienvenido a BCB Global..."
               />
             </div>
@@ -271,11 +271,11 @@ export default function AdminContenidoHomeV2() {
           <div className="mt-12 pt-12 border-t border-white/5">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic flex items-center gap-3">
-                <Bell className="text-sav-primary" size={24} /> Comunicados
+                <Bell className="text-bcb-primary" size={24} /> Comunicados
               </h3>
               <button 
                 onClick={handleCreateAnnouncement}
-                className="p-3 rounded-xl bg-sav-primary/10 text-sav-primary hover:bg-sav-primary hover:text-white transition-all border border-sav-primary/20"
+                className="p-3 rounded-xl bg-bcb-primary/10 text-bcb-primary hover:bg-bcb-primary hover:text-white transition-all border border-bcb-primary/20"
               >
                 <Plus size={20} />
               </button>
@@ -315,54 +315,54 @@ export default function AdminContenidoHomeV2() {
         >
           <div className="bg-[#161926] border border-white/5 p-10 rounded-[45px] shadow-2xl relative overflow-hidden">
             <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic mb-8 flex items-center gap-3">
-              <Zap className="text-sav-primary" size={24} /> Reglas del Sistema
+              <Zap className="text-bcb-primary" size={24} /> Reglas del Sistema
             </h3>
 
             <div className="space-y-8">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Comisión de Retiro (%)</label>
                 <div className="relative group">
-                  <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-sav-primary transition-colors" size={18} />
+                  <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-bcb-primary transition-colors" size={18} />
                   <input 
                     type="number" 
                     value={content.comision_retiro} 
                     onChange={e => setContent({...content, comision_retiro: e.target.value})}
-                    className="w-full pl-14 pr-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-sav-primary/30 transition-all shadow-inner"
+                    className="w-full pl-14 pr-6 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-bcb-primary/30 transition-all shadow-inner"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-6 rounded-3xl bg-[#0f111a] border border-white/5 flex items-center justify-between group hover:border-sav-primary/20 transition-all">
+                <div className="p-6 rounded-3xl bg-[#0f111a] border border-white/5 flex items-center justify-between group hover:border-bcb-primary/20 transition-all">
                   <div>
                     <p className="text-[10px] font-black text-white uppercase tracking-widest mb-1">Módulo Ruleta</p>
                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Activar/Desactivar sorteos</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" checked={content.ruleta_activa} onChange={e => setContent({...content, ruleta_activa: e.target.checked})} />
-                    <div className="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-sav-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-lg" />
+                    <div className="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-bcb-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-lg" />
                   </label>
                 </div>
 
-                <div className="p-6 rounded-3xl bg-[#0f111a] border border-white/5 flex items-center justify-between group hover:border-sav-primary/20 transition-all">
+                <div className="p-6 rounded-3xl bg-[#0f111a] border border-white/5 flex items-center justify-between group hover:border-bcb-primary/20 transition-all">
                   <div>
                     <p className="text-[10px] font-black text-white uppercase tracking-widest mb-1">Restricciones de Horario</p>
                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Activar/Desactivar límites</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" checked={content.restricciones_horario_activas} onChange={e => setContent({...content, restricciones_horario_activas: e.target.checked})} />
-                    <div className="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-sav-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-lg" />
+                    <div className="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-bcb-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-lg" />
                   </label>
                 </div>
 
-                <div className="p-6 rounded-3xl bg-[#0f111a] border border-white/5 flex items-center justify-between group hover:border-sav-primary/20 transition-all">
+                <div className="p-6 rounded-3xl bg-[#0f111a] border border-white/5 flex items-center justify-between group hover:border-bcb-primary/20 transition-all">
                   <div>
                     <p className="text-[10px] font-black text-white uppercase tracking-widest mb-1">Recompensas</p>
                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Visibilidad de bonos</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" checked={content.recompensas_visibles} onChange={e => setContent({...content, recompensas_visibles: e.target.checked})} />
-                    <div className="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-sav-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-lg" />
+                    <div className="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-bcb-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-lg" />
                   </label>
                 </div>
               </div>
@@ -476,19 +476,19 @@ export default function AdminContenidoHomeV2() {
                 </div>
               </div>
 
-              <div className="p-6 rounded-3xl bg-sav-primary/5 border border-sav-primary/10 flex gap-4">
-                <div className="p-2 rounded-xl bg-sav-primary/10 text-sav-primary shrink-0"><Info size={20} /></div>
+              <div className="p-6 rounded-3xl bg-bcb-primary/5 border border-bcb-primary/10 flex gap-4">
+                <div className="p-2 rounded-xl bg-bcb-primary/10 text-bcb-primary shrink-0"><Info size={20} /></div>
                 <p className="text-[9px] font-bold text-slate-400 uppercase leading-relaxed tracking-wide">
                   Estos ajustes afectan a todos los usuarios en tiempo real. Asegúrate de verificar los enlaces antes de guardar los cambios.
                 </p>
               </div>
 
               <button 
-                onClick={handleSave}
-                disabled={saving}
-                className="w-full py-5 rounded-2xl bg-sav-primary text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-sav-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                onClick={handleBCB GLOBALe}
+                disabled={BCB GLOBALing}
+                className="w-full py-5 rounded-2xl bg-bcb-primary text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-bcb-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
               >
-                {saving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
+                {BCB GLOBALing ? <RefreshCw className="animate-spin" size={18} /> : <BCB GLOBALe size={18} />}
                 Deploy System Updates
               </button>
             </div>
@@ -511,10 +511,10 @@ export default function AdminContenidoHomeV2() {
               exit={{ scale: 0.9, y: 30 }}
               className="bg-[#161926] border border-white/10 p-12 rounded-[50px] max-w-lg w-full shadow-2xl relative overflow-hidden"
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sav-primary to-indigo-600 shadow-lg shadow-sav-primary/50" />
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-bcb-primary to-indigo-600 shadow-lg shadow-bcb-primary/50" />
               
               <div className="flex items-center gap-4 mb-8">
-                <div className="p-3.5 rounded-2xl bg-sav-primary/10 text-sav-primary border border-sav-primary/20">
+                <div className="p-3.5 rounded-2xl bg-bcb-primary/10 text-bcb-primary border border-bcb-primary/20">
                   <Bell size={24} />
                 </div>
                 <div>
@@ -531,7 +531,7 @@ export default function AdminContenidoHomeV2() {
                     value={announcementForm.titulo} 
                     onChange={e => setAnnouncementForm({...announcementForm, titulo: e.target.value})}
                     placeholder="Título del anuncio..."
-                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner"
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-bcb-primary/30 shadow-inner"
                   />
                 </div>
 
@@ -541,7 +541,7 @@ export default function AdminContenidoHomeV2() {
                     value={announcementForm.mensaje} 
                     onChange={e => setAnnouncementForm({...announcementForm, mensaje: e.target.value})}
                     placeholder="Contenido del mensaje..."
-                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-bold text-white outline-none focus:border-sav-primary/30 shadow-inner min-h-[120px] resize-none"
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-bold text-white outline-none focus:border-bcb-primary/30 shadow-inner min-h-[120px] resize-none"
                     required
                   />
                 </div>
@@ -553,7 +553,7 @@ export default function AdminContenidoHomeV2() {
                       type="number" 
                       value={announcementForm.orden} 
                       onChange={e => setAnnouncementForm({...announcementForm, orden: e.target.value})}
-                      className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner"
+                      className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-bcb-primary/30 shadow-inner"
                     />
                   </div>
                   <div className="space-y-2">
@@ -562,7 +562,7 @@ export default function AdminContenidoHomeV2() {
                       <span className="text-[10px] font-black text-white uppercase tracking-widest">{announcementForm.activo ? 'Activo' : 'Inactivo'}</span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" className="sr-only peer" checked={announcementForm.activo} onChange={e => setAnnouncementForm({...announcementForm, activo: e.target.checked})} />
-                        <div className="w-10 h-5 bg-slate-800 rounded-full peer peer-checked:bg-sav-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all shadow-lg" />
+                        <div className="w-10 h-5 bg-slate-800 rounded-full peer peer-checked:bg-bcb-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all shadow-lg" />
                       </label>
                     </div>
                   </div>
@@ -602,10 +602,10 @@ export default function AdminContenidoHomeV2() {
                   </button>
                   <button 
                     type="submit"
-                    disabled={announcementSaving}
-                    className="flex-1 py-4 rounded-2xl bg-sav-primary text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-sav-primary/20 flex items-center justify-center gap-2"
+                    disabled={announcementBCB GLOBALing}
+                    className="flex-1 py-4 rounded-2xl bg-bcb-primary text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-bcb-primary/20 flex items-center justify-center gap-2"
                   >
-                    {announcementSaving ? <RefreshCw className="animate-spin" size={14} /> : <CheckCircle2 size={14} />}
+                    {announcementBCB GLOBALing ? <RefreshCw className="animate-spin" size={14} /> : <CheckCircle2 size={14} />}
                     {editingAnnouncement ? 'Actualizar' : 'Publicar'}
                   </button>
                 </div>
@@ -617,3 +617,5 @@ export default function AdminContenidoHomeV2() {
     </div>
   );
 }
+
+

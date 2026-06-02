@@ -222,8 +222,8 @@ export default function Withdrawal() {
   if (securityStatus.loading) {
     return (
       <Layout>
-        <div className="min-h-screen bg-sav-dark flex items-center justify-center">
-          <LoaderIcon className="text-sav-primary animate-spin" size={40} />
+        <div className="min-h-screen bg-bcb-dark flex items-center justify-center">
+          <LoaderIcon className="text-bcb-primary animate-spin" size={40} />
         </div>
       </Layout>
     );
@@ -288,11 +288,11 @@ export default function Withdrawal() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-sav-dark">
+      <div className="min-h-screen bg-bcb-dark">
         <Header 
           title="Retiro de Fondos" 
           rightAction={
-            <Link to="/ganancias" className="text-sav-primary text-[9px] font-black uppercase tracking-widest bg-sav-primary/10 px-4 py-2 rounded-xl border border-sav-primary/20">
+            <Link to="/ganancias" className="text-bcb-primary text-[9px] font-black uppercase tracking-widest bg-bcb-primary/10 px-4 py-2 rounded-xl border border-bcb-primary/20">
               Historial
             </Link>
           } 
@@ -300,8 +300,8 @@ export default function Withdrawal() {
         
         {/* Background Decor */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-sav-primary/5 to-transparent blur-[120px]" />
-          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-sav-accent/5 rounded-full blur-[100px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-bcb-primary/5 to-transparent blur-[120px]" />
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-bcb-accent/5 rounded-full blur-[100px]" />
         </div>
 
         <main className="px-4 sm:px-6 py-6 sm:py-8 space-y-8 sm:space-y-10 pb-32 animate-fade">
@@ -324,9 +324,9 @@ export default function Withdrawal() {
           <AnimatePresence>
             {error && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <Card className="p-4 sm:p-5 bg-sav-error/10 border-sav-error/20 flex items-start sm:items-center gap-3 sm:gap-4 shadow-xl">
-                  <AlertCircleIcon size={18} className="text-sav-error shrink-0 mt-0.5 sm:mt-0" />
-                  <p className="text-[9px] sm:text-[10px] text-sav-error font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] leading-relaxed">{error}</p>
+                <Card className="p-4 sm:p-5 bg-bcb-error/10 border-bcb-error/20 flex items-start sm:items-center gap-3 sm:gap-4 shadow-xl">
+                  <AlertCircleIcon size={18} className="text-bcb-error shrink-0 mt-0.5 sm:mt-0" />
+                  <p className="text-[9px] sm:text-[10px] text-bcb-error font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] leading-relaxed">{error}</p>
                 </Card>
               </motion.div>
             )}
@@ -354,7 +354,7 @@ export default function Withdrawal() {
               <form onSubmit={handleFundPasswordSubmit} className="space-y-6">
                 <Card variant="outline" className="p-6 space-y-5 bg-white/[0.02] border-white/5 rounded-[2.5rem]">
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Nueva Contraseña de Fondos</label>
+                    <label className="text-[9px] font-black text-bcb-muted uppercase tracking-[0.2em] ml-2">Nueva Contraseña de Fondos</label>
                     <div className="relative">
                       <Input
                         type="password"
@@ -370,7 +370,7 @@ export default function Withdrawal() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Confirmar Contraseña</label>
+                    <label className="text-[9px] font-black text-bcb-muted uppercase tracking-[0.2em] ml-2">Confirmar Contraseña</label>
                     <div className="relative">
                       <Input
                         type="password"
@@ -416,11 +416,11 @@ export default function Withdrawal() {
               <form onSubmit={handleBankAccountSubmit} className="space-y-6">
                 <Card variant="outline" className="p-6 space-y-5 bg-white/[0.02] border-white/5 rounded-[2.5rem]">
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Banco o Plataforma</label>
+                    <label className="text-[9px] font-black text-bcb-muted uppercase tracking-[0.2em] ml-2">Banco o Plataforma</label>
                     <select 
                       value={bankAcc.banco}
                       onChange={(e) => setBankAcc({ ...bankAcc, banco: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-2xl h-14 px-6 text-sm font-black text-slate-900 outline-none focus:border-sav-primary/30 transition-all appearance-none cursor-pointer"
+                      className="w-full bg-white border border-slate-200 rounded-2xl h-14 px-6 text-sm font-black text-slate-900 outline-none focus:border-bcb-primary/30 transition-all appearance-none cursor-pointer"
                     >
                       <option value="bnb" className="bg-white text-slate-900">BNB (Banco Nacional de Bolivia)</option>
                       <option value="union" className="bg-white text-slate-900">Banco Unión</option>
@@ -433,7 +433,7 @@ export default function Withdrawal() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Nombre del Titular</label>
+                    <label className="text-[9px] font-black text-bcb-muted uppercase tracking-[0.2em] ml-2">Nombre del Titular</label>
                     <Input
                       value={bankAcc.titular}
                       onChange={(e) => setBankAcc({ ...bankAcc, titular: e.target.value })}
@@ -444,7 +444,7 @@ export default function Withdrawal() {
 
                   {/* Account Number / Phone for QR */}
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Nro de Cuenta o Teléfono (QR)</label>
+                    <label className="text-[9px] font-black text-bcb-muted uppercase tracking-[0.2em] ml-2">Nro de Cuenta o Teléfono (QR)</label>
                     <Input 
                       placeholder="Nro de cuenta o celular" 
                       value={bankAcc.numero_cuenta} 
@@ -456,7 +456,7 @@ export default function Withdrawal() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-[9px] font-black text-sav-muted uppercase tracking-[0.2em] ml-2">Tipo de Cuenta</label>
+                      <label className="text-[9px] font-black text-bcb-muted uppercase tracking-[0.2em] ml-2">Tipo de Cuenta</label>
                       <Input
                         value={bankAcc.tipo_cuenta}
                         onChange={(e) => setBankAcc({ ...bankAcc, tipo_cuenta: e.target.value })}
@@ -561,13 +561,13 @@ export default function Withdrawal() {
 
               {isInternar && (
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-                  <Card variant="premium" className="p-6 sm:p-8 border-sav-primary/20 bg-sav-primary/5 flex flex-col items-center gap-4 text-center">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-sav-primary/10 flex items-center justify-center text-sav-primary shadow-inner">
+                  <Card variant="premium" className="p-6 sm:p-8 border-bcb-primary/20 bg-bcb-primary/5 flex flex-col items-center gap-4 text-center">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary shadow-inner">
                       <LockIcon size={28} className="sm:w-[32px] sm:h-[32px]" />
                     </div>
                     <div className="space-y-1.5 sm:space-y-2">
                       <h3 className="text-xs sm:text-sm font-black text-gray-900 uppercase tracking-widest">Retiros Deshabilitados</h3>
-                      <p className="text-[9px] sm:text-[10px] font-bold text-sav-muted uppercase tracking-widest leading-relaxed">
+                      <p className="text-[9px] sm:text-[10px] font-bold text-bcb-muted uppercase tracking-widest leading-relaxed">
                         Los usuarios en etapa de Pasantía no tienen habilitados los retiros. Esta medida forma parte de nuestras políticas de privacidad y seguridad, para proteger los fondos de la empresa y evitar registros automatizados o usos indebidos. <br/>
                         Para acceder a retiros, debes estar en un nivel global habilitado.
                       </p>
@@ -581,7 +581,7 @@ export default function Withdrawal() {
                 {/* Origen de Fondos */}
                 <section className="space-y-5 sm:space-y-6">
                   <div className="flex items-center gap-2 sm:gap-3 px-1">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sav-primary/10 flex items-center justify-center text-sav-primary border border-sav-primary/20 shadow-lg">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary border border-bcb-primary/20 shadow-lg">
                       <WalletIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
                     </div>
                     <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">1. Origen de Fondos</h2>
@@ -600,25 +600,25 @@ export default function Withdrawal() {
                           variant={active ? 'premium' : 'flat'}
                           className={cn(
                             "p-4 sm:p-6 flex items-center justify-between cursor-pointer border transition-all duration-500",
-                            active ? "border-sav-primary/40 bg-sav-primary/10 scale-[1.01] sm:scale-[1.02] shadow-xl sm:shadow-2xl" : "border-black/5 bg-white shadow-sm hover:bg-black/5"
+                            active ? "border-bcb-primary/40 bg-bcb-primary/10 scale-[1.01] sm:scale-[1.02] shadow-xl sm:shadow-2xl" : "border-black/5 bg-white shadow-sm hover:bg-black/5"
                           )}
                           onClick={() => setTipoBilletera(b.id)}
                         >
                           <div className="flex items-center gap-4 sm:gap-5 min-w-0">
                             <div className={cn(
                               "w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-inner shrink-0",
-                              active ? "bg-white/10 text-white" : "bg-sav-primary/5 text-sav-primary"
+                              active ? "bg-white/10 text-white" : "bg-bcb-primary/5 text-bcb-primary"
                             )}>
                               <Icon size={20} className="sm:w-[24px] sm:h-[24px]" />
                             </div>
                             <div className="space-y-0.5 sm:space-y-1 min-w-0">
-                              <p className={cn("text-[8px] sm:text-[9px] font-black uppercase tracking-widest truncate", active ? "text-white/60" : "text-sav-muted")}>{b.label}</p>
+                              <p className={cn("text-[8px] sm:text-[9px] font-black uppercase tracking-widest truncate", active ? "text-white/60" : "text-bcb-muted")}>{b.label}</p>
                               <p className="text-xl sm:text-2xl font-black text-gray-900 tracking-tighter truncate">{b.val.toLocaleString()} <span className="text-[9px] text-gray-400 uppercase">Bs</span></p>
                             </div>
                           </div>
                           <div className={cn(
                             "w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0", 
-                            active ? "border-white bg-white text-sav-primary" : "border-black/10"
+                            active ? "border-white bg-white text-bcb-primary" : "border-black/10"
                           )}>
                             {active && <CheckIcon size={12} className="sm:w-[14px] sm:h-[14px]" strokeWidth={4} />}
                           </div>
@@ -632,7 +632,7 @@ export default function Withdrawal() {
                 <section className="space-y-5 sm:space-y-6">
                   <div className="flex items-center justify-between px-1">
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sav-accent/10 flex items-center justify-center text-sav-accent border border-sav-accent/20 shadow-lg">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-bcb-accent/10 flex items-center justify-center text-bcb-accent border border-bcb-accent/20 shadow-lg">
                         <BanknoteIcon size={14} className="sm:w-[16px] sm:h-[16px]" />
                       </div>
                       <h2 className="text-[10px] sm:text-[11px] font-black text-gray-900 uppercase tracking-[0.2em] sm:tracking-[0.3em]">2. Monto a Retirar</h2>
@@ -647,7 +647,7 @@ export default function Withdrawal() {
                         value={monto || ''}
                         onChange={(e) => setMonto(Number(e.target.value))}
                         placeholder="Ingresa la cantidad"
-                        className="w-full h-16 pl-14 pr-6 rounded-2xl border-2 border-slate-100 bg-white text-lg font-black text-black outline-none focus:border-sav-primary/30 transition-all shadow-sm"
+                        className="w-full h-16 pl-14 pr-6 rounded-2xl border-2 border-slate-100 bg-white text-lg font-black text-black outline-none focus:border-bcb-primary/30 transition-all shadow-sm"
                       />
                     </div>
 
@@ -660,8 +660,8 @@ export default function Withdrawal() {
                           className={cn(
                             "h-12 sm:h-16 rounded-xl sm:rounded-[1.5rem] border text-[10px] sm:text-[11px] font-black uppercase tracking-widest transition-all duration-300",
                             monto === m 
-                              ? "bg-sav-primary border-sav-primary text-white shadow-lg sm:shadow-[0_15px_30px_rgba(220,38,38,0.2)] scale-[1.05]" 
-                              : "bg-white border-black/5 text-sav-muted hover:bg-black/5 shadow-sm"
+                              ? "bg-bcb-primary border-bcb-primary text-white shadow-lg sm:shadow-[0_15px_30px_rgba(220,38,38,0.2)] scale-[1.05]" 
+                              : "bg-white border-black/5 text-bcb-muted hover:bg-black/5 shadow-sm"
                           )}
                         >
                           {m}
@@ -683,7 +683,7 @@ export default function Withdrawal() {
                           </div>
                           <div className="flex justify-between items-center text-[11px] font-black uppercase tracking-widest pt-2 border-t border-slate-200">
                             <span className="text-slate-900">Monto Neto a Recibir</span>
-                            <span className="text-sav-primary text-lg tracking-tighter">{montoRecibir} Bs</span>
+                            <span className="text-bcb-primary text-lg tracking-tighter">{montoRecibir} Bs</span>
                           </div>
                         </motion.div>
                       )}
@@ -718,7 +718,7 @@ export default function Withdrawal() {
                               <BuildingIcon size={20} />
                             </div>
                             <div>
-                              <p className={cn("text-[9px] font-black uppercase tracking-widest", active ? "text-white/60" : "text-sav-muted")}>{t.banco}</p>
+                              <p className={cn("text-[9px] font-black uppercase tracking-widest", active ? "text-white/60" : "text-bcb-muted")}>{t.banco}</p>
                               <p className="text-sm font-black text-gray-900">{t.numero_cuenta}</p>
                             </div>
                           </div>
@@ -747,7 +747,7 @@ export default function Withdrawal() {
                     variant="outline" 
                     className={cn(
                       "p-8 sm:p-10 border-2 border-dashed flex flex-col items-center justify-center text-center gap-4 sm:gap-5 relative overflow-hidden group transition-all duration-500 cursor-pointer",
-                      comprobantePreview ? "border-emerald-500/40 bg-emerald-500/5" : "border-black/10 bg-white hover:border-sav-primary/40 hover:bg-sav-primary/5 shadow-sm"
+                      comprobantePreview ? "border-emerald-500/40 bg-emerald-500/5" : "border-black/10 bg-white hover:border-bcb-primary/40 hover:bg-bcb-primary/5 shadow-sm"
                     )}
                     onClick={() => fileRef.current?.click()}
                   >
@@ -765,11 +765,11 @@ export default function Withdrawal() {
                       </>
                     ) : (
                       <>
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-slate-50 flex items-center justify-center text-sav-muted group-hover:bg-sav-primary group-hover:text-white transition-all duration-500 border border-black/5 shadow-inner">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-slate-50 flex items-center justify-center text-bcb-muted group-hover:bg-bcb-primary group-hover:text-white transition-all duration-500 border border-black/5 shadow-inner">
                           {isOptimizing ? <LoaderIcon size={28} className="animate-spin" /> : <UploadIcon size={28} />}
                         </div>
                         <div className="space-y-1.5 sm:space-y-2">
-                          <p className="text-[10px] sm:text-xs font-black text-sav-muted uppercase tracking-[0.2em] group-hover:text-sav-primary transition-colors">Sube un comprobante</p>
+                          <p className="text-[10px] sm:text-xs font-black text-bcb-muted uppercase tracking-[0.2em] group-hover:text-bcb-primary transition-colors">Sube un comprobante</p>
                           <p className="text-[8px] sm:text-[9px] text-gray-300 font-bold uppercase tracking-[0.3em]">Requisito obligatorio para retiro</p>
                         </div>
                       </>
@@ -800,13 +800,13 @@ export default function Withdrawal() {
                     <div className="px-1 flex items-start gap-3 group cursor-pointer" onClick={() => setHasSignature(!hasSignature)}>
                       <div className={cn(
                         "w-5 h-5 rounded border-2 flex items-center justify-center transition-all mt-0.5 shrink-0",
-                        hasSignature ? "bg-sav-primary border-sav-primary text-white" : "border-black/10 bg-white"
+                        hasSignature ? "bg-bcb-primary border-bcb-primary text-white" : "border-black/10 bg-white"
                       )}>
                         {hasSignature && <CheckIcon size={12} strokeWidth={4} />}
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[9px] sm:text-[10px] font-black text-gray-900 uppercase tracking-widest group-hover:text-sav-primary transition-colors">Autorización de Transacción</p>
-                        <p className="text-[7px] sm:text-[8px] text-sav-muted font-medium uppercase tracking-widest leading-relaxed">Confirmo que los datos son correctos y autorizo el procesamiento.</p>
+                        <p className="text-[9px] sm:text-[10px] font-black text-gray-900 uppercase tracking-widest group-hover:text-bcb-primary transition-colors">Autorización de Transacción</p>
+                        <p className="text-[7px] sm:text-[8px] text-bcb-muted font-medium uppercase tracking-widest leading-relaxed">Confirmo que los datos son correctos y autorizo el procesamiento.</p>
                       </div>
                     </div>
                   </div>
@@ -833,3 +833,4 @@ export default function Withdrawal() {
     </Layout>
   );
 }
+

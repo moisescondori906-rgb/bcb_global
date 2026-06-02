@@ -12,7 +12,7 @@ const config = {
   password: '14738941lp'
 };
 
-const LOCAL_DIST_PATH = 'C:/Users/Lenovo/Documents/SAV-main/frontend/dist';
+const LOCAL_DIST_PATH = 'C:/Users/Lenovo/Documents/bcb-main/frontend/dist';
 const REMOTE_DIST_PATH = '/var/www/bcb_global/frontend/dist';
 
 console.log('🚀 Iniciando subida rápida del Frontend...');
@@ -69,3 +69,4 @@ conn.on('ready', () => {
 }).on('error', (err) => {
   console.error('❌ Error SSH:', err.message);
 }).connect(config);
+

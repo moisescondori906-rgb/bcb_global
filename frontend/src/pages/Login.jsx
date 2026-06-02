@@ -64,7 +64,7 @@ export default function Login() {
             Bienvenido
           </h1>
           <div className="flex items-center justify-center gap-2">
-            <ShieldCheck size={14} className="text-sav-primary" />
+            <ShieldCheck size={14} className="text-bcb-primary" />
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60">Portal Seguro BCB</p>
           </div>
         </div>
@@ -109,12 +109,12 @@ export default function Login() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="hidden" 
                 />
-                <div className={`w-5 h-5 rounded-md border transition-all flex items-center justify-center ${rememberMe ? 'bg-sav-primary border-sav-primary' : 'bg-white border-slate-200 shadow-sm'}`}>
+                <div className={`w-5 h-5 rounded-md border transition-all flex items-center justify-center ${rememberMe ? 'bg-bcb-primary border-bcb-primary' : 'bg-white border-slate-200 shadow-sm'}`}>
                   {rememberMe && <div className="w-2 h-2 bg-white rounded-sm" />}
                 </div>
                 <span className="text-[10px] font-black text-black/60 uppercase tracking-widest group-hover:text-black transition-colors">Recordarme</span>
               </label>
-              <button type="button" className="text-[10px] font-black text-sav-primary uppercase tracking-widest hover:underline">¿Olvidaste?</button>
+              <button type="button" className="text-[10px] font-black text-bcb-primary uppercase tracking-widest hover:underline">¿Olvidaste?</button>
             </div>
 
             <Button 
@@ -134,7 +134,7 @@ export default function Login() {
           </p>
           <Link
             to="/register"
-            className="flex items-center justify-center gap-2 text-black font-black uppercase tracking-widest text-xs hover:text-sav-primary transition-all group"
+            className="flex items-center justify-center gap-2 text-black font-black uppercase tracking-widest text-xs hover:text-bcb-primary transition-all group"
           >
             Crear cuenta VIP
             <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -144,3 +144,4 @@ export default function Login() {
     </div>
   );
 }
+

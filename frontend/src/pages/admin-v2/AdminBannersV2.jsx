@@ -22,7 +22,7 @@ export default function AdminBannersV2() {
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isBCB GLOBALing, setIsBCB GLOBALing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   
   const [form, setForm] = useState({
@@ -76,7 +76,7 @@ export default function AdminBannersV2() {
     e.preventDefault();
     if (!form.imagen) return alert('Sube una imagen');
     
-    setIsSaving(true);
+    setIsBCB GLOBALing(true);
     try {
       await api.post('/admin/banners', form);
       setShowModal(false);
@@ -85,7 +85,7 @@ export default function AdminBannersV2() {
     } catch (err) {
       alert(err.message);
     } finally {
-      setIsSaving(false);
+      setIsBCB GLOBALing(false);
     }
   };
 
@@ -113,13 +113,13 @@ export default function AdminBannersV2() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
         <div className="space-y-2">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-sav-primary to-indigo-600 text-white shadow-xl shadow-sav-primary/20">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-bcb-primary to-indigo-600 text-white shadow-xl shadow-bcb-primary/20">
               <ImageIcon size={24} />
             </div>
             <div>
               <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Recursos Multimedia</h1>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                <ShieldCheck size={14} className="text-sav-primary" /> Gestión de banners y recursos visuales BCB Global
+                <ShieldCheck size={14} className="text-bcb-primary" /> Gestión de banners y recursos visuales BCB Global
               </p>
             </div>
           </div>
@@ -142,7 +142,7 @@ export default function AdminBannersV2() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ delay: idx * 0.05 }}
-              className="admin-card rounded-[40px] shadow-2xl overflow-hidden group border-white/5 hover:border-sav-primary/40 transition-all duration-500"
+              className="admin-card rounded-[40px] shadow-2xl overflow-hidden group border-white/5 hover:border-bcb-primary/40 transition-all duration-500"
             >
               <div className="aspect-video relative overflow-hidden bg-black/40">
                  <img src={api.getMediaUrl(b.imagen_url)} alt={b.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
@@ -162,7 +162,7 @@ export default function AdminBannersV2() {
                     <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Prioridad: {b.prioridad} • ID: {b.id.substring(0,8)}</p>
                  </div>
                  {b.link_url && (
-                    <a href={b.link_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[9px] font-black text-sav-primary uppercase tracking-widest hover:underline group/link">
+                    <a href={b.link_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[9px] font-black text-bcb-primary uppercase tracking-widest hover:underline group/link">
                        Link de Destino <ExternalLink size={12} className="group-hover/link:translate-x-0.5 transition-transform" />
                     </a>
                  )}
@@ -193,7 +193,7 @@ export default function AdminBannersV2() {
               exit={{ scale: 0.9, y: 30 }}
               className="admin-card p-12 rounded-[50px] max-w-lg w-full shadow-2xl relative overflow-hidden"
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sav-primary to-indigo-600 shadow-lg" />
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-bcb-primary to-indigo-600 shadow-lg" />
               
               <h3 className="text-3xl font-black text-white uppercase tracking-tighter italic mb-8">Desplegar Banner</h3>
 
@@ -206,8 +206,8 @@ export default function AdminBannersV2() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Contenido Visual (Banner)</label>
                   <div className="grid grid-cols-2 gap-4">
-                     <button type="button" onClick={() => fileRef.current?.click()} className="h-32 rounded-2xl border-2 border-dashed border-white/5 bg-black/40 flex flex-col items-center justify-center gap-2 hover:border-sav-primary/30 transition-all shadow-inner group/upload">
-                        {isProcessing ? <Loader2 className="animate-spin text-sav-primary" /> : <Upload size={24} className="text-slate-600 group-hover/upload:text-sav-primary transition-colors" />}
+                     <button type="button" onClick={() => fileRef.current?.click()} className="h-32 rounded-2xl border-2 border-dashed border-white/5 bg-black/40 flex flex-col items-center justify-center gap-2 hover:border-bcb-primary/30 transition-all shadow-inner group/upload">
+                        {isProcessing ? <Loader2 className="animate-spin text-bcb-primary" /> : <Upload size={24} className="text-slate-600 group-hover/upload:text-bcb-primary transition-colors" />}
                         <span className="text-[8px] font-black uppercase tracking-widest">Seleccionar</span>
                      </button>
                      <div className="h-32 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center overflow-hidden shadow-inner">
@@ -230,7 +230,7 @@ export default function AdminBannersV2() {
                    <div className="flex items-center justify-center p-4 mt-6">
                       <label className="relative inline-flex items-center cursor-pointer group">
                         <input type="checkbox" className="sr-only peer" checked={form.activo} onChange={e => setForm({...form, activo: e.target.checked})} />
-                        <div className="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-sav-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-lg" />
+                        <div className="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-bcb-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-lg" />
                         <span className="ml-3 text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-white transition-colors">Activo</span>
                       </label>
                    </div>
@@ -238,8 +238,8 @@ export default function AdminBannersV2() {
 
                 <div className="flex gap-4 pt-6">
                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-8 py-5 rounded-xl bg-white/5 text-slate-400 font-black text-[11px] uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all border border-white/5">Cancelar</button>
-                   <button type="submit" disabled={isSaving || isProcessing} className="admin-button-primary flex-1 !h-14 !text-[11px] uppercase tracking-widest disabled:opacity-50">
-                      {isSaving ? 'Desplegando...' : 'Desplegar Recurso'}
+                   <button type="submit" disabled={isBCB GLOBALing || isProcessing} className="admin-button-primary flex-1 !h-14 !text-[11px] uppercase tracking-widest disabled:opacity-50">
+                      {isBCB GLOBALing ? 'Desplegando...' : 'Desplegar Recurso'}
                    </button>
                 </div>
               </form>
@@ -250,3 +250,5 @@ export default function AdminBannersV2() {
     </div>
   );
 }
+
+

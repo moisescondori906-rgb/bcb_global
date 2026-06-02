@@ -7,7 +7,7 @@ import {
   Trash2, 
   Edit3, 
   Shield, 
-  Save, 
+  BCB GLOBALe, 
   X, 
   Lock, 
   Eye, 
@@ -108,7 +108,7 @@ export default function AdminTelegramV2() {
     }
   };
 
-  const handleSaveEquipo = async (e) => {
+  const handleBCB GLOBALeEquipo = async (e) => {
     e.preventDefault();
     try {
       if (editingEquipo) await api.admin.telegram.updateEquipo(editingEquipo.id, equipoForm);
@@ -120,7 +120,7 @@ export default function AdminTelegramV2() {
     }
   };
 
-  const handleSaveIntegrante = async (e) => {
+  const handleBCB GLOBALeIntegrante = async (e) => {
     e.preventDefault();
     try {
       if (editingIntegrante) await api.admin.telegram.updateIntegrante(editingIntegrante.id, integranteForm);
@@ -132,7 +132,7 @@ export default function AdminTelegramV2() {
     }
   };
 
-  const handleSaveHorarios = async () => {
+  const handleBCB GLOBALeHorarios = async () => {
     try {
       await api.admin.telegram.updateHorarios(horarios);
       alert('Configuración Global Actualizada');
@@ -332,7 +332,7 @@ export default function AdminTelegramV2() {
             </div>
 
             <div className="flex items-center gap-4 mb-8">
-              <div className="p-3 rounded-2xl bg-sav-primary/10 text-sav-primary border border-sav-primary/20 shadow-inner">
+              <div className="p-3 rounded-2xl bg-bcb-primary/10 text-bcb-primary border border-bcb-primary/20 shadow-inner">
                 <Activity size={20} />
               </div>
               <h3 className="text-xl font-black text-white uppercase tracking-tighter italic">Global Config</h3>
@@ -342,12 +342,12 @@ export default function AdminTelegramV2() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Zap size={14} className="text-sav-primary" />
+                    <Zap size={14} className="text-bcb-primary" />
                     <span className="text-[10px] font-black text-white uppercase tracking-widest">Estado del Servicio</span>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" checked={horarios.activo} onChange={e => setHorarios({...horarios, activo: e.target.checked})} />
-                    <div className="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-sav-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-lg shadow-black/40" />
+                    <div className="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-bcb-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-lg shadow-black/40" />
                   </label>
                 </div>
 
@@ -355,11 +355,11 @@ export default function AdminTelegramV2() {
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 space-y-1">
                       <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest italic">Apertura</p>
-                      <input type="time" value={horarios.hora_inicio} onChange={e => setHorarios({...horarios, hora_inicio: e.target.value})} className="w-full bg-[#161926] border border-white/5 rounded-xl px-4 py-3 text-[10px] font-black text-white outline-none focus:border-sav-primary/30 shadow-inner" />
+                      <input type="time" value={horarios.hora_inicio} onChange={e => setHorarios({...horarios, hora_inicio: e.target.value})} className="w-full bg-[#161926] border border-white/5 rounded-xl px-4 py-3 text-[10px] font-black text-white outline-none focus:border-bcb-primary/30 shadow-inner" />
                     </div>
                     <div className="flex-1 space-y-1">
                       <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest italic">Cierre</p>
-                      <input type="time" value={horarios.hora_fin} onChange={e => setHorarios({...horarios, hora_fin: e.target.value})} className="w-full bg-[#161926] border border-white/5 rounded-xl px-4 py-3 text-[10px] font-black text-white outline-none focus:border-sav-primary/30 shadow-inner" />
+                      <input type="time" value={horarios.hora_fin} onChange={e => setHorarios({...horarios, hora_fin: e.target.value})} className="w-full bg-[#161926] border border-white/5 rounded-xl px-4 py-3 text-[10px] font-black text-white outline-none focus:border-bcb-primary/30 shadow-inner" />
                     </div>
                   </div>
 
@@ -373,7 +373,7 @@ export default function AdminTelegramV2() {
                           <button 
                             key={d} 
                             onClick={() => toggleDia(d)}
-                            className={`flex-1 aspect-square rounded-xl text-[10px] font-black transition-all border ${active ? 'bg-sav-primary text-white border-sav-primary shadow-lg shadow-sav-primary/20' : 'bg-[#161926] text-slate-600 border-white/5 hover:border-white/10'}`}
+                            className={`flex-1 aspect-square rounded-xl text-[10px] font-black transition-all border ${active ? 'bg-bcb-primary text-white border-bcb-primary shadow-lg shadow-bcb-primary/20' : 'bg-[#161926] text-slate-600 border-white/5 hover:border-white/10'}`}
                           >
                             {labels[d]}
                           </button>
@@ -388,7 +388,7 @@ export default function AdminTelegramV2() {
                   <select 
                     value={horarios.visibilidad_numero} 
                     onChange={e => setHorarios({...horarios, visibilidad_numero: e.target.value})}
-                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-sav-primary/30 shadow-inner appearance-none cursor-pointer"
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-bcb-primary/30 shadow-inner appearance-none cursor-pointer"
                   >
                     <option value="completo">Mostrar Números Completos</option>
                     <option value="parcial">Ocultar 3 Dígitos (Parcial)</option>
@@ -398,10 +398,10 @@ export default function AdminTelegramV2() {
               </div>
 
               <button 
-                onClick={handleSaveHorarios}
-                className="w-full py-5 rounded-2xl bg-sav-primary text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-sav-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+                onClick={handleBCB GLOBALeHorarios}
+                className="w-full py-5 rounded-2xl bg-bcb-primary text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-bcb-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
               >
-                <Save size={18} /> Commit Configuration
+                <BCB GLOBALe size={18} /> Commit Configuration
               </button>
             </div>
           </motion.div>
@@ -467,7 +467,7 @@ export default function AdminTelegramV2() {
                 </div>
               </div>
 
-              <form onSubmit={showEquipoModal ? handleSaveEquipo : handleSaveIntegrante} className="space-y-6">
+              <form onSubmit={showEquipoModal ? handleBCB GLOBALeEquipo : handleBCB GLOBALeIntegrante} className="space-y-6">
                 {showEquipoModal ? (
                   <>
                     <div className="space-y-2">
@@ -518,3 +518,5 @@ export default function AdminTelegramV2() {
     </div>
   );
 }
+
+

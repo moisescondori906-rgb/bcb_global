@@ -34,14 +34,14 @@ export default function ActionGrid({ items }) {
             >
               <div className={cn(
                 "w-13 h-13 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:rotate-3 shadow-sm",
-                bg || "bg-sav-surface",
-                color || "text-sav-primary"
+                bg || "bg-bcb-surface",
+                color || "text-bcb-primary"
               )}>
                 <Icon size={26} strokeWidth={2.5} />
               </div>
               <div className="flex flex-col items-center gap-1">
                 <span className={cn(
-                  "text-[11px] font-extrabold uppercase tracking-widest text-sav-text-dim group-hover:text-sav-primary transition-colors text-center leading-none",
+                  "text-[11px] font-extrabold uppercase tracking-widest text-bcb-text-dim group-hover:text-bcb-primary transition-colors text-center leading-none",
                   className
                 )}>
                   {label}
@@ -59,3 +59,5 @@ export default function ActionGrid({ items }) {
     </motion.div>
   );
 }
+
+

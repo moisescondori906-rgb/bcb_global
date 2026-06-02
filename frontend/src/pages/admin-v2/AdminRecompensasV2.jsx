@@ -10,7 +10,7 @@ import {
   Target,
   AlertTriangle,
   X,
-  Save,
+  BCB GLOBALe,
   User as UserIcon,
   Layers,
   CheckCircle2,
@@ -168,7 +168,7 @@ export default function AdminRecompensasV2() {
   const handleConfigSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.admin.sorteoConfig.save(configForm);
+      await api.admin.sorteoConfig.BCB GLOBALe(configForm);
       setShowConfigModal(false);
       fetchData();
     } catch (err) {
@@ -227,13 +227,13 @@ export default function AdminRecompensasV2() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
         <div className="space-y-2">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-sav-primary to-violet-600 text-white shadow-xl shadow-sav-primary/20">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-bcb-primary to-violet-600 text-white shadow-xl shadow-bcb-primary/20">
               <Gift size={24} />
             </div>
             <div>
               <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Control de Premios</h1>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                <ShieldCheck size={14} className="text-sav-primary" /> Gestión de probabilidades y premios forzados
+                <ShieldCheck size={14} className="text-bcb-primary" /> Gestión de probabilidades y premios forzados
               </p>
             </div>
           </div>
@@ -254,13 +254,13 @@ export default function AdminRecompensasV2() {
           </button>
           <button 
             onClick={() => setShowConfigModal(true)}
-            className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#161926] border border-sav-primary/30 text-sav-primary text-[10px] font-black uppercase tracking-widest hover:bg-sav-primary hover:text-white transition-all shadow-xl"
+            className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#161926] border border-bcb-primary/30 text-bcb-primary text-[10px] font-black uppercase tracking-widest hover:bg-bcb-primary hover:text-white transition-all shadow-xl"
           >
             <Target size={18} /> Forzar Premio
           </button>
           <button 
             onClick={() => { setEditingPremio(null); setShowModal(true); setForm({ nombre: '', valor: '', probabilidad: '', color: '#1a1f36', activo: true, orden: 0 }); }}
-            className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-sav-primary text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-sav-primary/20"
+            className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-bcb-primary text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-bcb-primary/20"
           >
             <Plus size={18} /> Nuevo Premio Base
           </button>
@@ -332,7 +332,7 @@ export default function AdminRecompensasV2() {
                     </div>
                   </td>
                   <td className="px-10 py-6">
-                    <p className="text-sm font-black text-sav-primary tracking-tighter">{c.premio_forzado_nombre || 'Aleatorio'}</p>
+                    <p className="text-sm font-black text-bcb-primary tracking-tighter">{c.premio_forzado_nombre || 'Aleatorio'}</p>
                   </td>
                   <td className="px-10 py-6">
                     <div className={`px-4 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest border w-fit ${c.activa ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
@@ -360,17 +360,17 @@ export default function AdminRecompensasV2() {
       <div className="bg-[#161926] border border-white/5 rounded-[45px] shadow-2xl shadow-black/40 overflow-hidden">
         <div className="p-10 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/[0.01]">
            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-sav-primary/10 text-sav-primary border border-sav-primary/20 shadow-inner"><Zap size={20} /></div>
+              <div className="p-3 rounded-2xl bg-bcb-primary/10 text-bcb-primary border border-bcb-primary/20 shadow-inner"><Zap size={20} /></div>
               <h3 className="text-xl font-black text-white uppercase tracking-tighter italic">Nodos de Premio Base</h3>
            </div>
            <div className="relative group">
-              <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-sav-primary transition-colors" />
+              <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-bcb-primary transition-colors" />
               <input 
                 type="text" 
                 placeholder="Audit reward nodes..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full md:w-96 pl-14 pr-8 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner"
+                className="w-full md:w-96 pl-14 pr-8 py-5 rounded-2xl bg-[#0f111a] border border-white/5 text-xs font-black text-white outline-none focus:border-bcb-primary/30 shadow-inner"
               />
            </div>
         </div>
@@ -406,7 +406,7 @@ export default function AdminRecompensasV2() {
                     <p className="text-sm font-black text-white tracking-tighter">{formatCurrency(p.valor)}</p>
                   </td>
                   <td className="px-10 py-6">
-                    <p className="text-xs font-black text-sav-primary tracking-tighter">{p.probabilidad}%</p>
+                    <p className="text-xs font-black text-bcb-primary tracking-tighter">{p.probabilidad}%</p>
                   </td>
                   <td className="px-10 py-6">
                     <p className={`text-xs font-black tracking-tighter ${p.stock === 0 ? 'text-rose-500' : 'text-slate-400'}`}>
@@ -424,7 +424,7 @@ export default function AdminRecompensasV2() {
                   </td>
                   <td className="px-10 py-6 text-right">
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => handleEdit(p)} className="p-3 rounded-xl bg-white/5 text-sav-primary border border-white/5 hover:bg-sav-primary hover:text-white transition-all shadow-lg"><Edit3 size={16} /></button>
+                      <button onClick={() => handleEdit(p)} className="p-3 rounded-xl bg-white/5 text-bcb-primary border border-white/5 hover:bg-bcb-primary hover:text-white transition-all shadow-lg"><Edit3 size={16} /></button>
                       <button onClick={async () => { if(confirm('¿Eliminar?')) { await api.admin.eliminarPremioRuleta(p.id); fetchData(); } }} className="p-3 rounded-xl bg-white/5 text-rose-500 border border-white/5 hover:bg-rose-500 hover:text-white transition-all shadow-lg"><Trash2 size={16} /></button>
                     </div>
                   </td>
@@ -467,7 +467,7 @@ export default function AdminRecompensasV2() {
                   <select 
                     value={configForm.target_type} 
                     onChange={e => setConfigForm({...configForm, target_type: e.target.value, target_id: ''})}
-                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-sav-primary/30 shadow-inner"
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-bcb-primary/30 shadow-inner"
                   >
                     <option value="usuario">Usuario Específico</option>
                     <option value="nivel">Nivel VIP Completo</option>
@@ -479,7 +479,7 @@ export default function AdminRecompensasV2() {
                   <select 
                     value={configForm.target_id} 
                     onChange={e => setConfigForm({...configForm, target_id: e.target.value})}
-                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-sav-primary/30 shadow-inner"
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-bcb-primary/30 shadow-inner"
                     required
                   >
                     <option value="">-- Seleccionar --</option>
@@ -495,7 +495,7 @@ export default function AdminRecompensasV2() {
                   <select 
                     value={configForm.premio_id_forzado} 
                     onChange={e => setConfigForm({...configForm, premio_id_forzado: e.target.value})}
-                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-sav-primary uppercase tracking-widest outline-none focus:border-sav-primary/30 shadow-inner"
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-bcb-primary uppercase tracking-widest outline-none focus:border-bcb-primary/30 shadow-inner"
                     required
                   >
                     <option value="">-- Ninguno (Usar Probabilidad Base) --</option>
@@ -505,7 +505,7 @@ export default function AdminRecompensasV2() {
 
                 <div className="flex gap-4 pt-4">
                    <button type="button" onClick={() => setShowConfigModal(false)} className="flex-1 px-8 py-5 rounded-[25px] bg-white/5 text-slate-400 font-black text-[11px] uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all border border-white/5">Cancelar</button>
-                   <button type="submit" className="flex-1 px-8 py-5 rounded-[25px] bg-sav-primary text-white font-black text-[11px] uppercase tracking-widest hover:bg-sav-primary/80 transition-all shadow-2xl shadow-sav-primary/30 active:scale-95">Guardar Regla</button>
+                   <button type="submit" className="flex-1 px-8 py-5 rounded-[25px] bg-bcb-primary text-white font-black text-[11px] uppercase tracking-widest hover:bg-bcb-primary/80 transition-all shadow-2xl shadow-bcb-primary/30 active:scale-95">Guardar Regla</button>
                 </div>
               </form>
             </motion.div>
@@ -528,9 +528,9 @@ export default function AdminRecompensasV2() {
               exit={{ scale: 0.9, y: 30 }}
               className="bg-[#161926] border border-white/10 p-12 rounded-[50px] max-w-lg w-full shadow-2xl relative overflow-hidden"
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sav-primary to-rose-600 shadow-lg shadow-sav-primary/50" />
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-bcb-primary to-rose-600 shadow-lg shadow-bcb-primary/50" />
               <div className="flex items-center gap-6 mb-10">
-                <div className="p-4 rounded-[1.8rem] bg-sav-primary/10 text-sav-primary border border-sav-primary/20 shadow-inner">
+                <div className="p-4 rounded-[1.8rem] bg-bcb-primary/10 text-bcb-primary border border-bcb-primary/20 shadow-inner">
                   <Zap size={32} />
                 </div>
                 <div>
@@ -549,11 +549,11 @@ export default function AdminRecompensasV2() {
                       </div>
                     )}
                     {form.imagen && (
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden border border-sav-primary">
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden border border-bcb-primary">
                         <img src={URL.createObjectURL(form.imagen)} className="w-full h-full object-cover" alt="Preview" />
                       </div>
                     )}
-                    <label className="flex-1 flex flex-col items-center justify-center h-16 border-2 border-dashed border-white/10 rounded-2xl hover:border-sav-primary/50 hover:bg-sav-primary/5 transition-all cursor-pointer">
+                    <label className="flex-1 flex flex-col items-center justify-center h-16 border-2 border-dashed border-white/10 rounded-2xl hover:border-bcb-primary/50 hover:bg-bcb-primary/5 transition-all cursor-pointer">
                       <Plus size={20} className="text-slate-500" />
                       <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">Subir Imagen</span>
                       <input type="file" className="hidden" accept="image/*" onChange={e => setForm({...form, imagen: e.target.files[0]})} />
@@ -564,24 +564,24 @@ export default function AdminRecompensasV2() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Reward Name</label>
-                    <input type="text" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner" required />
+                    <input type="text" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-bcb-primary/30 shadow-inner" required />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Value (Bs)</label>
-                    <input type="number" value={form.valor} onChange={e => setForm({...form, valor: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner" required />
+                    <input type="number" value={form.valor} onChange={e => setForm({...form, valor: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-bcb-primary/30 shadow-inner" required />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Probability %</label>
-                    <input type="number" step="0.01" value={form.probabilidad} onChange={e => setForm({...form, probabilidad: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-sav-primary outline-none focus:border-sav-primary/30 shadow-inner" required />
+                    <input type="number" step="0.01" value={form.probabilidad} onChange={e => setForm({...form, probabilidad: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-bcb-primary outline-none focus:border-bcb-primary/30 shadow-inner" required />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Visual Color (Hex)</label>
                     <div className="flex gap-3">
                        <input type="color" value={form.color} onChange={e => setForm({...form, color: e.target.value})} className="w-14 h-14 bg-[#0f111a] border border-white/5 rounded-xl p-1 cursor-pointer" />
-                       <input type="text" value={form.color} onChange={e => setForm({...form, color: e.target.value})} className="flex-1 bg-[#0f111a] border border-white/5 rounded-2xl px-4 py-4 text-[10px] font-mono text-slate-400 outline-none focus:border-sav-primary/30 shadow-inner" />
+                       <input type="text" value={form.color} onChange={e => setForm({...form, color: e.target.value})} className="flex-1 bg-[#0f111a] border border-white/5 rounded-2xl px-4 py-4 text-[10px] font-mono text-slate-400 outline-none focus:border-bcb-primary/30 shadow-inner" />
                     </div>
                   </div>
                 </div>
@@ -589,18 +589,18 @@ export default function AdminRecompensasV2() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Stock (-1 = ∞)</label>
-                    <input type="number" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner" required />
+                    <input type="number" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-bcb-primary/30 shadow-inner" required />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Cooldown (Minutos)</label>
-                    <input type="number" value={form.cooldown_individual} onChange={e => setForm({...form, cooldown_individual: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner" required />
+                    <input type="number" value={form.cooldown_individual} onChange={e => setForm({...form, cooldown_individual: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-bcb-primary/30 shadow-inner" required />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Rareza</label>
-                    <select value={form.rareza} onChange={e => setForm({...form, rareza: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase outline-none focus:border-sav-primary/30 shadow-inner">
+                    <select value={form.rareza} onChange={e => setForm({...form, rareza: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase outline-none focus:border-bcb-primary/30 shadow-inner">
                       <option value="comun">Común</option>
                       <option value="raro">Raro</option>
                       <option value="epico">Épico</option>
@@ -609,7 +609,7 @@ export default function AdminRecompensasV2() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Operational Index (Order)</label>
-                    <input type="number" value={form.orden} onChange={e => setForm({...form, orden: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner" required />
+                    <input type="number" value={form.orden} onChange={e => setForm({...form, orden: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-bcb-primary/30 shadow-inner" required />
                   </div>
                 </div>
 
@@ -627,7 +627,7 @@ export default function AdminRecompensasV2() {
 
                 <div className="flex gap-4 pt-6">
                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-8 py-5 rounded-[25px] bg-white/5 text-slate-400 font-black text-[11px] uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all border border-white/5">Cancel</button>
-                   <button type="submit" className="flex-1 px-8 py-5 rounded-[25px] bg-sav-primary text-white font-black text-[11px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-2xl shadow-sav-primary/30">Deploy Reward</button>
+                   <button type="submit" className="flex-1 px-8 py-5 rounded-[25px] bg-bcb-primary text-white font-black text-[11px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-2xl shadow-bcb-primary/30">Deploy Reward</button>
                 </div>
               </form>
             </motion.div>
@@ -746,10 +746,10 @@ export default function AdminRecompensasV2() {
               exit={{ scale: 0.9, y: 30 }}
               className="bg-[#161926] border border-white/10 p-12 rounded-[50px] max-w-lg w-full shadow-2xl relative overflow-hidden"
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sav-primary to-indigo-600 shadow-lg shadow-sav-primary/50" />
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-bcb-primary to-indigo-600 shadow-lg shadow-bcb-primary/50" />
               
               <div className="flex items-center gap-6 mb-10">
-                <div className="p-4 rounded-[1.8rem] bg-sav-primary/10 text-sav-primary border border-sav-primary/20 shadow-inner">
+                <div className="p-4 rounded-[1.8rem] bg-bcb-primary/10 text-bcb-primary border border-bcb-primary/20 shadow-inner">
                   <Ticket size={32} className="animate-bounce" />
                 </div>
                 <div>
@@ -764,7 +764,7 @@ export default function AdminRecompensasV2() {
                   <select 
                     value={giftForm.tipo} 
                     onChange={e => setGiftForm({...giftForm, tipo: e.target.value})}
-                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-sav-primary/30 shadow-inner appearance-none cursor-pointer"
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-bcb-primary/30 shadow-inner appearance-none cursor-pointer"
                   >
                     <option value="todos">Todos los Usuarios (Full Rollout)</option>
                     <option value="nivel">Filtrar por Nivel VIP</option>
@@ -778,7 +778,7 @@ export default function AdminRecompensasV2() {
                     <select 
                       value={giftForm.targetId} 
                       onChange={e => setGiftForm({...giftForm, targetId: e.target.value})}
-                      className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-sav-primary/30 shadow-inner appearance-none cursor-pointer"
+                      className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-bcb-primary/30 shadow-inner appearance-none cursor-pointer"
                     >
                       <option value="">-- Choose Level --</option>
                       {niveles.map(n => <option key={n.id} value={n.id}>{n.nombre}</option>)}
@@ -792,7 +792,7 @@ export default function AdminRecompensasV2() {
                     <select 
                       value={giftForm.targetId} 
                       onChange={e => setGiftForm({...giftForm, targetId: e.target.value})}
-                      className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-sav-primary/30 shadow-inner appearance-none cursor-pointer"
+                      className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-bcb-primary/30 shadow-inner appearance-none cursor-pointer"
                     >
                       <option value="">-- Choose User --</option>
                       {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre_usuario}</option>)}
@@ -806,14 +806,14 @@ export default function AdminRecompensasV2() {
                     type="number" 
                     value={giftForm.cantidad} 
                     onChange={e => setGiftForm({...giftForm, cantidad: e.target.value})} 
-                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-sav-primary outline-none focus:border-sav-primary/30 shadow-inner" 
+                    className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-bcb-primary outline-none focus:border-bcb-primary/30 shadow-inner" 
                     min="1" 
                   />
                 </div>
 
                 <div className="flex gap-4 pt-4">
                    <button type="button" onClick={() => setShowGiftModal(false)} className="flex-1 px-8 py-5 rounded-[25px] bg-white/5 text-slate-400 font-black text-[11px] uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all border border-white/5">Abort</button>
-                   <button type="submit" className="flex-1 px-8 py-5 rounded-[25px] bg-sav-primary text-white font-black text-[11px] uppercase tracking-widest hover:bg-sav-primary/80 transition-all shadow-2xl shadow-sav-primary/30 active:scale-95">Deploy Tickets</button>
+                   <button type="submit" className="flex-1 px-8 py-5 rounded-[25px] bg-bcb-primary text-white font-black text-[11px] uppercase tracking-widest hover:bg-bcb-primary/80 transition-all shadow-2xl shadow-bcb-primary/30 active:scale-95">Deploy Tickets</button>
                 </div>
               </form>
             </motion.div>
@@ -823,4 +823,6 @@ export default function AdminRecompensasV2() {
     </div>
   );
 }
+
+
 

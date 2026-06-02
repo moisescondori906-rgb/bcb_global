@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, 
   Edit3, 
-  Save, 
+  BCB GLOBALe, 
   X, 
   Clock, 
   TrendingUp, 
@@ -240,7 +240,7 @@ export default function AdminNivelesV2() {
 
                   <div className="flex flex-col sm:flex-row gap-6 pt-6">
                     <button onClick={handleUpdate} className="admin-button-primary flex-1 !h-16 !text-[11px] !tracking-[0.3em] !rounded-2xl shadow-2xl shadow-admin-accent/20 flex items-center justify-center gap-4">
-                      <Save size={20} /> Deploy Level Updates
+                      <BCB GLOBALe size={20} /> Deploy Level Updates
                     </button>
                     <button onClick={() => setEditing(null)} className="admin-button-secondary !h-16 !px-10 !rounded-2xl flex items-center justify-center gap-4">
                       <X size={20} /> Abort
@@ -310,3 +310,5 @@ export default function AdminNivelesV2() {
     </div>
   );
 }
+
+

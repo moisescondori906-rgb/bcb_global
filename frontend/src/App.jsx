@@ -56,7 +56,6 @@ const PaymentMethods = lazyWithRetry(() => import('./pages/PaymentMethods.jsx'))
 const VIP = lazyWithRetry(() => import('./pages/VIP.jsx'));
 const Ganancias = lazyWithRetry(() => import('./pages/Ganancias.jsx'));
 const Movimientos = lazyWithRetry(() => import('./pages/Movimientos.jsx'));
-const NoticiasConferencia = lazyWithRetry(() => import('./pages/NoticiasConferencia.jsx'));
 const Team = lazyWithRetry(() => import('./pages/Team.jsx'));
 const Invite = lazyWithRetry(() => import('./pages/Invite.jsx'));
 const Security = lazyWithRetry(() => import('./pages/Security.jsx'));
@@ -67,7 +66,6 @@ const BillingRecord = lazyWithRetry(() => import('./pages/BillingRecord.jsx'));
 const Recompensas = lazyWithRetry(() => import('./pages/Recompensas.jsx'));
 const HelpCenter = lazyWithRetry(() => import('./pages/HelpCenter.jsx'));
 const AboutUs = lazyWithRetry(() => import('./pages/AboutUs.jsx'));
-const Messages = lazyWithRetry(() => import('./pages/Messages.jsx'));
 const Announcements = lazyWithRetry(() => import('./pages/Announcements.jsx'));
 const Premios = lazyWithRetry(() => import('./pages/Recompensas.jsx')); 
 
@@ -148,7 +146,6 @@ function AppRoutes() {
           <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/premios" element={<PrivateRoute><Premios /></PrivateRoute>} />
           <Route path="/recompensas" element={<Navigate to="/premios" replace />} />
-          <Route path="/mensajes" element={<PrivateRoute><Messages /></PrivateRoute>} />
           <Route path="/anuncios" element={<PrivateRoute><Announcements /></PrivateRoute>} />
           {/* Rutas Privadas */}
           <Route path="/tareas" element={<PrivateRoute><TaskRoom /></PrivateRoute>} />
@@ -158,7 +155,6 @@ function AppRoutes() {
           <Route path="/vip" element={<PrivateRoute><VIP /></PrivateRoute>} />
           <Route path="/ganancias" element={<PrivateRoute><Ganancias /></PrivateRoute>} />
           <Route path="/movimientos" element={<PrivateRoute><Movimientos /></PrivateRoute>} />
-          <Route path="/noticias-conferencia" element={<PrivateRoute><NoticiasConferencia /></PrivateRoute>} />
           <Route path="/retiro" element={<PrivateRoute><Withdrawal /></PrivateRoute>} />
           <Route path="/pagar" element={<PrivateRoute><PaymentMethods /></PrivateRoute>} />
           <Route path="/recargar" element={<PrivateRoute><Recharge /></PrivateRoute>} />

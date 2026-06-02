@@ -1,4 +1,4 @@
-package com.bcb.container;
+package com.bcb.global;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -113,3 +113,4 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 }
+

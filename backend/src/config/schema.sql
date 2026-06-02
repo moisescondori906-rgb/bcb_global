@@ -1,4 +1,4 @@
--- SAV - MySQL Production Schema (Optimized for High Concurrency)
+-- BCB GLOBAL - MySQL Production Schema (Optimized for High Concurrency)
 -- Generated for Contabo Server
 
 SET FOREIGN_KEY_CHECKS = 0;

@@ -10,10 +10,10 @@ export function Button({
   ...props 
 }) {
   const variants = {
-    primary: 'h-12 sm:h-14 w-full flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-sav-primary to-sav-accent-hot text-white font-bold text-sm sm:text-base transition-all shadow-lg shadow-sav-primary/30 hover:shadow-sav-primary/40 active:translate-y-0.5 shadow-sav-glow',
+    primary: 'h-12 sm:h-14 w-full flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-bcb-primary to-bcb-accent-hot text-white font-bold text-sm sm:text-base transition-all shadow-lg shadow-bcb-primary/30 hover:shadow-bcb-primary/40 active:translate-y-0.5 shadow-bcb-glow',
     secondary: 'h-12 sm:h-14 w-full flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-slate-100 border-2 border-slate-200 text-slate-700 font-bold text-sm sm:text-base transition-all shadow-sm hover:bg-slate-200',
-    ghost: 'bg-transparent hover:bg-sav-primary/5 text-sav-primary font-black px-4 py-2 text-sm sm:text-base',
-    danger: 'h-12 sm:h-14 w-full flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-sav-error text-white shadow-lg shadow-sav-error/30 hover:brightness-110 font-black text-sm sm:text-base'
+    ghost: 'bg-transparent hover:bg-bcb-primary/5 text-bcb-primary font-black px-4 py-2 text-sm sm:text-base',
+    danger: 'h-12 sm:h-14 w-full flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-bcb-error text-white shadow-lg shadow-bcb-error/30 hover:brightness-110 font-black text-sm sm:text-base'
   };
 
   return (
@@ -29,7 +29,7 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <div className="w-5 h-5 border-2 border-sav-primary/30 border-t-sav-primary rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-bcb-primary/30 border-t-bcb-primary rounded-full animate-spin" />
       ) : (
         <>
           {Icon && <Icon size={20} />}
@@ -39,3 +39,5 @@ export function Button({
     </button>
   );
 }
+
+

@@ -51,7 +51,7 @@ export default function Announcements() {
           </button>
           <div className="space-y-0.5">
             <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Anuncios</h1>
-            <p className="text-[10px] font-black text-sav-primary uppercase tracking-[0.2em] opacity-60">Centro de Comunicados</p>
+            <p className="text-[10px] font-black text-bcb-primary uppercase tracking-[0.2em] opacity-60">Centro de Comunicados</p>
           </div>
         </header>
 
@@ -78,7 +78,7 @@ export default function Announcements() {
                 <div className="space-y-4">
                   {/* Date Badge */}
                   <div className="flex items-center gap-2 px-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-sav-primary" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-bcb-primary" />
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                       {formatDate(item.created_at)}
                     </span>
@@ -100,7 +100,7 @@ export default function Announcements() {
                         <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-tight">
                           {item.titulo || 'Comunicado Oficial'}
                         </h3>
-                        <div className="h-1 w-12 bg-sav-primary/10 rounded-full" />
+                        <div className="h-1 w-12 bg-bcb-primary/10 rounded-full" />
                       </div>
 
                       <p className="text-[13px] text-slate-600 font-bold leading-relaxed whitespace-pre-wrap">
@@ -108,7 +108,7 @@ export default function Announcements() {
                       </p>
 
                       <div className="pt-4 flex items-center gap-2 opacity-40">
-                        <SparklesIcon size={12} className="text-sav-primary" />
+                        <SparklesIcon size={12} className="text-bcb-primary" />
                         <span className="text-[8px] font-black text-slate-900 uppercase tracking-[0.3em]">BCB Global Tech</span>
                       </div>
                     </div>
@@ -130,3 +130,4 @@ export default function Announcements() {
     </Layout>
   );
 }
+

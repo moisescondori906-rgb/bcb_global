@@ -13,7 +13,7 @@ export function Card({
     default: 'bg-white border-2 border-slate-200 rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-xl shadow-slate-200/60',
     flat: 'bg-slate-50 border-2 border-slate-300 rounded-[1.2rem] sm:rounded-[2rem] p-4 sm:p-6',
     outline: 'bg-transparent border-2 border-slate-300 rounded-[1.2rem] sm:rounded-[2rem] p-4 sm:p-6',
-    premium: 'bg-white border-2 border-slate-200 rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-xl shadow-slate-200/60 border-t-sav-primary/80'
+    premium: 'bg-white border-2 border-slate-200 rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-xl shadow-slate-200/60 border-t-bcb-primary/80'
   };
 
   const Component = animate ? motion.div : 'div';
@@ -33,3 +33,4 @@ export function Card({
     </Component>
   );
 }
+

@@ -97,9 +97,9 @@ export default function FloatingQuestionnaire() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-[100] bg-sav-dark/95 backdrop-blur-md flex items-center justify-center p-6">
-          <div className="bg-sav-card w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 flex flex-col animate-in">
-            <div className="bg-sav-primary p-8 text-white relative">
+        <div className="fixed inset-0 z-[100] bg-bcb-dark/95 backdrop-blur-md flex items-center justify-center p-6">
+          <div className="bg-bcb-card w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 flex flex-col animate-in">
+            <div className="bg-bcb-primary p-8 text-white relative">
               <button 
                 onClick={() => setShowModal(false)}
                 className="absolute top-6 right-6 p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
@@ -117,7 +117,7 @@ export default function FloatingQuestionnaire() {
               {Array.isArray(cuestionario?.preguntas) && cuestionario.preguntas.map((p, pIdx) => (
                 <div key={p.id} className="space-y-4">
                   <div className="flex gap-3">
-                    <span className="w-6 h-6 bg-sav-primary/10 text-sav-primary rounded-lg flex items-center justify-center text-xs font-black shrink-0">{pIdx + 1}</span>
+                    <span className="w-6 h-6 bg-bcb-primary/10 text-bcb-primary rounded-lg flex items-center justify-center text-xs font-black shrink-0">{pIdx + 1}</span>
                     <h3 className="text-sm font-black text-white uppercase tracking-tight leading-tight">{p?.texto}</h3>
                   </div>
                   
@@ -127,7 +127,7 @@ export default function FloatingQuestionnaire() {
                         key={oIdx}
                         type="button"
                         onClick={() => setRespuestas(prev => ({ ...prev, [p.id]: oIdx }))}
-                        className={`w-full p-4 rounded-xl border text-[10px] font-black uppercase tracking-widest text-left flex items-center justify-between transition-all active:scale-[0.98] ${respuestas[p.id] === oIdx ? 'bg-sav-primary border-sav-primary text-white shadow-lg shadow-sav-primary/20' : 'bg-sav-surface border-sav-border text-sav-muted hover:border-white/10'}`}
+                        className={`w-full p-4 rounded-xl border text-[10px] font-black uppercase tracking-widest text-left flex items-center justify-between transition-all active:scale-[0.98] ${respuestas[p.id] === oIdx ? 'bg-bcb-primary border-bcb-primary text-white shadow-lg shadow-bcb-primary/20' : 'bg-bcb-surface border-bcb-border text-bcb-muted hover:border-white/10'}`}
                       >
                         {opt}
                         {respuestas[p.id] === oIdx && <CheckCircle2 size={14} />}
@@ -142,7 +142,7 @@ export default function FloatingQuestionnaire() {
               <button 
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="w-full h-14 bg-sav-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-sav-primary/20 flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50"
+                className="w-full h-14 bg-bcb-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-bcb-primary/20 flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50"
               >
                 {submitting ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -157,3 +157,4 @@ export default function FloatingQuestionnaire() {
     </>
   );
 }
+

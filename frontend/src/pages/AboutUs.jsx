@@ -88,7 +88,7 @@ export default function AboutUs() {
                 className={cn(
                   "flex items-center gap-2 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border",
                   isActive 
-                    ? "bg-sav-primary border-sav-primary text-white shadow-lg shadow-sav-primary/20 scale-105" 
+                    ? "bg-bcb-primary border-bcb-primary text-white shadow-lg shadow-bcb-primary/20 scale-105" 
                     : "bg-white border-slate-200 text-slate-400 hover:bg-slate-50"
                 )}
               >
@@ -109,7 +109,7 @@ export default function AboutUs() {
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
             <Card variant="premium" className="p-8 relative overflow-hidden min-h-[420px] bg-white shadow-xl shadow-slate-200/50 border-slate-200">
-              <div className="absolute top-0 right-0 p-8 opacity-[0.05] text-sav-primary">
+              <div className="absolute top-0 right-0 p-8 opacity-[0.05] text-bcb-primary">
                 {(() => {
                   const Icon = tabs.find(t => t.id === activeTab).icon;
                   return <Icon size={180} />;
@@ -118,16 +118,16 @@ export default function AboutUs() {
 
               <div className="relative z-10 space-y-6">
                 <div className="space-y-2">
-                  <Badge variant="info" className="mb-2 bg-sav-primary text-white border-sav-primary shadow-sm">BCB GLOBAL OFFICIAL</Badge>
+                  <Badge variant="info" className="mb-2 bg-bcb-primary text-white border-bcb-primary shadow-sm">BCB GLOBAL OFFICIAL</Badge>
                   <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none drop-shadow-sm">
                     {content[activeTab].title}
                   </h2>
-                  <p className="text-[13px] font-black text-sav-primary uppercase tracking-[0.25em] bg-sav-primary/5 py-1 px-3 rounded-lg inline-block">
+                  <p className="text-[13px] font-black text-bcb-primary uppercase tracking-[0.25em] bg-bcb-primary/5 py-1 px-3 rounded-lg inline-block">
                     {content[activeTab].subtitle}
                   </p>
                 </div>
 
-                <p className="text-[15px] text-slate-600 font-bold leading-relaxed border-l-4 border-sav-primary/30 pl-4 py-1">
+                <p className="text-[15px] text-slate-600 font-bold leading-relaxed border-l-4 border-bcb-primary/30 pl-4 py-1">
                   {content[activeTab].description}
                 </p>
 
@@ -136,8 +136,8 @@ export default function AboutUs() {
                     <div className="flex justify-between items-center px-1">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ventana Operativa</span>
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-sav-primary animate-pulse" />
-                        <span className="text-[9px] font-black text-sav-primary uppercase tracking-widest">Bolivia Time</span>
+                        <div className="w-2 h-2 rounded-full bg-bcb-primary animate-pulse" />
+                        <span className="text-[9px] font-black text-bcb-primary uppercase tracking-widest">Bolivia Time</span>
                       </div>
                     </div>
                     <div className="grid grid-cols-7 gap-2">
@@ -149,7 +149,7 @@ export default function AboutUs() {
                             <div className={cn(
                               "w-full aspect-square rounded-xl flex items-center justify-center text-[11px] font-black transition-all",
                               isAllowed 
-                                ? "bg-sav-primary text-white shadow-lg shadow-sav-primary/30 scale-110" 
+                                ? "bg-bcb-primary text-white shadow-lg shadow-bcb-primary/30 scale-110" 
                                 : "bg-white text-slate-300 border border-slate-100"
                             )}>
                               {i + 1}
@@ -160,7 +160,7 @@ export default function AboutUs() {
                     </div>
                     <div className="pt-2 flex items-center justify-center gap-4">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-sav-primary" />
+                        <div className="w-2 h-2 rounded-full bg-bcb-primary" />
                         <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Habilitado</span>
                       </div>
                       <div className="flex items-center gap-1.5">
@@ -174,7 +174,7 @@ export default function AboutUs() {
                 <div className="space-y-5 pt-4">
                   {content[activeTab].items.map((item, i) => (
                     <div key={i} className="flex items-center gap-4 group">
-                      <div className="w-11 h-11 rounded-2xl bg-sav-primary text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-sav-primary/30">
+                      <div className="w-11 h-11 rounded-2xl bg-bcb-primary text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-bcb-primary/30">
                         <item.icon size={20} strokeWidth={2.5} />
                       </div>
                       <span className="text-[13px] font-black text-slate-800 uppercase tracking-tight">{item.text}</span>
@@ -214,3 +214,4 @@ export default function AboutUs() {
     </Layout>
   );
 }
+

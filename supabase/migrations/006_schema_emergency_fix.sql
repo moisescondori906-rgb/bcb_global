@@ -1,4 +1,4 @@
--- SAV - Schema Fix for Task Activity and Earnings
+-- BCB GLOBAL - Schema Fix for Task Activity and Earnings
 -- Execute in Supabase SQL Editor
 
 -- 1. Add nivel_id to actividad_tareas and comentario_ingles to tareas
@@ -39,3 +39,4 @@ BEGIN
 EXCEPTION
   WHEN others THEN NULL;
 END $$;
+

@@ -18,8 +18,8 @@ export function Input({
   return (
     <div className={cn("space-y-2 w-full", className)}>
       {label && (
-        <label className="flex items-center gap-2 text-[10px] font-black text-sav-muted uppercase tracking-[0.2em] ml-1">
-          {Icon && <Icon size={12} className="text-sav-primary" />}
+        <label className="flex items-center gap-2 text-[10px] font-black text-bcb-muted uppercase tracking-[0.2em] ml-1">
+          {Icon && <Icon size={12} className="text-bcb-primary" />}
           {label}
         </label>
       )}
@@ -40,7 +40,7 @@ export function Input({
             Icon ? "pl-14 pr-6" : "px-6",
             error 
               ? "border-red-500 bg-red-50 text-red-900 placeholder:text-red-300" 
-              : "border-slate-100 bg-white text-black placeholder:text-slate-400 focus:border-sav-primary/30 shadow-sm",
+              : "border-slate-100 bg-white text-black placeholder:text-slate-400 focus:border-bcb-primary/30 shadow-sm",
             showPasswordToggle && "pr-14",
             className
           )}
@@ -49,17 +49,18 @@ export function Input({
           <button
             type="button"
             onClick={() => setShowPass(!showPass)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-sav-muted hover:text-sav-primary transition-colors p-2"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-bcb-muted hover:text-bcb-primary transition-colors p-2"
           >
             {showPass ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
           </button>
         )}
       </div>
       {error && (
-        <p className="text-[10px] font-bold text-sav-error uppercase tracking-widest ml-1 animate-in">
+        <p className="text-[10px] font-bold text-bcb-error uppercase tracking-widest ml-1 animate-in">
           {error}
         </p>
       )}
     </div>
   );
 }
+

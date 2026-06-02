@@ -1,4 +1,4 @@
--- SAV - Agregar columnas de QR y Turnos a la tabla admins
+-- BCB GLOBAL - Agregar columnas de QR y Turnos a la tabla admins
 -- Ejecutar en Supabase SQL Editor
 
 ALTER TABLE admins
@@ -10,3 +10,4 @@ ADD COLUMN IF NOT EXISTS recibe_notificaciones BOOLEAN DEFAULT TRUE;
 
 COMMENT ON COLUMN admins.qr_base64 IS 'Imagen QR de cobro del administrador en formato Base64';
 COMMENT ON COLUMN admins.dias_semana IS 'Días de la semana en los que el admin está de turno (0-6, separados por coma)';
+

@@ -165,8 +165,8 @@ export default function Dashboard() {
       to: '/equipo', 
       icon: UsersIcon, 
       label: 'Mi Equipo', 
-      color: 'text-sav-primary', 
-      bg: 'bg-sav-primary/10',
+      color: 'text-bcb-primary', 
+      bg: 'bg-bcb-primary/10',
       className: 'text-[8px] sm:text-[9px] scale-90',
       badge: teamSummary?.niveles ? (
         <div className="flex gap-1 mt-1">
@@ -200,33 +200,33 @@ export default function Dashboard() {
               className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl"
             />
             
-            {/* Modal Container: Independiente del scroll del fondo */}
+            {/* Modal Container: Floating Luxury Card (Premium Overlay) */}
             <motion.div 
-              initial={{ opacity: 0, scale: 0.7, rotate: -2 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              exit={{ opacity: 0, scale: 0.8, rotate: 1 }}
-              transition={{ type: "spring", damping: 20, stiffness: 300 }}
-              className="relative w-[90%] max-w-[350px] max-h-[75vh] bg-white rounded-[3.5rem] shadow-[0_80px_200px_-40px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,1)] flex flex-col overflow-hidden z-[100000] border-[8px] border-white"
+              initial={{ opacity: 0, scale: 0.85, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              className="relative w-[90%] max-w-[400px] bg-white rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,1)] flex flex-col overflow-hidden z-[100000] border border-slate-100"
             >
-              {/* Animated Gradient Border Overlay */}
-              <div className="absolute inset-0 z-0 opacity-20">
-                <div className="absolute inset-0 bg-gradient-to-tr from-sav-primary via-rose-500 to-amber-500 animate-spin-slow blur-2xl" />
+              {/* Animated Gradient Border Overlay (Refined) */}
+              <div className="absolute inset-0 z-0 opacity-10">
+                <div className="absolute inset-0 bg-gradient-to-tr from-bcb-primary via-indigo-500 to-purple-500 animate-spin-slow blur-3xl" />
               </div>
 
               {/* Luxury Glow Background */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(79,70,229,0.1)_0%,transparent_70%)] pointer-events-none z-0" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(30,27,75,0.05)_0%,transparent_70%)] pointer-events-none z-0" />
               
-              {/* Header/Imagen: Ultra Clean with Shine Effect */}
-              <div className="w-full aspect-square bg-slate-950 relative overflow-hidden shrink-0 z-10">
+              {/* Header/Imagen: Independent and Centered */}
+              <div className="w-full aspect-[4/3] bg-slate-950 relative overflow-hidden shrink-0 z-10 flex items-center justify-center">
                 <AnimatePresence mode="wait">
                   <motion.img 
                     key={currentAnnouncementIndex}
-                    initial={{ opacity: 0, scale: 1.3, filter: 'blur(10px)' }}
-                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }}
-                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    initial={{ opacity: 0, scale: 1.1 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                     src={comunicados[currentAnnouncementIndex].imagen_url ? api.getMediaUrl(comunicados[currentAnnouncementIndex].imagen_url) : '/imag/logo-carrusel.webp'} 
-                    className="w-full h-full object-contain p-10"
+                    className="w-full h-full object-contain p-6"
                     alt="Comunicado"
                   />
                 </AnimatePresence>
@@ -235,26 +235,26 @@ export default function Dashboard() {
                 <motion.div 
                   animate={{ x: ['-100%', '200%'] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 z-20 pointer-events-none"
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 z-20 pointer-events-none"
                 />
 
-                {/* Botón Cerrar: Estilo Flotante Premium */}
+                {/* Botón Cerrar: Minimalist Floating */}
                 <button 
                   onClick={() => setShowDailyAnnouncement(false)}
-                  className="absolute top-6 right-6 z-50 w-12 h-12 bg-black/40 hover:bg-black/70 backdrop-blur-2xl rounded-2xl text-white transition-all active:scale-90 flex items-center justify-center border border-white/20 shadow-2xl group"
+                  className="absolute top-5 right-5 z-50 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-xl rounded-full text-white transition-all active:scale-90 flex items-center justify-center border border-white/20 shadow-xl group"
                 >
-                  <CloseIcon size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+                  <CloseIcon size={20} className="group-hover:rotate-90 transition-transform duration-300" />
                 </button>
 
-                {/* Indicadores: Estilo Cápsula */}
+                {/* Indicadores: Modern Capsule */}
                 {comunicados.length > 1 && (
-                  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2.5 z-50 bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-50 bg-black/40 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10">
                     {comunicados.map((_, i) => (
                       <div 
                         key={i} 
                         className={cn(
-                          "h-1.5 rounded-full transition-all duration-700",
-                          i === currentAnnouncementIndex ? "w-8 bg-sav-primary shadow-[0_0_15px_rgba(79,70,229,0.8)]" : "w-1.5 bg-white/40"
+                          "h-1 rounded-full transition-all duration-500",
+                          i === currentAnnouncementIndex ? "w-6 bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]" : "w-1 bg-white/30"
                         )}
                       />
                     ))}
@@ -262,47 +262,46 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* Contenido: Tipografía de Revista */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-8 text-center relative z-10 bg-white">
+              {/* Contenido: High-End Typography */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-8 sm:p-10 space-y-6 text-center relative z-10 bg-white">
                 <AnimatePresence mode="wait">
                   <motion.div 
                     key={currentAnnouncementIndex}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.6, ease: "backOut" }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
                     className="space-y-6"
                   >
                     <div className="flex flex-col items-center gap-4">
                       <div className="relative">
-                        <div className="absolute inset-0 bg-sav-primary/20 blur-xl rounded-full animate-pulse" />
-                        <div className="relative w-16 h-16 bg-gradient-to-br from-sav-primary to-indigo-600 rounded-[1.5rem] flex items-center justify-center text-white shadow-2xl border border-white/20 transform -rotate-3 group-hover:rotate-0 transition-transform">
-                          <BellIcon size={32} strokeWidth={2.5} className="animate-bounce-slow" />
+                        <div className="absolute inset-0 bg-bcb-primary/10 blur-xl rounded-full" />
+                        <div className="relative w-14 h-14 bg-gradient-to-br from-bcb-primary to-indigo-900 rounded-2xl flex items-center justify-center text-white shadow-xl border border-white/10">
+                          <BellIcon size={28} strokeWidth={2.5} />
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none !text-black">
+                      <div className="space-y-2">
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight leading-none !text-black">
                           {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
                         </h2>
-                        <div className="h-1.5 w-12 bg-gradient-to-r from-sav-primary to-rose-500 rounded-full mx-auto" />
+                        <div className="h-1 w-10 bg-bcb-primary rounded-full mx-auto" />
                       </div>
                     </div>
                     
-                    <p className="text-[14px] sm:text-base font-black uppercase tracking-widest leading-relaxed text-black whitespace-pre-wrap opacity-90 drop-shadow-sm">
+                    <p className="text-[13px] sm:text-sm font-bold uppercase tracking-wider leading-relaxed text-slate-600 whitespace-pre-wrap">
                       {comunicados[currentAnnouncementIndex].mensaje}
                     </p>
                   </motion.div>
                 </AnimatePresence>
               </div>
 
-              {/* Footer: Botón de Acción Principal */}
-              <div className="p-10 pt-0 mt-auto relative z-10 bg-white">
+              {/* Footer: Clean Action */}
+              <div className="p-8 pt-0 mt-auto relative z-10 bg-white">
                 <Button 
                   onClick={() => setShowDailyAnnouncement(false)}
-                  className="w-full h-16 rounded-[2rem] bg-sav-primary text-white font-black uppercase tracking-[0.3em] shadow-[0_25px_50px_-12px_rgba(79,70,229,0.5)] hover:scale-[1.02] active:scale-95 transition-all text-sm border-b-4 border-indigo-950 flex items-center justify-center gap-3 group"
+                  className="w-full h-14 rounded-2xl bg-bcb-primary text-white font-black uppercase tracking-[0.2em] shadow-xl hover:brightness-110 active:scale-[0.98] transition-all text-[12px] flex items-center justify-center gap-2 group"
                 >
-                  <SparklesIcon size={18} className="animate-pulse" />
-                  ENTENDIDO
+                  <span>ENTENDIDO</span>
                 </Button>
               </div>
             </motion.div>
@@ -327,13 +326,13 @@ export default function Dashboard() {
               exit={{ opacity: 0, scale: 0.9 }}
               className="relative w-[95%] max-w-sm bg-white rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.15)] border border-slate-100 flex flex-col p-10 space-y-8 items-center text-center z-[100000]"
             >
-              <div className="w-24 h-24 bg-sav-primary/10 rounded-full flex items-center justify-center text-sav-primary border border-sav-primary/10">
+              <div className="w-24 h-24 bg-bcb-primary/10 rounded-full flex items-center justify-center text-bcb-primary border border-bcb-primary/10">
                 <CoffeeIcon size={48} />
               </div>
               
               <div className="space-y-4">
                 <h2 className="text-3xl font-black text-black uppercase tracking-tighter leading-tight !text-black">
-                  ¡Buen domingo <br/> <span className="text-sav-primary">para todos!</span> 😊
+                  ¡Buen domingo <br/> <span className="text-bcb-primary">para todos!</span> 😊
                 </h2>
                 
                 <div className="space-y-4 text-sm font-bold uppercase tracking-widest leading-relaxed text-black/60">
@@ -346,7 +345,7 @@ export default function Dashboard() {
 
               <Button 
                 onClick={() => setShowSundayModal(false)}
-                className="w-full h-16 rounded-[2rem] bg-sav-primary text-white font-black uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all"
+                className="w-full h-16 rounded-[2rem] bg-bcb-primary text-white font-black uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all"
               >
                 <span className="text-white">ENTRAR AL PANEL</span>
               </Button>
@@ -356,10 +355,10 @@ export default function Dashboard() {
       </AnimatePresence>
 
       <Layout>
-        <div className="fixed inset-0 bg-sav-dark -z-10" />
+        <div className="fixed inset-0 bg-bcb-dark -z-10" />
         {/* Dynamic Background Effects */}
-        <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-sav-primary/10 blur-[120px] rounded-full -z-10 animate-pulse" />
-        <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sav-accent/5 blur-[100px] rounded-full -z-10" />
+        <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-bcb-primary/10 blur-[120px] rounded-full -z-10 animate-pulse" />
+        <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-bcb-accent/5 blur-[100px] rounded-full -z-10" />
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.03)_0%,transparent_70%)] -z-10" />
         
         <main className="px-4 sm:px-5 space-y-6 sm:space-y-7 pb-12 pt-4 animate-in">
@@ -373,17 +372,17 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] bg-sav-error/5 border border-sav-error/10 backdrop-blur-md shadow-xl shadow-sav-error/5 overflow-hidden group"
+              className="relative p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] bg-bcb-error/5 border border-bcb-error/10 backdrop-blur-md shadow-xl shadow-bcb-error/5 overflow-hidden group"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-sav-error/5 blur-[50px] -z-10" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-bcb-error/5 blur-[50px] -z-10" />
               <div className="flex items-start gap-4 sm:gap-5">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-sav-error/10 rounded-2xl flex items-center justify-center text-sav-error border border-sav-error/10 shadow-sm group-hover:scale-110 transition-transform duration-500">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-bcb-error/10 rounded-2xl flex items-center justify-center text-bcb-error border border-bcb-error/10 shadow-sm group-hover:scale-110 transition-transform duration-500">
                   <ShieldAlertIcon size={24} />
                 </div>
                 <div className="flex-1 space-y-2">
                   <h3 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
                     Aviso de Seguridad
-                    <span className="w-1.5 h-1.5 rounded-full bg-sav-error animate-ping" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-bcb-error animate-ping" />
                   </h3>
                   <p className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest leading-relaxed">
                     {securityAlert}
@@ -391,7 +390,7 @@ export default function Dashboard() {
                   <div className="flex items-center gap-3 pt-2">
                     <button 
                       onClick={handleClearAlert}
-                      className="px-3 sm:px-4 py-2 rounded-xl bg-sav-error text-white text-[8px] sm:text-[9px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-md shadow-sav-error/20"
+                      className="px-3 sm:px-4 py-2 rounded-xl bg-bcb-error text-white text-[8px] sm:text-[9px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-md shadow-bcb-error/20"
                     >
                       Entendido
                     </button>
@@ -414,18 +413,18 @@ export default function Dashboard() {
           <div className="space-y-1">
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <SparklesIcon size={14} className="text-sav-primary animate-pulse" />
+                <SparklesIcon size={14} className="text-bcb-primary animate-pulse" />
                 <h1 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">BCB GLOBAL</h1>
               </div>
             </div>
           </div>
           <Link to="/anuncios" className="relative group">
-            <div className="absolute -inset-3 bg-sav-primary/10 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
-            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-sav-muted hover:text-white transition-all duration-300 shadow-sm group-hover:border-sav-primary/30 group-hover:bg-sav-primary/5">
+            <div className="absolute -inset-3 bg-bcb-primary/10 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
+            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-bcb-muted hover:text-white transition-all duration-300 shadow-sm group-hover:border-bcb-primary/30 group-hover:bg-bcb-primary/5">
               <BellIcon size={20} className="group-hover:animate-bounce" />
               {/* Notif Badge */}
               {comunicados.length > 0 && (
-                <div className="absolute top-2 right-2 w-2 h-2 bg-sav-primary rounded-full border-2 border-sav-dark shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
+                <div className="absolute top-2 right-2 w-2 h-2 bg-bcb-primary rounded-full border-2 border-bcb-dark shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
               )}
             </div>
           </Link>
@@ -537,12 +536,12 @@ export default function Dashboard() {
         <section className="space-y-5">
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-sav-primary/5 flex items-center justify-center text-sav-primary">
+              <div className="w-8 h-8 rounded-lg bg-bcb-primary/5 flex items-center justify-center text-bcb-primary">
                 <TrendingUpIcon size={16} strokeWidth={2.5} />
               </div>
               <h3 className="text-[11px] sm:text-[12px] font-black text-slate-900 uppercase tracking-[0.25em]">Planes VIP GLOBAL</h3>
             </div>
-            <Link to="/vip" className="text-[10px] font-black text-sav-primary uppercase tracking-widest flex items-center gap-1.5 hover:underline">
+            <Link to="/vip" className="text-[10px] font-black text-bcb-primary uppercase tracking-widest flex items-center gap-1.5 hover:underline">
               Ver Catálogo <ChevronRightIcon size={14} />
             </Link>
           </div>
@@ -556,20 +555,20 @@ export default function Dashboard() {
                   to="/vip"
                   className={cn(
                     "min-w-[140px] sm:min-w-[160px] p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border transition-all snap-start relative overflow-hidden group",
-                    esActual ? "bg-sav-primary/10 border-sav-primary/30" : "bg-white border-black/5 shadow-sm"
+                    esActual ? "bg-bcb-primary/10 border-bcb-primary/30" : "bg-white border-black/5 shadow-sm"
                   )}
                 >
                   <div className="space-y-3 relative z-10">
                     <div className="flex justify-between items-start">
                       <span className="text-[9px] sm:text-[10px] font-black text-gray-900 uppercase tracking-tighter">{n.nombre}</span>
-                      {esActual && <div className="w-1.5 h-1.5 rounded-full bg-sav-success animate-pulse" />}
+                      {esActual && <div className="w-1.5 h-1.5 rounded-full bg-bcb-success animate-pulse" />}
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-[7px] sm:text-[8px] font-black text-sav-muted uppercase tracking-widest leading-none">Diario</p>
+                      <p className="text-[7px] sm:text-[8px] font-black text-bcb-muted uppercase tracking-widest leading-none">Diario</p>
                       <p className="text-base sm:text-lg font-black text-gray-900">+{Number(n.ingreso_diario || 0).toFixed(2)}</p>
                     </div>
                     <div className="pt-2 sm:pt-3 border-t border-black/5 flex justify-between items-center">
-                      <span className="text-[7px] sm:text-[8px] font-bold text-sav-muted uppercase">Inversión</span>
+                      <span className="text-[7px] sm:text-[8px] font-bold text-bcb-muted uppercase">Inversión</span>
                       <span className="text-[9px] sm:text-[10px] font-black text-gray-900">{formatCurrency(n.deposito, 'Bs')}</span>
                     </div>
                   </div>
@@ -584,7 +583,7 @@ export default function Dashboard() {
 
         {/* Tutorial Section */}
         <div className="px-1 relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-sav-primary/20 to-rose-500/20 rounded-[1.5rem] sm:rounded-[2rem] blur opacity-50 group-hover:opacity-100 transition duration-1000" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-bcb-primary/20 to-rose-500/20 rounded-[1.5rem] sm:rounded-[2rem] blur opacity-50 group-hover:opacity-100 transition duration-1000" />
           <GuideSection text={pc?.marquee_text || "Bienvenido a BCB Global Institutional Bolivia — Líder en Publicidad Digital"} />
         </div>
 
@@ -619,7 +618,7 @@ export default function Dashboard() {
                 <span className="bg-white/90 backdrop-blur-md border border-black/5 px-3 py-2 rounded-xl text-[8px] sm:text-[9px] font-black text-gray-900 uppercase tracking-widest shadow-xl">
                   Canal Oficial
                 </span>
-                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-sav-primary flex items-center justify-center text-white border border-white/10 shadow-xl">
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-bcb-primary flex items-center justify-center text-white border border-white/10 shadow-xl">
                   <UsersIcon size={18} />
                 </div>
               </a>
@@ -642,7 +641,7 @@ export default function Dashboard() {
             "w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center text-white transition-all duration-300 border-2 z-10 shadow-2xl",
             showSupportMenu 
               ? "bg-white border-black/10 text-gray-900 rotate-45" 
-              : "bg-gradient-to-br from-sav-primary to-rose-700 border-white/20"
+              : "bg-gradient-to-br from-bcb-primary to-rose-700 border-white/20"
           )}
         >
           {showSupportMenu ? <CloseIcon size={20} /> : <PlusIcon size={24} />}
@@ -652,3 +651,4 @@ export default function Dashboard() {
     </>
   );
 }
+

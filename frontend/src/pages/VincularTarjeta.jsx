@@ -48,21 +48,21 @@ export default function VincularTarjeta() {
       <Header title="Vincular Cuenta" />
       <div className="p-6 space-y-8 animate-fade">
         <div className="flex flex-col items-center text-center space-y-4 mb-2">
-          <div className="w-16 h-16 rounded-3xl bg-sav-primary/10 flex items-center justify-center text-sav-primary border border-sav-primary/20 shadow-xl">
+          <div className="w-16 h-16 rounded-3xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary border border-bcb-primary/20 shadow-xl">
             <ShieldCheckIcon size={32} />
           </div>
           <div>
             <h2 className="text-xl font-black text-white uppercase tracking-tighter">Seguridad de Cobro</h2>
-            <p className="text-[10px] text-sav-muted font-bold uppercase tracking-widest mt-1">Configura tu método de retiro preferido</p>
+            <p className="text-[10px] text-bcb-muted font-bold uppercase tracking-widest mt-1">Configura tu método de retiro preferido</p>
           </div>
         </div>
 
         <form onSubmit={submit} className="space-y-6">
           <Card className="p-6 space-y-6 bg-white/[0.02] border-white/5 shadow-2xl">
             {error && (
-              <div className="p-4 rounded-2xl bg-sav-error/10 border border-sav-error/20 flex items-center gap-3 animate-shake">
-                <AlertCircleIcon size={18} className="text-sav-error shrink-0" />
-                <p className="text-[10px] text-sav-error font-black uppercase tracking-widest leading-relaxed">{error}</p>
+              <div className="p-4 rounded-2xl bg-bcb-error/10 border border-bcb-error/20 flex items-center gap-3 animate-shake">
+                <AlertCircleIcon size={18} className="text-bcb-error shrink-0" />
+                <p className="text-[10px] text-bcb-error font-black uppercase tracking-widest leading-relaxed">{error}</p>
               </div>
             )}
 
@@ -73,7 +73,7 @@ export default function VincularTarjeta() {
               <input
                 value={nombreBanco}
                 onChange={(e) => setNombreBanco(e.target.value)}
-                className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold text-sm focus:border-sav-primary/30 focus:bg-white/10 transition-all outline-none placeholder:text-white/10"
+                className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold text-sm focus:border-bcb-primary/30 focus:bg-white/10 transition-all outline-none placeholder:text-white/10"
                 required
                 placeholder="Nombre completo"
               />
@@ -86,15 +86,15 @@ export default function VincularTarjeta() {
               <select 
                 value={tipo} 
                 onChange={(e) => setTipo(e.target.value)} 
-                className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold text-sm focus:border-sav-primary/30 focus:bg-white/10 transition-all outline-none appearance-none"
+                className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold text-sm focus:border-bcb-primary/30 focus:bg-white/10 transition-all outline-none appearance-none"
               >
-                <option value="bnb" className="bg-sav-dark">BNB (Banco Nacional de Bolivia)</option>
-                <option value="union" className="bg-sav-dark">Banco Unión</option>
-                <option value="mercantil" className="bg-sav-dark">Banco Mercantil Santa Cruz</option>
-                <option value="ganadero" className="bg-sav-dark">Banco Ganadero</option>
-                <option value="economico" className="bg-sav-dark">Banco Económico</option>
-                <option value="bisa" className="bg-sav-dark">Banco BISA</option>
-                <option value="otro" className="bg-sav-dark">Otro Banco / QR</option>
+                <option value="bnb" className="bg-bcb-dark">BNB (Banco Nacional de Bolivia)</option>
+                <option value="union" className="bg-bcb-dark">Banco Unión</option>
+                <option value="mercantil" className="bg-bcb-dark">Banco Mercantil Santa Cruz</option>
+                <option value="ganadero" className="bg-bcb-dark">Banco Ganadero</option>
+                <option value="economico" className="bg-bcb-dark">Banco Económico</option>
+                <option value="bisa" className="bg-bcb-dark">Banco BISA</option>
+                <option value="otro" className="bg-bcb-dark">Otro Banco / QR</option>
               </select>
             </div>
 
@@ -105,13 +105,13 @@ export default function VincularTarjeta() {
               <input
                 value={numero}
                 onChange={(e) => setNumero(e.target.value)}
-                className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold text-sm focus:border-sav-primary/30 focus:bg-white/10 transition-all outline-none placeholder:text-white/10"
+                className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white font-bold text-sm focus:border-bcb-primary/30 focus:bg-white/10 transition-all outline-none placeholder:text-white/10"
                 required
                 placeholder="Mínimo 4 dígitos"
               />
               <div className="flex items-start gap-2 mt-2 px-1">
-                <InfoIcon size={12} className="text-sav-muted mt-0.5" />
-                <p className="text-[9px] text-sav-muted font-bold uppercase tracking-widest leading-relaxed">
+                <InfoIcon size={12} className="text-bcb-muted mt-0.5" />
+                <p className="text-[9px] text-bcb-muted font-bold uppercase tracking-widest leading-relaxed">
                   Por seguridad, solo guardamos los últimos 4 dígitos para visualización.
                 </p>
               </div>
@@ -121,14 +121,14 @@ export default function VincularTarjeta() {
           <Button
             type="submit"
             loading={loading}
-            className="w-full h-16 rounded-3xl text-xs font-black tracking-[0.2em] shadow-2xl shadow-sav-primary/20 active:scale-95 transition-all"
+            className="w-full h-16 rounded-3xl text-xs font-black tracking-[0.2em] shadow-2xl shadow-bcb-primary/20 active:scale-95 transition-all"
           >
             GUARDAR CONFIGURACIÓN
           </Button>
         </form>
 
-        <Card className="p-6 bg-sav-primary/5 border-sav-primary/10 rounded-[2rem]">
-          <p className="text-[10px] text-sav-muted font-bold leading-relaxed uppercase tracking-widest text-center">
+        <Card className="p-6 bg-bcb-primary/5 border-bcb-primary/10 rounded-[2rem]">
+          <p className="text-[10px] text-bcb-muted font-bold leading-relaxed uppercase tracking-widest text-center">
             Asegúrate de que los datos sean correctos. BCB Global no se hace responsable por transferencias a cuentas configuradas erróneamente.
           </p>
         </Card>
@@ -136,3 +136,4 @@ export default function VincularTarjeta() {
     </Layout>
   );
 }
+

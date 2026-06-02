@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('lastUserUpdate');
     localStorage.removeItem('apiVersion');
     // Limpiar estado del popup para que se vuelva a mostrar al iniciar sesión
-    sessionStorage.removeItem('sav_popup_seen');
+    sessionStorage.removeItem('BCB GLOBAL_popup_seen');
     sessionStorage.removeItem('cv_global_popup_seen');
     setUser(null);
   }, []);
@@ -208,3 +208,4 @@ export function AuthProvider({ children }) {
 
 /* eslint-disable-next-line react-refresh/only-export-components */
 export const useAuth = () => useContext(AuthContext);
+

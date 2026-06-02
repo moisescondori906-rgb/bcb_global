@@ -1,6 +1,6 @@
 
 /**
- * SAV v4.0.0 - SEMILLA DE TAREAS PROFESIONALES
+ * BCB GLOBAL v4.0.0 - SEMILLA DE TAREAS PROFESIONALES
  * 
  * Este archivo contiene la configuración de tareas vinculadas a videos reales
  * en la carpeta /video del proyecto, con descripciones en inglés y lógica

@@ -71,7 +71,7 @@ export function PhoneInputWithCountry({
           'flex h-14 w-full items-center overflow-hidden rounded-2xl border-2 transition-all duration-300',
           error 
             ? 'border-red-500 bg-red-50'
-            : 'border-slate-100 bg-white focus-within:border-sav-primary/30 shadow-sm'
+            : 'border-slate-100 bg-white focus-within:border-bcb-primary/30 shadow-sm'
         )}
       >
         <div className="relative h-full w-[100px] shrink-0">
@@ -103,7 +103,7 @@ export function PhoneInputWithCountry({
       </div>
  
       {error && ( 
-        <p className="mt-2 px-1 text-[10px] font-bold uppercase tracking-widest text-sav-error animate-in fade-in slide-in-from-top-1"> 
+        <p className="mt-2 px-1 text-[10px] font-bold uppercase tracking-widest text-bcb-error animate-in fade-in slide-in-from-top-1"> 
           {error} 
         </p> 
       )} 

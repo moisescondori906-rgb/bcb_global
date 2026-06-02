@@ -5,7 +5,7 @@ import {
   Plus, 
   Trash2, 
   Edit3, 
-  Save, 
+  BCB GLOBALe, 
   X, 
   Upload, 
   CheckCircle2, 
@@ -366,3 +366,4 @@ export default function AdminTareasV2() {
     </div>
   );
 }
+

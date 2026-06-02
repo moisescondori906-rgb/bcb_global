@@ -47,8 +47,8 @@ export default function Profile() {
   };
 
   const menuItems = [
-    { to: '/ganancias', icon: Wallet, label: 'Mi Billetera', color: 'text-sav-success', bg: 'bg-emerald-50' },
-    { to: '/vip', icon: TrendingUp, label: 'Membresía VIP', color: 'text-sav-primary', bg: 'bg-sav-primary/5' },
+    { to: '/ganancias', icon: Wallet, label: 'Mi Billetera', color: 'text-bcb-success', bg: 'bg-emerald-50' },
+    { to: '/vip', icon: TrendingUp, label: 'Membresía VIP', color: 'text-bcb-primary', bg: 'bg-bcb-primary/5' },
     { to: '/premios', icon: Gift, label: 'Premios y Regalos', color: 'text-amber-500', bg: 'bg-amber-50' },
     { to: '/seguridad', icon: Settings, label: 'Seguridad y Cuenta', color: 'text-slate-500', bg: 'bg-slate-50' },
     { to: '/ayuda', icon: HelpCircle, label: 'Centro de Ayuda', color: 'text-blue-500', bg: 'bg-blue-50' },
@@ -179,19 +179,19 @@ export default function Profile() {
         {/* Wallet & VIP Quick Access */}
         <section className="grid grid-cols-2 gap-4">
           <Link to="/ganancias">
-            <Card className="p-5 bg-emerald-50 border-emerald-100 hover:border-sav-success/30 transition-all rounded-2xl sm:rounded-3xl flex flex-col items-center gap-3 group">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-sav-success flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Card className="p-5 bg-emerald-50 border-emerald-100 hover:border-bcb-success/30 transition-all rounded-2xl sm:rounded-3xl flex flex-col items-center gap-3 group">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-bcb-success flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Wallet size={24} />
               </div>
-              <p className="text-[10px] font-black text-sav-success uppercase tracking-widest">Billetera</p>
+              <p className="text-[10px] font-black text-bcb-success uppercase tracking-widest">Billetera</p>
             </Card>
           </Link>
           <Link to="/vip">
-            <Card className="p-5 bg-sav-primary/5 border-sav-primary/10 hover:border-sav-primary/30 transition-all rounded-2xl sm:rounded-3xl flex flex-col items-center gap-3 group">
-              <div className="w-12 h-12 rounded-2xl bg-sav-primary/10 text-sav-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Card className="p-5 bg-bcb-primary/5 border-bcb-primary/10 hover:border-bcb-primary/30 transition-all rounded-2xl sm:rounded-3xl flex flex-col items-center gap-3 group">
+              <div className="w-12 h-12 rounded-2xl bg-bcb-primary/10 text-bcb-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                 <TrendingUp size={24} />
               </div>
-              <p className="text-[10px] font-black text-sav-primary uppercase tracking-widest">Subir VIP</p>
+              <p className="text-[10px] font-black text-bcb-primary uppercase tracking-widest">Subir VIP</p>
             </Card>
           </Link>
         </section>
@@ -211,7 +211,7 @@ export default function Profile() {
                   </div>
                   <span className="text-[11px] sm:text-xs font-black text-slate-700 uppercase tracking-widest">{item.label}</span>
                 </div>
-                <ChevronRight size={16} className="text-slate-300 group-hover:text-sav-primary transition-colors" />
+                <ChevronRight size={16} className="text-slate-300 group-hover:text-bcb-primary transition-colors" />
               </Link>
             ))}
           </div>
@@ -220,7 +220,7 @@ export default function Profile() {
         {/* Logout Button */}
         <button 
           onClick={handleLogout}
-          className="w-full h-16 rounded-[1.5rem] sm:rounded-[2.5rem] bg-red-50 border border-red-100 text-sav-error flex items-center justify-center gap-3 hover:bg-red-100 transition-all group active:scale-[0.98]"
+          className="w-full h-16 rounded-[1.5rem] sm:rounded-[2.5rem] bg-red-50 border border-red-100 text-bcb-error flex items-center justify-center gap-3 hover:bg-red-100 transition-all group active:scale-[0.98]"
         >
           <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
           <span className="text-[11px] font-black uppercase tracking-[0.2em]">Cerrar Sesión</span>
@@ -229,3 +229,4 @@ export default function Profile() {
     </Layout>
   );
 }
+

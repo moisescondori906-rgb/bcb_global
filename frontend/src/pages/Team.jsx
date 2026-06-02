@@ -24,16 +24,16 @@ const PieChart = ({ data }) => {
   const chartData = Array.isArray(data) ? data : [];
   if (chartData.length === 0) return (
     <div className="flex flex-col items-center justify-center p-8 text-center space-y-2">
-      <div className="w-16 h-16 rounded-full border-4 border-dashed border-sav-muted/20" />
-      <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest">Sin datos de ingresos</p>
+      <div className="w-16 h-16 rounded-full border-4 border-dashed border-bcb-muted/20" />
+      <p className="text-[8px] font-black text-bcb-muted uppercase tracking-widest">Sin datos de ingresos</p>
     </div>
   );
 
   const total = chartData.reduce((acc, item) => acc + (Number(item.value) || 0), 0);
   if (total === 0) return (
     <div className="flex flex-col items-center justify-center p-8 text-center space-y-2">
-      <div className="w-16 h-16 rounded-full border-4 border-dashed border-sav-muted/20" />
-      <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest">Sin ingresos registrados</p>
+      <div className="w-16 h-16 rounded-full border-4 border-dashed border-bcb-muted/20" />
+      <p className="text-[8px] font-black text-bcb-muted uppercase tracking-widest">Sin ingresos registrados</p>
     </div>
   );
 
@@ -225,8 +225,8 @@ export default function Team() {
   if (loading && !data) {
     return (
       <Layout>
-        <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] space-y-6 bg-sav-dark">
-          <div className="w-16 h-16 border-4 border-slate-200 border-t-sav-primary rounded-full animate-spin" />
+        <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] space-y-6 bg-bcb-dark">
+          <div className="w-16 h-16 border-4 border-slate-200 border-t-bcb-primary rounded-full animate-spin" />
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">Sincronizando Equipo</p>
         </div>
       </Layout>
@@ -243,7 +243,7 @@ export default function Team() {
       
       <main className="px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-32 animate-fade">
         {/* Invitation Banner */}
-        <Card className="p-6 sm:p-8 bg-sav-primary text-white shadow-xl shadow-sav-primary/20 relative overflow-hidden rounded-[2rem] sm:rounded-[3rem] group">
+        <Card className="p-6 sm:p-8 bg-bcb-primary text-white shadow-xl shadow-bcb-primary/20 relative overflow-hidden rounded-[2rem] sm:rounded-[3rem] group">
           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
             <UserPlus size={100} />
           </div>
@@ -261,7 +261,7 @@ export default function Team() {
                 </div>
                 <button 
                   onClick={handleCopy}
-                  className="p-3 bg-white text-sav-primary rounded-xl shadow-lg active:scale-90 transition-all"
+                  className="p-3 bg-white text-bcb-primary rounded-xl shadow-lg active:scale-90 transition-all"
                 >
                   {copied ? <Check size={20} /> : <Copy size={20} />}
                 </button>
@@ -280,7 +280,7 @@ export default function Team() {
           <Card className="p-5 sm:p-7 bg-white border-2 border-slate-100 shadow-xl shadow-slate-200/50 rounded-2xl sm:rounded-[2.5rem] space-y-2">
             <div className="flex items-center justify-between gap-2">
               <span className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest truncate">Ganancia Total</span>
-              <TrendingUp size={16} className="text-sav-primary shrink-0" />
+              <TrendingUp size={16} className="text-bcb-primary shrink-0" />
             </div>
             <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter truncate">{(Number(resumen.ingresos_totales) || 0).toFixed(2)}</p>
           </Card>
@@ -299,7 +299,7 @@ export default function Team() {
             <div className="flex items-center justify-between">
               <div className="flex flex-col gap-1">
                 <h3 className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
-                  <PieChartIcon size={14} className="text-sav-primary" /> Análisis de Ingresos
+                  <PieChartIcon size={14} className="text-bcb-primary" /> Análisis de Ingresos
                 </h3>
                 <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-widest">Desglose de tus ganancias acumuladas.</p>
               </div>
@@ -311,13 +311,13 @@ export default function Team() {
 
         {/* Módulo: Porcentaje de Ganancias por Red */}
         <section className="px-1">
-          <Card className="bg-sav-primary/5 border-sav-primary/10 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] relative overflow-hidden group">
+          <Card className="bg-bcb-primary/5 border-bcb-primary/10 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
-              <Zap size={60} className="text-sav-primary" />
+              <Zap size={60} className="text-bcb-primary" />
             </div>
             <div className="relative z-10 space-y-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-sav-primary/10 flex items-center justify-center text-sav-primary">
+                <div className="w-8 h-8 rounded-lg bg-bcb-primary/10 flex items-center justify-center text-bcb-primary">
                   <Star size={16} />
                 </div>
                 <h3 className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Comisiones por Niveles</h3>
@@ -325,15 +325,15 @@ export default function Team() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-slate-200 text-center shadow-sm">
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1">Nivel A</p>
-                  <p className="text-sm sm:text-base font-black text-sav-primary">10%</p>
+                  <p className="text-sm sm:text-base font-black text-bcb-primary">10%</p>
                 </div>
                 <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-slate-200 text-center shadow-sm">
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1">Nivel B</p>
-                  <p className="text-sm sm:text-base font-black text-sav-primary">3%</p>
+                  <p className="text-sm sm:text-base font-black text-bcb-primary">3%</p>
                 </div>
                 <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-slate-200 text-center shadow-sm">
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1">Nivel C</p>
-                  <p className="text-sm sm:text-base font-black text-sav-primary">1%</p>
+                  <p className="text-sm sm:text-base font-black text-bcb-primary">1%</p>
                 </div>
               </div>
             </div>
@@ -343,15 +343,15 @@ export default function Team() {
         {/* Breakdown by Levels */}
         <section className="px-1 space-y-4">
           <div className="flex items-center gap-2 px-1">
-            <Target size={16} className="text-sav-primary" />
+            <Target size={16} className="text-bcb-primary" />
             <h3 className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Estructura de Red</h3>
           </div>
           
           <div className="space-y-3">
             {niveles.map((n, i) => (
-              <Card key={i} className="bg-white border-slate-200 p-4 sm:p-5 flex items-center justify-between rounded-2xl sm:rounded-[2rem] shadow-lg shadow-slate-200/50 hover:border-sav-primary/20 transition-all group">
+              <Card key={i} className="bg-white border-slate-200 p-4 sm:p-5 flex items-center justify-between rounded-2xl sm:rounded-[2rem] shadow-lg shadow-slate-200/50 hover:border-bcb-primary/20 transition-all group">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sav-primary/5 flex items-center justify-center text-sav-primary group-hover:bg-sav-primary group-hover:text-white transition-all duration-500">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-bcb-primary/5 flex items-center justify-center text-bcb-primary group-hover:bg-bcb-primary group-hover:text-white transition-all duration-500">
                     <span className="text-sm sm:text-base font-black">L{i+1}</span>
                   </div>
                   <div>
@@ -361,7 +361,7 @@ export default function Team() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs sm:text-sm font-black text-slate-900">{(Number(n.monto_recarga) || 0).toFixed(2)} Bs</p>
-                  <p className="text-[8px] font-black text-sav-success uppercase tracking-widest">+{n.porcentaje}% Comisión</p>
+                  <p className="text-[8px] font-black text-bcb-success uppercase tracking-widest">+{n.porcentaje}% Comisión</p>
                 </div>
               </Card>
             ))}
@@ -372,7 +372,7 @@ export default function Team() {
         <section className="space-y-4">
           <div className="flex flex-col gap-1 px-1">
             <h3 className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Users size={14} className="text-sav-primary" /> Miembros por nivel
+              <Users size={14} className="text-bcb-primary" /> Miembros por nivel
             </h3>
             <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-widest">
               Gestiona los integrantes de tu red.
@@ -387,8 +387,8 @@ export default function Team() {
                 className={cn(
                   "flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
                   selectedNivel === nivel 
-                    ? "bg-sav-primary text-white border-sav-primary shadow-lg shadow-sav-primary/20" 
-                    : "bg-white text-slate-400 border-slate-200 hover:border-sav-primary/20"
+                    ? "bg-bcb-primary text-white border-bcb-primary shadow-lg shadow-bcb-primary/20" 
+                    : "bg-white text-slate-400 border-slate-200 hover:border-bcb-primary/20"
                 )}
               >
                 Nivel {nivel}
@@ -400,7 +400,7 @@ export default function Team() {
             <div className="divide-y divide-slate-100">
               {referralsLoading && referrals.length === 0 ? (
                 <div className="p-10 flex flex-col items-center justify-center space-y-4">
-                  <div className="w-8 h-8 border-2 border-slate-200 border-t-sav-primary rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-slate-200 border-t-bcb-primary rounded-full animate-spin" />
                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">Cargando nivel {selectedNivel}...</p>
                 </div>
               ) : referrals.length > 0 ? (
@@ -425,8 +425,8 @@ export default function Team() {
 
                     <div className="flex items-center gap-3">
                       <div className="text-right space-y-1">
-                        <div className="inline-block px-2.5 py-1 rounded-lg bg-sav-primary/10 border-2 border-sav-primary/20">
-                          <p className="text-[9px] sm:text-[10px] font-black text-sav-primary uppercase tracking-widest">
+                        <div className="inline-block px-2.5 py-1 rounded-lg bg-bcb-primary/10 border-2 border-bcb-primary/20">
+                          <p className="text-[9px] sm:text-[10px] font-black text-bcb-primary uppercase tracking-widest">
                             {ref.nivel}
                           </p>
                         </div>
@@ -439,10 +439,10 @@ export default function Team() {
                         <button
                           onClick={() => handleDeleteReferral(ref.id)}
                           disabled={deletingId === ref.id}
-                          className="p-2 text-sav-error hover:bg-sav-error/5 rounded-lg transition-colors disabled:opacity-50 border border-transparent hover:border-sav-error/10"
+                          className="p-2 text-bcb-error hover:bg-bcb-error/5 rounded-lg transition-colors disabled:opacity-50 border border-transparent hover:border-bcb-error/10"
                         >
                           {deletingId === ref.id ? (
-                            <div className="w-4 h-4 border-2 border-sav-error/20 border-t-sav-error rounded-full animate-spin" />
+                            <div className="w-4 h-4 border-2 border-bcb-error/20 border-t-bcb-error rounded-full animate-spin" />
                           ) : (
                             <Trash2 size={16} />
                           )}
@@ -468,7 +468,7 @@ export default function Team() {
 
         {/* Info Card */}
         <Card className="p-6 bg-slate-50 border-slate-100 rounded-[2rem] flex items-center gap-4">
-          <div className="w-12 h-12 bg-sav-primary/5 rounded-2xl flex items-center justify-center text-sav-primary">
+          <div className="w-12 h-12 bg-bcb-primary/5 rounded-2xl flex items-center justify-center text-bcb-primary">
             <Info size={24} />
           </div>
           <div className="space-y-1">
@@ -482,3 +482,4 @@ export default function Team() {
     </Layout>
   );
 }
+

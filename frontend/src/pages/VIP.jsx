@@ -46,7 +46,7 @@ export default function VIP() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-sav-dark pb-32">
+      <div className="min-h-screen bg-bcb-dark pb-32">
         <header className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter leading-none">Inversiones GLOBAL</h1>
@@ -75,7 +75,7 @@ export default function VIP() {
 
         <main className="px-4 sm:px-5 space-y-6 pb-10">
           <div className="flex items-center gap-2 px-1 mb-2">
-            <Sparkles size={16} className="text-sav-primary" />
+            <Sparkles size={16} className="text-bcb-primary" />
             <h2 className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Portafolio de Inversión</h2>
           </div>
 
@@ -206,3 +206,4 @@ export default function VIP() {
     </Layout>
   );
 }
+

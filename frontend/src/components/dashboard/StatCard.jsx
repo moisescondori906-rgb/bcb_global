@@ -13,7 +13,7 @@ export default function StatCard({ label, value, icon: Icon, color, bg, delay = 
       )}
     >
       <div className="flex items-start justify-between mb-4">
-        <div className={cn("p-3 rounded-2xl bg-white/5 border border-white/5", color || "text-sav-accent")}>
+        <div className={cn("p-3 rounded-2xl bg-white/5 border border-white/5", color || "text-bcb-accent")}>
           <Icon size={20} strokeWidth={2.5} />
         </div>
         <div className="flex flex-col items-end">
@@ -28,13 +28,14 @@ export default function StatCard({ label, value, icon: Icon, color, bg, delay = 
       </div>
       
       {/* Decorative pulse line at the bottom */}
-      <div className={cn("h-1 w-12 rounded-full", color?.replace('text-', 'bg-') || "bg-sav-accent")} />
+      <div className={cn("h-1 w-12 rounded-full", color?.replace('text-', 'bg-') || "bg-bcb-accent")} />
       
       {/* Background glow */}
       <div className={cn(
         "absolute -bottom-10 -right-10 w-24 h-24 blur-[50px] opacity-10 rounded-full",
-        color?.replace('text-', 'bg-') || "bg-sav-accent"
+        color?.replace('text-', 'bg-') || "bg-bcb-accent"
       )} />
     </motion.div>
   );
 }
+

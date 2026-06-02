@@ -5,7 +5,7 @@ import {
   Plus, 
   Trash2, 
   Edit3, 
-  Save, 
+  BCB GLOBALe, 
   X, 
   Zap, 
   RefreshCw,
@@ -92,13 +92,13 @@ export default function AdminCuestionarioV2() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
         <div className="space-y-2">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-sav-primary to-indigo-600 text-white shadow-xl">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-bcb-primary to-indigo-600 text-white shadow-xl">
               <HelpCircle size={24} />
             </div>
             <div>
               <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Institutional Surveys</h1>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                <ShieldCheck size={14} className="text-sav-primary" /> Gestión de feedback y recolección de datos
+                <ShieldCheck size={14} className="text-bcb-primary" /> Gestión de feedback y recolección de datos
               </p>
             </div>
           </div>
@@ -108,20 +108,20 @@ export default function AdminCuestionarioV2() {
            <div className="flex bg-[#161926] p-1.5 rounded-2xl border border-white/5 shadow-xl">
               <button 
                 onClick={() => setViewTab('surveys')}
-                className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${viewTab === 'surveys' ? 'bg-sav-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${viewTab === 'surveys' ? 'bg-bcb-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
               >
                 Cuestionarios
               </button>
               <button 
                 onClick={() => setViewTab('responses')}
-                className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${viewTab === 'responses' ? 'bg-sav-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${viewTab === 'responses' ? 'bg-bcb-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
               >
                 Respuestas
               </button>
            </div>
            <button 
              onClick={() => setShowModal(true)}
-             className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-sav-primary text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
+             className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-bcb-primary text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
            >
              <Plus size={18} /> New Survey
            </button>
@@ -137,12 +137,12 @@ export default function AdminCuestionarioV2() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.05 }}
-                className="bg-[#161926] border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden group hover:border-sav-primary/20 transition-all duration-500"
+                className="bg-[#161926] border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden group hover:border-bcb-primary/20 transition-all duration-500"
               >
                 <div className="flex flex-col h-full justify-between gap-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
-                       <div className="w-14 h-14 rounded-2xl bg-[#0f111a] border border-white/5 flex items-center justify-center text-sav-primary shadow-inner">
+                       <div className="w-14 h-14 rounded-2xl bg-[#0f111a] border border-white/5 flex items-center justify-center text-bcb-primary shadow-inner">
                           <FileQuestion size={28} />
                        </div>
                        <button onClick={() => handleDelete(s.id)} className="p-3 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all shadow-lg">
@@ -191,7 +191,7 @@ export default function AdminCuestionarioV2() {
                       <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{r.telefono}</p>
                     </td>
                     <td className="px-10 py-6">
-                       <p className="text-[10px] font-black text-sav-primary uppercase tracking-widest">{list.find(s => s.id === r.cuestionario_id)?.titulo || 'Survey'}</p>
+                       <p className="text-[10px] font-black text-bcb-primary uppercase tracking-widest">{list.find(s => s.id === r.cuestionario_id)?.titulo || 'Survey'}</p>
                     </td>
                     <td className="px-10 py-6">
                        <div className="flex gap-2">
@@ -225,25 +225,25 @@ export default function AdminCuestionarioV2() {
               exit={{ scale: 0.9, y: 30 }}
               className="bg-[#161926] border border-white/10 p-12 rounded-[50px] max-w-2xl w-full shadow-2xl relative overflow-hidden"
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sav-primary to-indigo-600 shadow-lg" />
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-bcb-primary to-indigo-600 shadow-lg" />
               
               <h3 className="text-3xl font-black text-white uppercase tracking-tighter italic mb-8">Initialize Survey</h3>
 
               <form onSubmit={handleSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto pr-4 custom-scrollbar">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Survey Title</label>
-                  <input type="text" value={form.titulo} onChange={e => setForm({...form, titulo: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-sav-primary/30 shadow-inner" required />
+                  <input type="text" value={form.titulo} onChange={e => setForm({...form, titulo: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white outline-none focus:border-bcb-primary/30 shadow-inner" required />
                 </div>
                 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Short Description</label>
-                  <textarea value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-bold text-slate-300 outline-none focus:border-sav-primary/30 shadow-inner min-h-[100px] resize-none" />
+                  <textarea value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-xs font-bold text-slate-300 outline-none focus:border-bcb-primary/30 shadow-inner min-h-[100px] resize-none" />
                 </div>
 
                 <div className="space-y-6 pt-4 border-t border-white/5">
                    <div className="flex items-center justify-between">
                       <h4 className="text-xs font-black text-white uppercase tracking-widest italic">Preguntas del Sistema</h4>
-                      <button type="button" onClick={handleAddPregunta} className="p-2 rounded-xl bg-sav-primary/10 text-sav-primary border border-sav-primary/20 hover:bg-sav-primary hover:text-white transition-all">
+                      <button type="button" onClick={handleAddPregunta} className="p-2 rounded-xl bg-bcb-primary/10 text-bcb-primary border border-bcb-primary/20 hover:bg-bcb-primary hover:text-white transition-all">
                          <Plus size={16} />
                       </button>
                    </div>
@@ -251,7 +251,7 @@ export default function AdminCuestionarioV2() {
                    {form.preguntas.map((p, i) => (
                       <div key={i} className="p-6 rounded-3xl bg-[#0f111a] border border-white/5 space-y-4">
                          <div className="flex items-center gap-4">
-                            <span className="w-8 h-8 rounded-lg bg-sav-primary/20 flex items-center justify-center text-[10px] font-black text-sav-primary border border-sav-primary/20">{i+1}</span>
+                            <span className="w-8 h-8 rounded-lg bg-bcb-primary/20 flex items-center justify-center text-[10px] font-black text-bcb-primary border border-bcb-primary/20">{i+1}</span>
                             <input 
                               type="text" 
                               value={p.t} 
@@ -261,7 +261,7 @@ export default function AdminCuestionarioV2() {
                                 setForm({...form, preguntas: next});
                               }}
                               placeholder="Escribe la pregunta..."
-                              className="flex-1 bg-transparent border-b border-white/10 py-2 text-xs font-bold text-white outline-none focus:border-sav-primary/50"
+                              className="flex-1 bg-transparent border-b border-white/10 py-2 text-xs font-bold text-white outline-none focus:border-bcb-primary/50"
                             />
                          </div>
                          <div className="space-y-2">
@@ -275,7 +275,7 @@ export default function AdminCuestionarioV2() {
                                 setForm({...form, preguntas: next});
                               }}
                               placeholder="Muy bueno, Bueno, Regular, Malo"
-                              className="w-full bg-[#161926] border border-white/5 rounded-xl px-5 py-3 text-[10px] font-bold text-slate-400 outline-none focus:border-sav-primary/30 shadow-inner"
+                              className="w-full bg-[#161926] border border-white/5 rounded-xl px-5 py-3 text-[10px] font-bold text-slate-400 outline-none focus:border-bcb-primary/30 shadow-inner"
                             />
                          </div>
                       </div>
@@ -284,7 +284,7 @@ export default function AdminCuestionarioV2() {
 
                 <div className="flex gap-4 pt-6">
                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-8 py-5 rounded-[25px] bg-white/5 text-slate-400 font-black text-[11px] uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all border border-white/5">Cancel</button>
-                   <button type="submit" className="flex-1 px-8 py-5 rounded-[25px] bg-sav-primary text-white font-black text-[11px] uppercase tracking-widest hover:bg-sav-primary/80 transition-all shadow-2xl shadow-sav-primary/30 active:scale-95">Deploy Survey</button>
+                   <button type="submit" className="flex-1 px-8 py-5 rounded-[25px] bg-bcb-primary text-white font-black text-[11px] uppercase tracking-widest hover:bg-bcb-primary/80 transition-all shadow-2xl shadow-bcb-primary/30 active:scale-95">Deploy Survey</button>
                 </div>
               </form>
             </motion.div>
@@ -294,3 +294,4 @@ export default function AdminCuestionarioV2() {
     </div>
   );
 }
+

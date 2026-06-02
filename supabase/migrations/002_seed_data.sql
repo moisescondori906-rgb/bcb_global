@@ -1,4 +1,4 @@
--- SAV - Datos de ejemplo (seed)
+-- BCB GLOBAL - Datos de ejemplo (seed)
 -- Ejecutar después de 001_initial_schema.sql
 
 -- Niveles según especificación
@@ -25,3 +25,4 @@ INSERT INTO configuraciones (clave, valor) VALUES
 ('montos_retiro', '[25, 100, 500, 1500, 5000, 10000]'),
 ('s4_personas_s3', '10'),
 ('s4_personas_debajo_s3', '15');
+

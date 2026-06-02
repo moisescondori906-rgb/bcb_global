@@ -6,7 +6,7 @@ import {
   Plus, 
   Trash2, 
   Edit3, 
-  Save, 
+  BCB GLOBALe, 
   X, 
   Clock, 
   Zap, 
@@ -97,7 +97,7 @@ export default function AdminCalendarioV2() {
 
         <button 
           onClick={() => { setEditingDay(null); setForm({ fecha: getTodayStr(), tareas_habilitadas: true, retiros_habilitados: true, recargas_habilitadas: true, motivo: '', reglas_niveles: {} }); setShowModal(true); }}
-          className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-sav-primary text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
+          className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-bcb-primary text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
         >
           <Plus size={18} /> Add Exception Day
         </button>
@@ -245,3 +245,4 @@ export default function AdminCalendarioV2() {
     </div>
   );
 }
+

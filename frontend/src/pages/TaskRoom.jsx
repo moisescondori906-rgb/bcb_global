@@ -176,8 +176,8 @@ export default function TaskRoom() {
     return (
       <Layout>
         <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] space-y-6">
-          <div className="w-16 h-16 border-4 border-sav-primary/10 border-t-sav-primary rounded-full animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-sav-muted animate-pulse">Sincronizando BCB</p>
+          <div className="w-16 h-16 border-4 border-bcb-primary/10 border-t-bcb-primary rounded-full animate-spin" />
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-bcb-muted animate-pulse">Sincronizando BCB</p>
         </div>
       </Layout>
     );
@@ -200,7 +200,7 @@ export default function TaskRoom() {
       displayTitle = 'DOMINGO DE DESCANSO';
       displayMessage = 'Hoy no hay tareas disponibles. En BCB Global también valoramos el descanso. Aprovecha este día para compartir con tu familia, relajarte y disfrutar de un lindo domingo. Las tareas volverán a estar disponibles mañana.';
       Icon = Heart;
-      iconColor = "bg-sav-primary/10 text-sav-primary";
+      iconColor = "bg-bcb-primary/10 text-bcb-primary";
     } else if (msg.includes('feriado')) {
       displayTitle = 'Tareas suspendidas';
     } else if (msg.includes('mantenimiento')) {
@@ -220,7 +220,7 @@ export default function TaskRoom() {
             <div className="space-y-4">
               <h2 className={cn(
                 "text-2xl font-black uppercase tracking-tight leading-none",
-                isSunday ? "text-sav-primary" : "text-gray-900"
+                isSunday ? "text-bcb-primary" : "text-gray-900"
               )}>
                 {displayTitle}
               </h2>
@@ -230,15 +230,15 @@ export default function TaskRoom() {
                     <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">
                       Hoy no hay tareas disponibles
                     </p>
-                    <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest leading-relaxed max-w-[280px] mx-auto">
+                    <p className="text-[10px] font-bold text-bcb-muted uppercase tracking-widest leading-relaxed max-w-[280px] mx-auto">
                       En BCB Global también valoramos el descanso. Aprovecha este día para compartir con tu familia, relajarte y disfrutar de un lindo domingo.
                     </p>
-                    <p className="text-[9px] font-black text-sav-primary uppercase tracking-[0.2em]">
+                    <p className="text-[9px] font-black text-bcb-primary uppercase tracking-[0.2em]">
                       Las tareas volverán a estar disponibles mañana.
                     </p>
                   </>
                 ) : (
-                  <p className="text-[10px] font-bold text-sav-muted uppercase tracking-widest leading-relaxed max-w-[250px]">
+                  <p className="text-[10px] font-bold text-bcb-muted uppercase tracking-widest leading-relaxed max-w-[250px]">
                     {displayMessage}
                   </p>
                 )}
@@ -250,7 +250,7 @@ export default function TaskRoom() {
           {(data?.bloqueado || isLevelBlocked) && !isSunday && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full">
               <Link to="/vip" className="w-full">
-                <Button variant="primary" className="shadow-sav-glow text-[10px] h-14 uppercase tracking-widest">Mejorar a VIP ahora</Button>
+                <Button variant="primary" className="shadow-bcb-glow text-[10px] h-14 uppercase tracking-widest">Mejorar a VIP ahora</Button>
               </Link>
             </motion.div>
           )}
@@ -262,13 +262,13 @@ export default function TaskRoom() {
   if (activeTask) {
     return (
       <Layout>
-        <div className="min-h-screen bg-sav-dark flex flex-col animate-fade pb-10">
+        <div className="min-h-screen bg-bcb-dark flex flex-col animate-fade pb-10">
           <header className="px-6 py-6 flex items-center justify-between sticky top-0 z-50 nav-blur">
-            <button onClick={() => setActiveTask(null)} className="p-2 bg-white rounded-xl border border-sav-border text-gray-900">
+            <button onClick={() => setActiveTask(null)} className="p-2 bg-white rounded-xl border border-bcb-border text-gray-900">
               <X size={20} />
             </button>
             <div className="text-center">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-sav-muted leading-none mb-1">Campaña Activa</h2>
+              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-bcb-muted leading-none mb-1">Campaña Activa</h2>
               <p className="text-xs font-black text-gray-900 uppercase tracking-tight">{activeTask.nombre}</p>
             </div>
             <div className="w-10" />
@@ -276,7 +276,7 @@ export default function TaskRoom() {
 
           <main className="px-5 py-6 space-y-6 flex-1 max-w-[430px] mx-auto w-full">
             {/* Video Card */}
-            <div className="relative aspect-video rounded-3xl overflow-hidden border border-sav-border bg-black shadow-2xl">
+            <div className="relative aspect-video rounded-3xl overflow-hidden border border-bcb-border bg-black shadow-2xl">
               <video 
                 ref={videoRef}
                 src={api.getMediaUrl(activeTask.video_url)}
@@ -288,8 +288,8 @@ export default function TaskRoom() {
                 muted={false}
               />
               {!videoFinished && !showResult && (
-                <div className="absolute top-4 right-4 px-3 py-1.5 bg-sav-dark/60 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-sav-primary rounded-full animate-ping" />
+                <div className="absolute top-4 right-4 px-3 py-1.5 bg-bcb-dark/60 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-bcb-primary rounded-full animate-ping" />
                   <span className="text-xs font-black text-white">{timer}s</span>
                 </div>
               )}
@@ -305,7 +305,7 @@ export default function TaskRoom() {
                 <Card variant="premium" className="text-center p-10 space-y-6 animate-in">
                   <div className={cn(
                     "w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-lg",
-                    isCorrect ? "bg-sav-success/20 text-sav-success" : "bg-sav-error/20 text-sav-error"
+                    isCorrect ? "bg-bcb-success/20 text-bcb-success" : "bg-bcb-error/20 text-bcb-error"
                   )}>
                     {isCorrect ? <Trophy size={40} /> : <AlertCircle size={40} />}
                   </div>
@@ -317,7 +317,7 @@ export default function TaskRoom() {
                       {isCorrect ? `Has ganado ${earnedAmount} Bs` : errorMessage}
                     </p>
                   </div>
-                  <Button onClick={() => { setActiveTask(null); fetchTasks(); }} className="bg-sav-primary text-white">Continuar</Button>
+                  <Button onClick={() => { setActiveTask(null); fetchTasks(); }} className="bg-bcb-primary text-white">Continuar</Button>
                 </Card>
               ) : (videoFinished || surveyVisible) ? (
                 <motion.div 
@@ -338,7 +338,7 @@ export default function TaskRoom() {
                         className={cn(
                           "w-full p-4 rounded-2xl text-[12px] font-black uppercase tracking-widest transition-all border-2",
                           "hover:scale-[1.02] active:scale-98",
-                          "bg-slate-50 border-slate-100 text-black hover:border-sav-primary/30"
+                          "bg-slate-50 border-slate-100 text-black hover:border-bcb-primary/30"
                         )}
                       >
                         {option}
@@ -360,7 +360,7 @@ export default function TaskRoom() {
                 </motion.div>
               ) : (
                 <Card variant="flat" className="p-6 flex items-center gap-4 animate-in">
-                  <div className="w-12 h-12 bg-sav-primary/10 rounded-2xl flex items-center justify-center text-sav-primary animate-pulse">
+                  <div className="w-12 h-12 bg-bcb-primary/10 rounded-2xl flex items-center justify-center text-bcb-primary animate-pulse">
                     <Clock size={24} />
                   </div>
                   <div className="flex-1">
@@ -387,8 +387,8 @@ export default function TaskRoom() {
     return (
       <Layout>
         <div className="p-10 flex flex-col items-center justify-center min-h-[70vh] text-center space-y-4">
-          <AlertCircle size={48} className="text-sav-muted" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-sav-muted">No se pudo cargar la información de tareas</p>
+          <AlertCircle size={48} className="text-bcb-muted" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-bcb-muted">No se pudo cargar la información de tareas</p>
           <Button onClick={fetchTasks} variant="outline" size="sm">Reintentar</Button>
         </div>
       </Layout>
@@ -406,19 +406,19 @@ export default function TaskRoom() {
         <Card variant="flat" className="p-6 space-y-4 border-black/5 bg-white shadow-xl shadow-black/5">
           <div className="flex justify-between items-end">
             <div className="space-y-1">
-              <p className="text-[10px] font-black text-sav-muted uppercase tracking-widest">Progreso Diario</p>
+              <p className="text-[10px] font-black text-bcb-muted uppercase tracking-widest">Progreso Diario</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-black text-gray-900">{tareasCompletadas}</span>
-                <span className="text-xs font-bold text-sav-muted uppercase">/ {totalDiarias}</span>
+                <span className="text-xs font-bold text-bcb-muted uppercase">/ {totalDiarias}</span>
               </div>
             </div>
-            <span className="text-[10px] font-black text-sav-primary uppercase tracking-widest">{Math.round(progress)}%</span>
+            <span className="text-[10px] font-black text-bcb-primary uppercase tracking-widest">{Math.round(progress)}%</span>
           </div>
           <div className="h-2 bg-black/5 rounded-full overflow-hidden border border-black/5">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              className="h-full bg-sav-primary shadow-[0_0_10px_rgba(220,38,38,0.2)]" 
+              className="h-full bg-bcb-primary shadow-[0_0_10px_rgba(220,38,38,0.2)]" 
             />
           </div>
         </Card>
@@ -426,7 +426,7 @@ export default function TaskRoom() {
 
       <main className="px-5 space-y-4 pb-10">
         <div className="flex items-center gap-2 px-1 mb-2">
-          <Target size={16} className="text-sav-primary" />
+          <Target size={16} className="text-bcb-primary" />
           <h2 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Disponibles Ahora</h2>
         </div>
 
@@ -463,14 +463,14 @@ export default function TaskRoom() {
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center justify-between">
                   <Badge className="px-2 py-0.5" variant="info">VIDEO</Badge>
-                  <span className="text-sm font-black text-sav-success">+{(taskReward || 0).toFixed(2)} <span className="text-[9px]">Bs</span></span>
+                  <span className="text-sm font-black text-bcb-success">+{(taskReward || 0).toFixed(2)} <span className="text-[9px]">Bs</span></span>
                 </div>
                 <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight truncate">{t.nombre}</h3>
-                <p className="text-[10px] text-sav-muted font-bold uppercase tracking-widest flex items-center gap-1.5">
+                <p className="text-[10px] text-bcb-muted font-bold uppercase tracking-widest flex items-center gap-1.5">
                   <Clock size={10} /> 10 segundos
                 </p>
               </div>
-              <ArrowRight size={18} className="text-sav-muted group-hover:text-sav-primary group-hover:translate-x-1 transition-all" />
+              <ArrowRight size={18} className="text-bcb-muted group-hover:text-bcb-primary group-hover:translate-x-1 transition-all" />
             </Card>
           ))}
           
@@ -486,10 +486,10 @@ export default function TaskRoom() {
         <section className="space-y-4 pt-6">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <TrendingUp size={16} className="text-sav-primary" />
+              <TrendingUp size={16} className="text-bcb-primary" />
               <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Sube de Nivel</h3>
             </div>
-            <Link to="/vip" className="text-[9px] font-black text-sav-primary uppercase tracking-widest flex items-center gap-1">
+            <Link to="/vip" className="text-[9px] font-black text-bcb-primary uppercase tracking-widest flex items-center gap-1">
               Ver VIP <ChevronRight size={12} />
             </Link>
           </div>
@@ -503,16 +503,16 @@ export default function TaskRoom() {
                   to="/vip"
                   className={cn(
                     "min-w-[150px] p-5 rounded-[2rem] border transition-all snap-start relative overflow-hidden group",
-                    esActual ? "bg-sav-primary/10 border-sav-primary/30" : "bg-black/5 border-black/5"
+                    esActual ? "bg-bcb-primary/10 border-bcb-primary/30" : "bg-black/5 border-black/5"
                   )}
                 >
                   <div className="space-y-3 relative z-10">
                     <div className="flex justify-between items-start">
                       <span className="text-[10px] font-black text-gray-900 uppercase tracking-tighter">{n.nombre}</span>
-                      {esActual && <div className="w-1.5 h-1.5 rounded-full bg-sav-success animate-pulse" />}
+                      {esActual && <div className="w-1.5 h-1.5 rounded-full bg-bcb-success animate-pulse" />}
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-[8px] font-black text-sav-muted uppercase tracking-widest leading-none">Ganancia Diaria</p>
+                      <p className="text-[8px] font-black text-bcb-muted uppercase tracking-widest leading-none">Ganancia Diaria</p>
                       <p className="text-lg font-black text-gray-900">+{Number(n.ingreso_diario || (Number(n.num_tareas_diarias || 0) * Number(n.ganancia_tarea || 0))).toFixed(2)} <span className="text-[9px] opacity-60">Bs</span></p>
                     </div>
                   </div>
@@ -528,3 +528,5 @@ export default function TaskRoom() {
     </Layout>
   );
 }
+
+

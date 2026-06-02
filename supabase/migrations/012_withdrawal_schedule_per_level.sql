@@ -1,4 +1,4 @@
--- SAV - Agregar horarios de retiro por nivel
+-- BCB GLOBAL - Agregar horarios de retiro por nivel
 -- Ejecutar en Supabase SQL Editor
 
 ALTER TABLE niveles
@@ -13,3 +13,4 @@ COMMENT ON COLUMN niveles.retiro_dia_fin IS 'Día de fin de retiros (0=Domingo, 
 COMMENT ON COLUMN niveles.retiro_hora_inicio IS 'Hora de inicio de retiros (HH:mm:ss)';
 COMMENT ON COLUMN niveles.retiro_hora_fin IS 'Hora de fin de retiros (HH:mm:ss)';
 COMMENT ON COLUMN niveles.retiro_horario_habilitado IS 'Si es TRUE, se valida este horario específico para el nivel. Si es FALSE, usa el global.';
+

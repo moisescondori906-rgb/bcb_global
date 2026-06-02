@@ -33,8 +33,8 @@ export default function HelpCenter() {
       title: 'Cómo Recargar',
       description: 'Aprende a subir de nivel y activar tu membresía Global.',
       icon: ArrowUpIcon,
-      color: 'text-sav-primary',
-      bg: 'bg-sav-primary/10',
+      color: 'text-bcb-primary',
+      bg: 'bg-bcb-primary/10',
       videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', 
     },
     {
@@ -73,7 +73,7 @@ export default function HelpCenter() {
       <main className="p-6 space-y-8 pb-32 animate-fade">
         <div className="space-y-2">
           <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Guías de Usuario</h2>
-          <p className="text-[10px] text-sav-muted font-bold uppercase tracking-widest">Aprende a usar BCB Global como un profesional</p>
+          <p className="text-[10px] text-bcb-muted font-bold uppercase tracking-widest">Aprende a usar BCB Global como un profesional</p>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
@@ -83,7 +83,7 @@ export default function HelpCenter() {
               <Card 
                 key={guide.id}
                 onClick={() => setSelectedVideo(guide)}
-                className="p-5 flex items-center gap-5 bg-white/[0.02] border-white/5 hover:border-sav-primary/30 transition-all group cursor-pointer"
+                className="p-5 flex items-center gap-5 bg-white/[0.02] border-white/5 hover:border-bcb-primary/30 transition-all group cursor-pointer"
               >
                 <div className={cn(
                   "w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-inner",
@@ -94,11 +94,11 @@ export default function HelpCenter() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-black text-white uppercase tracking-wider truncate">{guide.title}</h3>
-                  <p className="text-[10px] text-sav-muted font-bold leading-relaxed mt-0.5 uppercase tracking-wide line-clamp-2">
+                  <p className="text-[10px] text-bcb-muted font-bold leading-relaxed mt-0.5 uppercase tracking-wide line-clamp-2">
                     {guide.description}
                   </p>
                 </div>
-                <div className="p-2 rounded-xl bg-white/5 group-hover:bg-sav-primary group-hover:text-white transition-all">
+                <div className="p-2 rounded-xl bg-white/5 group-hover:bg-bcb-primary group-hover:text-white transition-all">
                   <PlayIcon size={20} />
                 </div>
               </Card>
@@ -118,31 +118,31 @@ export default function HelpCenter() {
                   </div>
                   <div>
                     <h3 className="text-sm font-black text-white uppercase tracking-widest">WhatsApp Gerente</h3>
-                    <p className="text-[9px] text-sav-muted font-bold uppercase tracking-widest">Atención personalizada</p>
+                    <p className="text-[9px] text-bcb-muted font-bold uppercase tracking-widest">Atención personalizada</p>
                   </div>
                 </div>
-                <ChevronIcon size={18} className="text-sav-muted group-hover:text-white transition-colors" />
+                <ChevronIcon size={18} className="text-bcb-muted group-hover:text-white transition-colors" />
               </Card>
             </a>
 
             <a href={pc?.soporte_canal_url || '#'} target="_blank" rel="noopener noreferrer">
-              <Card className="p-6 flex items-center justify-between bg-sav-primary/5 border-sav-primary/20 hover:bg-sav-primary/10 transition-all group">
+              <Card className="p-6 flex items-center justify-between bg-bcb-primary/5 border-bcb-primary/20 hover:bg-bcb-primary/10 transition-all group">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-sav-primary/10 flex items-center justify-center text-sav-primary group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary group-hover:scale-110 transition-transform">
                     <UsersIcon size={24} />
                   </div>
                   <div>
                     <h3 className="text-sm font-black text-white uppercase tracking-widest">Canal Oficial</h3>
-                    <p className="text-[9px] text-sav-muted font-bold uppercase tracking-widest">Noticias y Actualizaciones</p>
+                    <p className="text-[9px] text-bcb-muted font-bold uppercase tracking-widest">Noticias y Actualizaciones</p>
                   </div>
                 </div>
-                <ChevronIcon size={18} className="text-sav-muted group-hover:text-white transition-colors" />
+                <ChevronIcon size={18} className="text-bcb-muted group-hover:text-white transition-colors" />
               </Card>
             </a>
           </div>
         </div>
 
-        <Card variant="premium" className="p-8 relative overflow-hidden text-center space-y-4 bg-sav-dark border-white/5 shadow-2xl">
+        <Card variant="premium" className="p-8 relative overflow-hidden text-center space-y-4 bg-bcb-dark border-white/5 shadow-2xl">
           <div className="absolute top-0 right-0 p-6 opacity-10">
             <SparklesIcon size={60} />
           </div>
@@ -153,7 +153,7 @@ export default function HelpCenter() {
             </p>
             <div className="pt-6">
               <a href={pc?.soporte_gerente_url || '#'} target="_blank" rel="noopener noreferrer">
-                <Button className="w-full h-14 text-[11px] font-black tracking-[0.2em] uppercase shadow-sav-glow">
+                <Button className="w-full h-14 text-[11px] font-black tracking-[0.2em] uppercase shadow-bcb-glow">
                   SOLICITAR ASISTENCIA
                 </Button>
               </a>
@@ -172,14 +172,14 @@ export default function HelpCenter() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedVideo(null)}
-              className="absolute inset-0 bg-sav-dark/95 backdrop-blur-xl"
+              className="absolute inset-0 bg-bcb-dark/95 backdrop-blur-xl"
             />
             <motion.div
               key="modal-content"
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-2xl bg-sav-dark border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl"
+              className="relative w-full max-w-2xl bg-bcb-dark border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl"
             >
               <div className="aspect-video w-full bg-black">
                 <iframe 
@@ -201,7 +201,7 @@ export default function HelpCenter() {
                   </div>
                   <div>
                     <h3 className="text-sm font-black text-white uppercase tracking-wider">{selectedVideo.title}</h3>
-                    <p className="text-[9px] text-sav-muted font-bold uppercase tracking-widest">Video Tutorial</p>
+                    <p className="text-[9px] text-bcb-muted font-bold uppercase tracking-widest">Video Tutorial</p>
                   </div>
                 </div>
                 <Button 
@@ -219,3 +219,5 @@ export default function HelpCenter() {
     </Layout>
   );
 }
+
+

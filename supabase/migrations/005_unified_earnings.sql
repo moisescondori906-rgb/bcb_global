@@ -1,4 +1,4 @@
--- SAV - Unified Earnings and Event-based Accounting
+-- BCB GLOBAL - Unified Earnings and Event-based Accounting
 -- Execute in Supabase SQL Editor
 
 -- 1. Create the movements table
@@ -37,3 +37,4 @@ ALTER PUBLICATION supabase_realtime ADD TABLE usuarios; -- Ensure users table is
 -- 5. Update existing transactions to movements (optional, but good for consistency if table exists)
 -- This depends on if there's data in the 'transacciones' table already. 
 -- Since we want a fresh start, we'll focus on new entries.
+

@@ -1,4 +1,4 @@
--- SAV - Vincular imágenes QR a administradores específicos
+-- BCB GLOBAL - Vincular imágenes QR a administradores específicos
 -- Ejecutar en Supabase SQL Editor
 
 -- 1. Agregar columna admin_id a metodos_qr
@@ -15,3 +15,4 @@ COMMENT ON COLUMN metodos_qr.seleccionada IS 'Indica si este es el QR principal/
 
 -- 4. Crear un índice para mejorar las búsquedas por admin_id
 CREATE INDEX IF NOT EXISTS idx_metodos_qr_admin_id ON metodos_qr(admin_id);
+

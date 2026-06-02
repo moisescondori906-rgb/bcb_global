@@ -27,11 +27,11 @@ export default function BannerCarousel({ banners = [] }) {
   const prev = () => setSlide((s) => (s - 1 + validBanners.length) % validBanners.length);
 
   if (validBanners.length === 0) return (
-    <div className="h-48 w-full rounded-3xl bg-sav-dark/50 border border-white/5 flex flex-col items-center justify-center gap-3 animate-pulse">
-      <div className="w-12 h-12 rounded-2xl bg-sav-primary/10 flex items-center justify-center text-sav-primary/30">
+    <div className="h-48 w-full rounded-3xl bg-bcb-dark/50 border border-white/5 flex flex-col items-center justify-center gap-3 animate-pulse">
+      <div className="w-12 h-12 rounded-2xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary/30">
         <Sparkles size={24} />
       </div>
-      <p className="text-[10px] font-black text-sav-muted uppercase tracking-[0.2em]">Cargando promociones...</p>
+      <p className="text-[10px] font-black text-bcb-muted uppercase tracking-[0.2em]">Cargando promociones...</p>
     </div>
   );
 
@@ -70,8 +70,8 @@ export default function BannerCarousel({ banners = [] }) {
                 </h3>
               )}
               <div className="flex items-center gap-2">
-                <div className="h-1 w-8 bg-sav-primary rounded-full" />
-                <span className="text-[10px] font-black text-sav-primary uppercase tracking-[0.3em]">Exclusivo</span>
+                <div className="h-1 w-8 bg-bcb-primary rounded-full" />
+                <span className="text-[10px] font-black text-bcb-primary uppercase tracking-[0.3em]">Exclusivo</span>
               </div>
             </motion.div>
           </div>
@@ -82,27 +82,28 @@ export default function BannerCarousel({ banners = [] }) {
       <div className="absolute inset-y-0 left-4 right-4 flex items-center justify-between pointer-events-none">
         <button 
           onClick={prev}
-          className="p-3 rounded-2xl bg-sav-dark/40 backdrop-blur-xl border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-all pointer-events-auto active:scale-90 hover:bg-sav-primary/20 hover:border-sav-primary/30"
+          className="p-3 rounded-2xl bg-bcb-dark/40 backdrop-blur-xl border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-all pointer-events-auto active:scale-90 hover:bg-bcb-primary/20 hover:border-bcb-primary/30"
         >
           <ChevronLeft size={20} />
         </button>
         <button 
           onClick={next}
-          className="p-3 rounded-2xl bg-sav-dark/40 backdrop-blur-xl border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-all pointer-events-auto active:scale-90 hover:bg-sav-primary/20 hover:border-sav-primary/30"
+          className="p-3 rounded-2xl bg-bcb-dark/40 backdrop-blur-xl border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-all pointer-events-auto active:scale-90 hover:bg-bcb-primary/20 hover:border-bcb-primary/30"
         >
           <ChevronRight size={20} />
         </button>
       </div>
 
       {/* Indicators - Estilo más moderno */}
-      <div className="absolute top-6 right-8 flex gap-2 bg-sav-dark/30 backdrop-blur-md p-2 rounded-full border border-white/5">
+      <div className="absolute top-6 right-8 flex gap-2 bg-bcb-dark/30 backdrop-blur-md p-2 rounded-full border border-white/5">
         {validBanners.map((_, i) => (
           <div 
             key={i} 
-            className={`h-1.5 rounded-full transition-all duration-500 ${i === slide ? 'w-6 bg-sav-primary' : 'w-1.5 bg-white/20'}`}
+            className={`h-1.5 rounded-full transition-all duration-500 ${i === slide ? 'w-6 bg-bcb-primary' : 'w-1.5 bg-white/20'}`}
           />
         ))}
       </div>
     </div>
   );
 }
+
