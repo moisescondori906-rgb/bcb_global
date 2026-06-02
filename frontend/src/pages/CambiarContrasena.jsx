@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import { api } from '../lib/api';
-import { Lock, ShieldCheck, AlertCircle, BCB GLOBALe, KeyRound } from 'lucide-react';
+import { Lock, ShieldCheck, AlertCircle, Save, KeyRound } from 'lucide-react';
 import { Card } from '../components/ui/Card.jsx';
 import { Button } from '../components/ui/Button.jsx';
 
@@ -121,7 +121,7 @@ export default function CambiarContrasena() {
           <Button 
             type="submit" 
             disabled={loading}
-            icon={BCB GLOBALe}
+            icon={Save}
             className="py-5 rounded-[1.8rem] shadow-2xl shadow-bcb-primary/20"
           >
             {loading ? 'Sincronizando...' : 'Actualizar Acceso'}
@@ -136,5 +136,6 @@ export default function CambiarContrasena() {
     </Layout>
   );
 }
+
 
 

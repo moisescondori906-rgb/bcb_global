@@ -7,7 +7,7 @@ import {
   Trash2, 
   Edit3, 
   Shield, 
-  BCB GLOBALe, 
+  Save, 
   X, 
   Lock, 
   Eye, 
@@ -108,7 +108,7 @@ export default function AdminTelegramV2() {
     }
   };
 
-  const handleBCB GLOBALeEquipo = async (e) => {
+  const handleSaveEquipo = async (e) => {
     e.preventDefault();
     try {
       if (editingEquipo) await api.admin.telegram.updateEquipo(editingEquipo.id, equipoForm);
@@ -120,7 +120,7 @@ export default function AdminTelegramV2() {
     }
   };
 
-  const handleBCB GLOBALeIntegrante = async (e) => {
+  const handleSaveIntegrante = async (e) => {
     e.preventDefault();
     try {
       if (editingIntegrante) await api.admin.telegram.updateIntegrante(editingIntegrante.id, integranteForm);
@@ -132,7 +132,7 @@ export default function AdminTelegramV2() {
     }
   };
 
-  const handleBCB GLOBALeHorarios = async () => {
+  const handleSaveHorarios = async () => {
     try {
       await api.admin.telegram.updateHorarios(horarios);
       alert('Configuración Global Actualizada');
@@ -398,10 +398,10 @@ export default function AdminTelegramV2() {
               </div>
 
               <button 
-                onClick={handleBCB GLOBALeHorarios}
+                onClick={handleSaveHorarios}
                 className="w-full py-5 rounded-2xl bg-bcb-primary text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-bcb-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
               >
-                <BCB GLOBALe size={18} /> Commit Configuration
+                <Save size={18} /> Commit Configuration
               </button>
             </div>
           </motion.div>
@@ -467,7 +467,7 @@ export default function AdminTelegramV2() {
                 </div>
               </div>
 
-              <form onSubmit={showEquipoModal ? handleBCB GLOBALeEquipo : handleBCB GLOBALeIntegrante} className="space-y-6">
+              <form onSubmit={showEquipoModal ? handleSaveEquipo : handleSaveIntegrante} className="space-y-6">
                 {showEquipoModal ? (
                   <>
                     <div className="space-y-2">
@@ -518,5 +518,6 @@ export default function AdminTelegramV2() {
     </div>
   );
 }
+
 
 

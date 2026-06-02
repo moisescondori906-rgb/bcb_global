@@ -10,7 +10,7 @@ import {
   Target,
   AlertTriangle,
   X,
-  BCB GLOBALe,
+  Save,
   User as UserIcon,
   Layers,
   CheckCircle2,
@@ -168,7 +168,7 @@ export default function AdminRecompensasV2() {
   const handleConfigSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.admin.sorteoConfig.BCB GLOBALe(configForm);
+      await api.admin.sorteoConfig.Save(configForm);
       setShowConfigModal(false);
       fetchData();
     } catch (err) {
@@ -823,6 +823,7 @@ export default function AdminRecompensasV2() {
     </div>
   );
 }
+
 
 
 

@@ -364,7 +364,7 @@ export const api = {
     regalarTickets: (data) => request('/admin/regalar-tickets', { method: 'POST', body: JSON.stringify(data) }),
     sorteoConfig: {
       list: () => request('/sorteo/admin/config-personalizada'),
-      BCB GLOBALe: (data) => request('/sorteo/admin/config-personalizada', { method: 'POST', body: JSON.stringify(data) }),
+      Save: (data) => request('/sorteo/admin/config-personalizada', { method: 'POST', body: JSON.stringify(data) }),
       delete: (id) => request(`/sorteo/admin/config-personalizada/${id}`, { method: 'DELETE' }),
     },
     publicContent: () => request('/admin/public-content'),
@@ -398,4 +398,5 @@ export const api = {
     respuestasCuestionario: () => request('/admin/cuestionario/respuestas'),
   },
 };
+
 

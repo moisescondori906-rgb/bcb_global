@@ -5,7 +5,7 @@ import {
   Plus, 
   Trash2, 
   Edit3, 
-  BCB GLOBALe, 
+  Save, 
   X, 
   Clock, 
   Bell, 
@@ -285,7 +285,7 @@ export default function AdminAdminsV2() {
 
               <div className="flex gap-4 border-t border-white/5 pt-8">
                  <button type="submit" className="admin-button-primary flex-1 !h-14 !text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3">
-                   <BCB GLOBALe size={18} /> {editingId ? 'Actualizar Nodo de Staff' : 'Desplegar Nuevo Operador'}
+                   <Save size={18} /> {editingId ? 'Actualizar Nodo de Staff' : 'Desplegar Nuevo Operador'}
                  </button>
               </div>
             </form>
@@ -371,5 +371,6 @@ export default function AdminAdminsV2() {
     </div>
   );
 }
+
 
 

@@ -5,7 +5,7 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { Lock, ShieldCheck, Zap, KeyRound, BCB GLOBALe, AlertCircle } from 'lucide-react';
+import { Lock, ShieldCheck, Zap, KeyRound, Save, AlertCircle } from 'lucide-react';
 import { Card } from '../components/ui/Card.jsx';
 import { Button } from '../components/ui/Button.jsx';
 
@@ -135,7 +135,7 @@ export default function CambiarContrasenaFondo() {
           <Button 
             type="submit" 
             disabled={loading} 
-            icon={BCB GLOBALe}
+            icon={Save}
             className="py-5 rounded-[1.8rem] bg-amber-600 hover:bg-amber-700 shadow-2xl shadow-amber-600/20"
           >
             {loading ? 'Validando...' : (tieneFondo ? 'Sincronizar Cambios' : 'Activar Firma Digital')}
@@ -150,5 +150,6 @@ export default function CambiarContrasenaFondo() {
     </Layout>
   );
 }
+
 
 

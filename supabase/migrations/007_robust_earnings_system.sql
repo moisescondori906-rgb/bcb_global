@@ -1,5 +1,5 @@
 -- BCB GLOBAL - Robust Earnings System and Schema Synchronization
--- Execute in Supabase SQL Editor to fix earnings BCB GLOBALing issues
+-- Execute in Supabase SQL Editor to fix earnings saving issues
 
 -- 1. Ensure all necessary extensions are available
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -135,4 +135,5 @@ END $$;
 
 -- 7. Force schema cache reload (Hint for PostgREST)
 NOTIFY pgrst, 'reload schema';
+
 

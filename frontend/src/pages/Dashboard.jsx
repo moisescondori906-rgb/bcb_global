@@ -35,6 +35,7 @@ import ActionGrid from '../components/dashboard/ActionGrid';
 import GuideSection from '../components/dashboard/GuideSection';
 import GlobalLoader from '../components/ui/GlobalLoader';
 import DownloadButton from '../components/DownloadButton';
+import FloatingAnnouncements from '../components/dashboard/FloatingAnnouncements';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -51,43 +52,25 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [pc, setPc] = useState(null);
   const [comunicados, setComunicados] = useState([]);
+  const [announcementsToShow, setAnnouncementsToShow] = useState([]);
   const [showSupportMenu, setShowSupportMenu] = useState(false);
   const [securityAlert, setSecurityAlert] = useState(null);
   const [showSundayModal, setShowSundayModal] = useState(true);
-  const [showDailyAnnouncement, setShowDailyAnnouncement] = useState(false);
-  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
   const isSunday = now.getDay() === 0;
 
   useEffect(() => {
-    // Lógica para mostrar comunicado diario
-    // Se muestra si hay comunicados y NO se ha mostrado en esta sesión
-    const sessionShow = sessionStorage.getItem('announcement_shown_session');
-    
-    if (comunicados.length > 0 && !sessionShow) {
-      setShowDailyAnnouncement(true);
-      sessionStorage.setItem('announcement_shown_session', 'true');
+    // Filtrar comunicados que ya se mostraron en esta sesión
+    if (comunicados.length > 0) {
+      const shownIds = JSON.parse(sessionStorage.getItem('shown_announcement_ids') || '[]');
+      const newAnnouncements = comunicados.filter(ann => !shownIds.includes(ann.id));
+      
+      if (newAnnouncements.length > 0) {
+        setAnnouncementsToShow(newAnnouncements);
+        const newShownIds = [...shownIds, ...newAnnouncements.map(ann => ann.id)];
+        sessionStorage.setItem('shown_announcement_ids', JSON.stringify(newShownIds));
+      }
     }
   }, [comunicados]);
-
-  // Bloqueo de scroll del fondo cuando el modal está abierto
-  useEffect(() => {
-    if (showDailyAnnouncement) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [showDailyAnnouncement]);
-
-  // Rotación automática de comunicados en el modal (cada 5s)
-  useEffect(() => {
-    if (showDailyAnnouncement && comunicados.length > 1) {
-      const timer = setInterval(() => {
-        setCurrentAnnouncementIndex(prev => (prev + 1) % comunicados.length);
-      }, 5000);
-      return () => clearInterval(timer);
-    }
-  }, [showDailyAnnouncement, comunicados.length]);
 
   useEffect(() => {
     if (user?.security_alert) {
@@ -187,127 +170,8 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* Modal de Comunicado Diario Estilo Notificación Flotante (Overlay Real Global) */}
-      <AnimatePresence>
-        {showDailyAnnouncement && comunicados.length > 0 && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
-            {/* Backdrop Premium con Blur Intenso e Interacción Global */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowDailyAnnouncement(false)}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl"
-            />
-            
-            {/* Modal Container: Floating Luxury Card (Premium Overlay) */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.85, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 400 }}
-              className="relative w-[90%] max-w-[400px] bg-white rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,1)] flex flex-col overflow-hidden z-[100000] border border-slate-100"
-            >
-              {/* Animated Gradient Border Overlay (Refined) */}
-              <div className="absolute inset-0 z-0 opacity-10">
-                <div className="absolute inset-0 bg-gradient-to-tr from-bcb-primary via-indigo-500 to-purple-500 animate-spin-slow blur-3xl" />
-              </div>
-
-              {/* Luxury Glow Background */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(30,27,75,0.05)_0%,transparent_70%)] pointer-events-none z-0" />
-              
-              {/* Header/Imagen: Independent and Centered */}
-              <div className="w-full aspect-[4/3] bg-slate-950 relative overflow-hidden shrink-0 z-10 flex items-center justify-center">
-                <AnimatePresence mode="wait">
-                  <motion.img 
-                    key={currentAnnouncementIndex}
-                    initial={{ opacity: 0, scale: 1.1 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    src={comunicados[currentAnnouncementIndex].imagen_url ? api.getMediaUrl(comunicados[currentAnnouncementIndex].imagen_url) : '/imag/logo-carrusel.webp'} 
-                    className="w-full h-full object-contain p-6"
-                    alt="Comunicado"
-                  />
-                </AnimatePresence>
-                
-                {/* Shine Animation */}
-                <motion.div 
-                  animate={{ x: ['-100%', '200%'] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 z-20 pointer-events-none"
-                />
-
-                {/* Botón Cerrar: Minimalist Floating */}
-                <button 
-                  onClick={() => setShowDailyAnnouncement(false)}
-                  className="absolute top-5 right-5 z-50 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-xl rounded-full text-white transition-all active:scale-90 flex items-center justify-center border border-white/20 shadow-xl group"
-                >
-                  <CloseIcon size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-                </button>
-
-                {/* Indicadores: Modern Capsule */}
-                {comunicados.length > 1 && (
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-50 bg-black/40 backdrop-blur-xl px-3 py-1.5 rounded-full border border-white/10">
-                    {comunicados.map((_, i) => (
-                      <div 
-                        key={i} 
-                        className={cn(
-                          "h-1 rounded-full transition-all duration-500",
-                          i === currentAnnouncementIndex ? "w-6 bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]" : "w-1 bg-white/30"
-                        )}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Contenido: High-End Typography */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-8 sm:p-10 space-y-6 text-center relative z-10 bg-white">
-                <AnimatePresence mode="wait">
-                  <motion.div 
-                    key={currentAnnouncementIndex}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="space-y-6"
-                  >
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-bcb-primary/10 blur-xl rounded-full" />
-                        <div className="relative w-14 h-14 bg-gradient-to-br from-bcb-primary to-indigo-900 rounded-2xl flex items-center justify-center text-white shadow-xl border border-white/10">
-                          <BellIcon size={28} strokeWidth={2.5} />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight leading-none !text-black">
-                          {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
-                        </h2>
-                        <div className="h-1 w-10 bg-bcb-primary rounded-full mx-auto" />
-                      </div>
-                    </div>
-                    
-                    <p className="text-[13px] sm:text-sm font-bold uppercase tracking-wider leading-relaxed text-slate-600 whitespace-pre-wrap">
-                      {comunicados[currentAnnouncementIndex].mensaje}
-                    </p>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              {/* Footer: Clean Action */}
-              <div className="p-8 pt-0 mt-auto relative z-10 bg-white">
-                <Button 
-                  onClick={() => setShowDailyAnnouncement(false)}
-                  className="w-full h-14 rounded-2xl bg-bcb-primary text-white font-black uppercase tracking-[0.2em] shadow-xl hover:brightness-110 active:scale-[0.98] transition-all text-[12px] flex items-center justify-center gap-2 group"
-                >
-                  <span>ENTENDIDO</span>
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Sistema de Anuncios Flotantes (Modernos y No-Bloqueantes) */}
+      <FloatingAnnouncements announcements={announcementsToShow} />
 
       {/* Modal de Mantenimiento Domingo - Fuera de Layout */}
       <AnimatePresence>

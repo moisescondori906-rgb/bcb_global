@@ -41,7 +41,7 @@ export default function AdminMetodosQrV2() {
   const [editingMetodo, setEditingMetodo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isBCB GLOBALing, setIsBCB GLOBALing] = useState(false);
+  const [issaving, setIssaving] = useState(false);
   const [loadingId, setLoadingId] = useState(null);
   const fileRef = useRef(null);
 
@@ -102,7 +102,7 @@ export default function AdminMetodosQrV2() {
     if (!formData.nombre.trim()) return alert('Ingresa el titular');
     if (!formData.imagen) return alert('Sube un QR');
     
-    setIsBCB GLOBALing(true);
+    setIssaving(true);
     try {
       await api.admin.crearMetodoQr({ 
         nombre_titular: formData.nombre, 
@@ -118,13 +118,13 @@ export default function AdminMetodosQrV2() {
     } catch (err) {
       alert(err.message);
     } finally {
-      setIsBCB GLOBALing(false);
+      setIssaving(false);
     }
   };
 
   const handleUpdate = async () => {
      if (!editingMetodo) return;
-     setIsBCB GLOBALing(true);
+     setIssaving(true);
      try {
        await api.admin.actualizarMetodoQr(editingMetodo.id, {
          nombre_titular: editingMetodo.nombre_titular,
@@ -141,7 +141,7 @@ export default function AdminMetodosQrV2() {
      } catch (err) {
        alert(err.message);
      } finally {
-       setIsBCB GLOBALing(false);
+       setIssaving(false);
      }
    };
 
@@ -284,7 +284,7 @@ export default function AdminMetodosQrV2() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => fileRef.current?.click()}
-                  disabled={isProcessing || isBCB GLOBALing}
+                  disabled={isProcessing || issaving}
                   className={`h-40 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-all active:scale-95 shadow-inner ${
                     formData.imagen 
                       ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-500' 
@@ -307,10 +307,10 @@ export default function AdminMetodosQrV2() {
 
             <button 
               onClick={handleCreate}
-              disabled={isBCB GLOBALing || isProcessing}
+              disabled={issaving || isProcessing}
               className="admin-button-primary w-full !h-14 !text-[11px] uppercase tracking-[0.2em] disabled:opacity-50"
             >
-              {isBCB GLOBALing ? 'Registrando Nodo...' : 'Registrar Punto de Cobro'}
+              {issaving ? 'Registrando Nodo...' : 'Registrar Punto de Cobro'}
             </button>
           </div>
         </motion.div>
@@ -515,10 +515,10 @@ export default function AdminMetodosQrV2() {
                   </button>
                   <button 
                     onClick={handleUpdate}
-                    disabled={isBCB GLOBALing}
+                    disabled={issaving}
                     className="admin-button-primary flex-2 !h-14 !text-[11px] uppercase tracking-[0.2em] disabled:opacity-50"
                   >
-                    {isBCB GLOBALing ? 'Guardando...' : 'Guardar Cambios'}
+                    {issaving ? 'Guardando...' : 'Guardar Cambios'}
                   </button>
                 </div>
               </div>
@@ -529,5 +529,6 @@ export default function AdminMetodosQrV2() {
     </div>
   );
 }
+
 
 

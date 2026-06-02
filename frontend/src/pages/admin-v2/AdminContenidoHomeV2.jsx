@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, 
-  BCB GLOBALe, 
+  Save, 
   Zap, 
   ShieldCheck, 
   MessageCircle, 
@@ -43,12 +43,12 @@ function parseDias(value, fallback) {
 
 export default function AdminContenidoHomeV2() {
   const [loading, setLoading] = useState(true);
-  const [BCB GLOBALing, setBCB GLOBALing] = useState(false);
+  const [saving, setsaving] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
   const [announcementForm, setAnnouncementForm] = useState({ titulo: '', mensaje: '', activo: true, orden: 0, image: null });
-  const [announcementBCB GLOBALing, setAnnouncementBCB GLOBALing] = useState(false);
+  const [announcementsaving, setAnnouncementsaving] = useState(false);
   
   const [content, setContent] = useState({
     soporte_canal_url: '',
@@ -102,7 +102,7 @@ export default function AdminContenidoHomeV2() {
 
   const handleAnnouncementSubmit = async (e) => {
     e.preventDefault();
-    setAnnouncementBCB GLOBALing(true);
+    setAnnouncementsaving(true);
     try {
       const formData = new FormData();
       formData.append('titulo', announcementForm.titulo);
@@ -121,7 +121,7 @@ export default function AdminContenidoHomeV2() {
     } catch (err) {
       alert('Error: ' + err.message);
     } finally {
-      setAnnouncementBCB GLOBALing(false);
+      setAnnouncementsaving(false);
     }
   };
 
@@ -150,16 +150,16 @@ export default function AdminContenidoHomeV2() {
     }
   };
 
-  const handleBCB GLOBALe = async (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    setBCB GLOBALing(true);
+    setsaving(true);
     try {
             await api.put('/admin/config', content);
       alert('Configuración global actualizada con éxito');
     } catch (err) {
       alert('Error: ' + err.message);
     } finally {
-      setBCB GLOBALing(false);
+      setsaving(false);
     }
   };
 
@@ -213,7 +213,7 @@ export default function AdminContenidoHomeV2() {
             <Smartphone className="text-bcb-primary" size={24} /> Canales de Soporte
           </h3>
 
-          <form onSubmit={handleBCB GLOBALe} className="space-y-8">
+          <form onSubmit={handleSave} className="space-y-8">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Canal de Telegram (Oficial)</label>
               <div className="relative group">
@@ -484,11 +484,11 @@ export default function AdminContenidoHomeV2() {
               </div>
 
               <button 
-                onClick={handleBCB GLOBALe}
-                disabled={BCB GLOBALing}
+                onClick={handleSave}
+                disabled={saving}
                 className="w-full py-5 rounded-2xl bg-bcb-primary text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-bcb-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
               >
-                {BCB GLOBALing ? <RefreshCw className="animate-spin" size={18} /> : <BCB GLOBALe size={18} />}
+                {saving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
                 Deploy System Updates
               </button>
             </div>
@@ -602,10 +602,10 @@ export default function AdminContenidoHomeV2() {
                   </button>
                   <button 
                     type="submit"
-                    disabled={announcementBCB GLOBALing}
+                    disabled={announcementsaving}
                     className="flex-1 py-4 rounded-2xl bg-bcb-primary text-white text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-bcb-primary/20 flex items-center justify-center gap-2"
                   >
-                    {announcementBCB GLOBALing ? <RefreshCw className="animate-spin" size={14} /> : <CheckCircle2 size={14} />}
+                    {announcementsaving ? <RefreshCw className="animate-spin" size={14} /> : <CheckCircle2 size={14} />}
                     {editingAnnouncement ? 'Actualizar' : 'Publicar'}
                   </button>
                 </div>
@@ -617,5 +617,6 @@ export default function AdminContenidoHomeV2() {
     </div>
   );
 }
+
 
 

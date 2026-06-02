@@ -5,7 +5,7 @@ import {
   Plus, 
   Trash2, 
   Edit3, 
-  BCB GLOBALe, 
+  Save, 
   X, 
   Zap, 
   RefreshCw,
@@ -294,4 +294,5 @@ export default function AdminCuestionarioV2() {
     </div>
   );
 }
+
 

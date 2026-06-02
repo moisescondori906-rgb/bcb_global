@@ -6,7 +6,7 @@ import {
   Plus, 
   Trash2, 
   Edit3, 
-  BCB GLOBALe, 
+  Save, 
   X, 
   Clock, 
   Zap, 
@@ -245,4 +245,5 @@ export default function AdminCalendarioV2() {
     </div>
   );
 }
+
 

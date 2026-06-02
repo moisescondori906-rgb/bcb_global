@@ -22,7 +22,7 @@ export default function AdminBannersV2() {
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isBCB GLOBALing, setIsBCB GLOBALing] = useState(false);
+  const [issaving, setIssaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
   
   const [form, setForm] = useState({
@@ -76,7 +76,7 @@ export default function AdminBannersV2() {
     e.preventDefault();
     if (!form.imagen) return alert('Sube una imagen');
     
-    setIsBCB GLOBALing(true);
+    setIssaving(true);
     try {
       await api.post('/admin/banners', form);
       setShowModal(false);
@@ -85,7 +85,7 @@ export default function AdminBannersV2() {
     } catch (err) {
       alert(err.message);
     } finally {
-      setIsBCB GLOBALing(false);
+      setIssaving(false);
     }
   };
 
@@ -238,8 +238,8 @@ export default function AdminBannersV2() {
 
                 <div className="flex gap-4 pt-6">
                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-8 py-5 rounded-xl bg-white/5 text-slate-400 font-black text-[11px] uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all border border-white/5">Cancelar</button>
-                   <button type="submit" disabled={isBCB GLOBALing || isProcessing} className="admin-button-primary flex-1 !h-14 !text-[11px] uppercase tracking-widest disabled:opacity-50">
-                      {isBCB GLOBALing ? 'Desplegando...' : 'Desplegar Recurso'}
+                   <button type="submit" disabled={issaving || isProcessing} className="admin-button-primary flex-1 !h-14 !text-[11px] uppercase tracking-widest disabled:opacity-50">
+                      {issaving ? 'Desplegando...' : 'Desplegar Recurso'}
                    </button>
                 </div>
               </form>
@@ -250,5 +250,6 @@ export default function AdminBannersV2() {
     </div>
   );
 }
+
 
 
