@@ -55,7 +55,6 @@ export default function Dashboard() {
   const [announcementsToShow, setAnnouncementsToShow] = useState([]);
   const [showSupportMenu, setShowSupportMenu] = useState(false);
   const [securityAlert, setSecurityAlert] = useState(null);
-  const [showSundayModal, setShowSundayModal] = useState(true);
   const isSunday = now.getDay() === 0;
 
   useEffect(() => {
@@ -64,13 +63,24 @@ export default function Dashboard() {
       const shownIds = JSON.parse(sessionStorage.getItem('shown_announcement_ids') || '[]');
       const newAnnouncements = comunicados.filter(ann => !shownIds.includes(ann.id));
       
+      // Añadir mensaje de domingo si aplica y no se ha mostrado
+      if (isSunday && !sessionStorage.getItem('sunday_notice_shown')) {
+        newAnnouncements.push({
+          id: 'sunday_maintenance',
+          titulo: 'Mantenimiento Dominical',
+          mensaje: '¡Buen domingo! Hoy realizamos mantenimiento semanal para optimizar tu experiencia. ¡Feliz descanso!',
+          isSpecial: true
+        });
+        sessionStorage.setItem('sunday_notice_shown', 'true');
+      }
+
       if (newAnnouncements.length > 0) {
         setAnnouncementsToShow(newAnnouncements);
-        const newShownIds = [...shownIds, ...newAnnouncements.map(ann => ann.id)];
+        const newShownIds = [...shownIds, ...newAnnouncements.filter(a => a.id !== 'sunday_maintenance').map(ann => ann.id)];
         sessionStorage.setItem('shown_announcement_ids', JSON.stringify(newShownIds));
       }
     }
-  }, [comunicados]);
+  }, [comunicados, isSunday]);
 
   useEffect(() => {
     if (user?.security_alert) {
@@ -172,51 +182,6 @@ export default function Dashboard() {
     <>
       {/* Sistema de Anuncios Flotantes (Modernos y No-Bloqueantes) */}
       <FloatingAnnouncements announcements={announcementsToShow} />
-
-      {/* Modal de Mantenimiento Domingo - Fuera de Layout */}
-      <AnimatePresence>
-        {isSunday && showSundayModal && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowSundayModal(false)}
-              className="absolute inset-0 bg-white/95 backdrop-blur-2xl"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="relative w-[95%] max-w-sm bg-white rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.15)] border border-slate-100 flex flex-col p-10 space-y-8 items-center text-center z-[100000]"
-            >
-              <div className="w-24 h-24 bg-bcb-primary/10 rounded-full flex items-center justify-center text-bcb-primary border border-bcb-primary/10">
-                <CoffeeIcon size={48} />
-              </div>
-              
-              <div className="space-y-4">
-                <h2 className="text-3xl font-black text-black uppercase tracking-tighter leading-tight !text-black">
-                  ¡Buen domingo <br/> <span className="text-bcb-primary">para todos!</span> 😊
-                </h2>
-                
-                <div className="space-y-4 text-sm font-bold uppercase tracking-widest leading-relaxed text-black/60">
-                  <p>Mantenimiento semanal para optimizar tu experiencia.</p>
-                  <p className="text-black font-black pt-6 border-t border-black/5 text-base">
-                    ¡Feliz descanso les desea <br/> BCB Global! 🚀
-                  </p>
-                </div>
-              </div>
-
-              <Button 
-                onClick={() => setShowSundayModal(false)}
-                className="w-full h-16 rounded-[2rem] bg-bcb-primary text-white font-black uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all"
-              >
-                <span className="text-white">ENTRAR AL PANEL</span>
-              </Button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       <Layout>
         <div className="fixed inset-0 bg-bcb-dark -z-10" />
