@@ -202,48 +202,59 @@ export default function Dashboard() {
             
             {/* Modal Container: Independiente del scroll del fondo */}
             <motion.div 
-              initial={{ opacity: 0, scale: 0.8, y: 40 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 30 }}
-              transition={{ type: "spring", damping: 25, stiffness: 400 }}
-              className="relative w-[88%] max-w-[340px] max-h-[70vh] bg-white rounded-[3.5rem] shadow-[0_60px_150px_-30px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,1)] flex flex-col overflow-hidden z-[100000] border-[6px] border-white"
+              initial={{ opacity: 0, scale: 0.7, rotate: -2 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.8, rotate: 1 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              className="relative w-[90%] max-w-[350px] max-h-[75vh] bg-white rounded-[3.5rem] shadow-[0_80px_200px_-40px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,1)] flex flex-col overflow-hidden z-[100000] border-[8px] border-white"
             >
-              {/* Luxury Glow Background */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(79,70,229,0.08)_0%,transparent_70%)] pointer-events-none" />
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-sav-primary/5 blur-[60px] rounded-full pointer-events-none" />
+              {/* Animated Gradient Border Overlay */}
+              <div className="absolute inset-0 z-0 opacity-20">
+                <div className="absolute inset-0 bg-gradient-to-tr from-sav-primary via-rose-500 to-amber-500 animate-spin-slow blur-2xl" />
+              </div>
 
-              {/* Header/Imagen: Ultra Clean */}
-              <div className="w-full aspect-square bg-slate-950 relative overflow-hidden shrink-0">
+              {/* Luxury Glow Background */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(79,70,229,0.1)_0%,transparent_70%)] pointer-events-none z-0" />
+              
+              {/* Header/Imagen: Ultra Clean with Shine Effect */}
+              <div className="w-full aspect-square bg-slate-950 relative overflow-hidden shrink-0 z-10">
                 <AnimatePresence mode="wait">
                   <motion.img 
                     key={currentAnnouncementIndex}
-                    initial={{ opacity: 0, scale: 1.2 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 1.3, filter: 'blur(10px)' }}
+                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                     src={comunicados[currentAnnouncementIndex].imagen_url ? api.getMediaUrl(comunicados[currentAnnouncementIndex].imagen_url) : '/imag/logo-carrusel.webp'} 
-                    className="w-full h-full object-contain p-8"
+                    className="w-full h-full object-contain p-10"
                     alt="Comunicado"
                   />
                 </AnimatePresence>
                 
-                {/* Botón Cerrar: Estilo Neumórfico Dark */}
+                {/* Shine Animation */}
+                <motion.div 
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 z-20 pointer-events-none"
+                />
+
+                {/* Botón Cerrar: Estilo Flotante Premium */}
                 <button 
                   onClick={() => setShowDailyAnnouncement(false)}
-                  className="absolute top-6 right-6 z-50 w-10 h-10 bg-black/50 hover:bg-black/80 backdrop-blur-xl rounded-2xl text-white transition-all active:scale-90 flex items-center justify-center border border-white/10 shadow-2xl"
+                  className="absolute top-6 right-6 z-50 w-12 h-12 bg-black/40 hover:bg-black/70 backdrop-blur-2xl rounded-2xl text-white transition-all active:scale-90 flex items-center justify-center border border-white/20 shadow-2xl group"
                 >
-                  <CloseIcon size={20} />
+                  <CloseIcon size={24} className="group-hover:rotate-90 transition-transform duration-300" />
                 </button>
 
-                {/* Indicadores: Minimalistas Premium */}
+                {/* Indicadores: Estilo Cápsula */}
                 {comunicados.length > 1 && (
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-50">
+                  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2.5 z-50 bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
                     {comunicados.map((_, i) => (
                       <div 
                         key={i} 
                         className={cn(
                           "h-1.5 rounded-full transition-all duration-700",
-                          i === currentAnnouncementIndex ? "w-10 bg-sav-primary shadow-[0_0_15px_rgba(79,70,229,0.5)]" : "w-2 bg-white/30"
+                          i === currentAnnouncementIndex ? "w-8 bg-sav-primary shadow-[0_0_15px_rgba(79,70,229,0.8)]" : "w-1.5 bg-white/40"
                         )}
                       />
                     ))}
@@ -251,40 +262,46 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* Contenido: Tipografía Refinada */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-8 sm:p-10 space-y-6 text-center relative z-10">
+              {/* Contenido: Tipografía de Revista */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-8 text-center relative z-10 bg-white">
                 <AnimatePresence mode="wait">
                   <motion.div 
                     key={currentAnnouncementIndex}
-                    initial={{ opacity: 0, y: 15 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.5 }}
-                    className="space-y-4"
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.6, ease: "backOut" }}
+                    className="space-y-6"
                   >
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-12 h-12 bg-sav-primary/10 rounded-[1.2rem] flex items-center justify-center text-sav-primary border border-sav-primary/10 shadow-inner mb-2">
-                        <BellIcon size={24} strokeWidth={2.5} />
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-sav-primary/20 blur-xl rounded-full animate-pulse" />
+                        <div className="relative w-16 h-16 bg-gradient-to-br from-sav-primary to-indigo-600 rounded-[1.5rem] flex items-center justify-center text-white shadow-2xl border border-white/20 transform -rotate-3 group-hover:rotate-0 transition-transform">
+                          <BellIcon size={32} strokeWidth={2.5} className="animate-bounce-slow" />
+                        </div>
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tighter leading-none !text-black">
-                        {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
-                      </h2>
-                      <div className="h-1 w-10 bg-sav-primary/20 rounded-full" />
+                      <div className="space-y-1">
+                        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none !text-black">
+                          {comunicados[currentAnnouncementIndex].titulo || 'Comunicado Oficial'}
+                        </h2>
+                        <div className="h-1.5 w-12 bg-gradient-to-r from-sav-primary to-rose-500 rounded-full mx-auto" />
+                      </div>
                     </div>
                     
-                    <p className="text-[13px] sm:text-sm font-black uppercase tracking-widest leading-relaxed text-black whitespace-pre-wrap opacity-80">
+                    <p className="text-[14px] sm:text-base font-black uppercase tracking-widest leading-relaxed text-black whitespace-pre-wrap opacity-90 drop-shadow-sm">
                       {comunicados[currentAnnouncementIndex].mensaje}
                     </p>
                   </motion.div>
                 </AnimatePresence>
               </div>
 
-              {/* Footer: Botón de Alta Visibilidad */}
-              <div className="p-8 pt-0 mt-auto relative z-10">
+              {/* Footer: Botón de Acción Principal */}
+              <div className="p-10 pt-0 mt-auto relative z-10 bg-white">
                 <Button 
                   onClick={() => setShowDailyAnnouncement(false)}
-                  className="w-full h-14 rounded-2xl bg-sav-primary text-white font-black uppercase tracking-[0.25em] shadow-[0_20px_40px_-10px_rgba(79,70,229,0.4)] hover:scale-[1.02] active:scale-95 transition-all text-xs border-b-4 border-indigo-950"
+                  className="w-full h-16 rounded-[2rem] bg-sav-primary text-white font-black uppercase tracking-[0.3em] shadow-[0_25px_50px_-12px_rgba(79,70,229,0.5)] hover:scale-[1.02] active:scale-95 transition-all text-sm border-b-4 border-indigo-950 flex items-center justify-center gap-3 group"
                 >
+                  <SparklesIcon size={18} className="animate-pulse" />
                   ENTENDIDO
                 </Button>
               </div>
