@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Megaphone, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { X, Megaphone, ChevronRight as ChevronRightIcon, BellRing } from 'lucide-react';
 import { cn } from '../../lib/utils/cn';
 import { api } from '../../lib/api';
 
@@ -39,105 +39,104 @@ export default function FloatingAnnouncements({ announcements, onClose }) {
 }
 
 function NotificationItem({ item, onRemove }) {
-  // Eliminamos el auto-dismiss para asegurar que el usuario vea el anuncio
-  // hasta que pulse "Entendido" o lo cierre manualmente.
-
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 100, scale: 0.8, filter: 'blur(10px)' }}
+      initial={{ opacity: 0, x: 100, scale: 0.9, rotate: 2 }}
       animate={{ 
         opacity: 1, 
-        y: 0, 
+        x: 0, 
         scale: 1, 
-        filter: 'blur(0px)',
+        rotate: 0,
         transition: {
           type: "spring",
-          stiffness: 260,
-          damping: 20
+          stiffness: 300,
+          damping: 25
         }
       }}
-      exit={{ opacity: 0, scale: 0.8, y: 20, transition: { duration: 0.3 } }}
+      exit={{ opacity: 0, scale: 0.8, x: 50, transition: { duration: 0.2 } }}
       className={cn(
         "pointer-events-auto relative w-full",
-        "bg-white/95 backdrop-blur-md border border-bcb-primary/20 rounded-[2rem] flex flex-col overflow-hidden",
-        "shadow-[0_20px_50px_-10px_rgba(79,70,229,0.3)]", // Premium glow shadow
-        "z-[100000]",
-        "after:absolute after:inset-0 after:rounded-[2rem] after:shadow-[0_0_20px_rgba(79,70,229,0.15)] after:animate-pulse after:pointer-events-none"
+        "bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] flex flex-col overflow-hidden",
+        "shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_0_20px_rgba(79,70,229,0.2)]",
+        "z-[100000] group"
       )}
     >
-      {/* Premium Gradient Header Decor */}
-      <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-bcb-primary via-indigo-400 to-bcb-primary" />
+      {/* Decorative Glow Orb */}
+      <div className="absolute -top-20 -right-20 w-40 h-40 bg-bcb-primary/20 blur-[80px] rounded-full group-hover:bg-bcb-primary/30 transition-colors duration-700" />
+      
+      {/* Top Accent Line (Animated) */}
+      <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-bcb-primary to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
 
-      {/* NEW Badge Premium with Pulse */}
+      {/* NEW Badge: Floating Neon Style */}
       {!item.read && (
-        <motion.span 
-          initial={{ x: -20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          className="absolute top-4 left-4 z-10"
+        <motion.div 
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="absolute top-6 left-6 z-10"
         >
-          <span className="relative flex h-full w-full">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span className="relative inline-flex px-3 py-1 bg-gradient-to-r from-red-600 to-rose-500 text-white text-[9px] font-black uppercase tracking-tighter rounded-full shadow-lg shadow-red-500/20">
-              NUEVO
-            </span>
-          </span>
-        </motion.span>
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-bcb-primary/20 border border-bcb-primary/30 backdrop-blur-sm shadow-[0_0_15px_rgba(79,70,229,0.3)]">
+            <div className="w-1.5 h-1.5 rounded-full bg-bcb-primary animate-pulse" />
+            <span className="text-[9px] font-black text-white uppercase tracking-widest">COMUNICADO</span>
+          </div>
+        </motion.div>
       )}
 
-      {/* Close Button: Elegant */}
+      {/* Close Button: Futuristic Glass */}
       <button
         onClick={onRemove}
-        className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-100/80 hover:bg-slate-200 text-slate-500 transition-all flex items-center justify-center border border-slate-200"
+        className="absolute top-6 right-6 z-10 w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all flex items-center justify-center border border-white/10 backdrop-blur-md active:scale-90"
       >
-        <X size={14} strokeWidth={3} />
+        <X size={18} strokeWidth={2.5} />
       </button>
 
-      <div className="flex items-start gap-4 p-6 pt-10">
-        {/* Thumbnail Image or Icon with Ring */}
-        <div className="shrink-0 relative">
-          <motion.div 
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="absolute -inset-1 bg-bcb-primary/20 rounded-2xl blur-sm" 
-          />
-          {item.imagen_url ? (
-            <img
-              src={api.getMediaUrl(item.imagen_url)}
-              className="relative w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md"
-              alt="BCB Global"
-            />
-          ) : (
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-bcb-primary to-indigo-600 flex items-center justify-center text-white border-2 border-white shadow-md">
-              <Megaphone size={24} strokeWidth={2.5} />
+      <div className="flex flex-col gap-6 p-8 pt-16">
+        <div className="flex items-center gap-5">
+          {/* Main Icon Container */}
+          <div className="shrink-0 relative">
+            <div className="absolute inset-0 bg-bcb-primary/30 blur-xl rounded-full animate-pulse" />
+            <div className="relative w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-bcb-primary to-indigo-700 p-0.5 shadow-2xl overflow-hidden">
+              <div className="absolute inset-0 bg-black/10" />
+              {item.imagen_url ? (
+                <img
+                  src={api.getMediaUrl(item.imagen_url)}
+                  className="w-full h-full rounded-[1.4rem] object-cover"
+                  alt="BCB"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white">
+                  <BellRing size={28} strokeWidth={2.5} className="animate-bounce" />
+                </div>
+              )}
             </div>
-          )}
+          </div>
+
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <h4 className="text-xl font-black text-white uppercase tracking-tighter leading-none italic">
+              {item.titulo || 'BCB Global'}
+            </h4>
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-1 rounded-full bg-bcb-primary" />
+              <span className="text-[10px] font-bold text-bcb-primary uppercase tracking-[0.2em]">Importante</span>
+            </div>
+          </div>
         </div>
         
-        {/* Title and Message */}
-        <div className="flex-1 min-w-0 space-y-1">
-          <h4 className="text-base font-black text-slate-900 uppercase tracking-tighter leading-tight italic bg-gradient-to-r from-bcb-primary to-indigo-600 bg-clip-text text-transparent">
-            {item.titulo || 'BCB Global Institucional'}
-          </h4>
-          <p className="text-[12px] font-bold text-slate-500 leading-snug">
-            {item.mensaje}
-          </p>
-        </div>
+        {/* Message: Elegant Silver Typography */}
+        <p className="text-[13px] font-bold text-slate-300 leading-relaxed uppercase tracking-wide">
+          {item.mensaje}
+        </p>
       </div>
 
-      {/* Action Button: Ultra Premium */}
-      <div className="px-6 pb-6">
+      {/* Action Area */}
+      <div className="px-8 pb-8">
         <button
           onClick={onRemove}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-bcb-primary via-indigo-600 to-bcb-primary bg-[length:200%_auto] animate-gradient-x text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-bcb-primary/20 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 group"
+          className="relative w-full py-4 rounded-[1.5rem] bg-white text-slate-950 text-[11px] font-black uppercase tracking-[0.3em] shadow-[0_15px_30px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 group/btn overflow-hidden"
         >
-          <span>Entendido</span>
-          <motion.div
-            animate={{ x: [0, 5, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            <ChevronRightIcon size={14} strokeWidth={3} />
-          </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/5 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
+          <span className="relative">Entendido</span>
+          <ChevronRightIcon size={16} strokeWidth={3} className="relative group-hover/btn:translate-x-1 transition-transform" />
         </button>
       </div>
     </motion.div>
