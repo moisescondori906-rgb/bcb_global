@@ -42,101 +42,81 @@ function NotificationItem({ item, onRemove }) {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: 100, scale: 0.9, rotate: 2 }}
+      initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ 
         opacity: 1, 
-        x: 0, 
-        scale: 1, 
-        rotate: 0,
+        y: 0, 
+        scale: 1,
         transition: {
           type: "spring",
-          stiffness: 300,
-          damping: 25
+          stiffness: 260,
+          damping: 20
         }
       }}
-      exit={{ opacity: 0, scale: 0.8, x: 50, transition: { duration: 0.2 } }}
+      exit={{ opacity: 0, scale: 0.95, y: 20, transition: { duration: 0.2 } }}
       className={cn(
         "pointer-events-auto relative w-full",
-        "bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] flex flex-col overflow-hidden",
-        "shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_0_20px_rgba(79,70,229,0.2)]",
+        "bg-white rounded-[2.5rem] flex flex-col overflow-hidden",
+        "shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] border border-slate-100",
         "z-[100000] group"
       )}
     >
-      {/* Decorative Glow Orb */}
-      <div className="absolute -top-20 -right-20 w-40 h-40 bg-bcb-primary/20 blur-[80px] rounded-full group-hover:bg-bcb-primary/30 transition-colors duration-700" />
-      
-      {/* Top Accent Line (Animated) */}
-      <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-bcb-primary to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
-
-      {/* NEW Badge: Floating Neon Style */}
-      {!item.read && (
-        <motion.div 
-          initial={{ y: -10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="absolute top-6 left-6 z-10"
-        >
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-bcb-primary/20 border border-bcb-primary/30 backdrop-blur-sm shadow-[0_0_15px_rgba(79,70,229,0.3)]">
-            <div className="w-1.5 h-1.5 rounded-full bg-bcb-primary animate-pulse" />
-            <span className="text-[9px] font-black text-white uppercase tracking-widest">COMUNICADO</span>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Close Button: Futuristic Glass */}
+      {/* Botón Cerrar (Estilo Flotante sobre imagen) */}
       <button
         onClick={onRemove}
-        className="absolute top-6 right-6 z-10 w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all flex items-center justify-center border border-white/10 backdrop-blur-md active:scale-90"
+        className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md transition-all flex items-center justify-center active:scale-90"
       >
-        <X size={18} strokeWidth={2.5} />
+        <X size={20} strokeWidth={2.5} />
       </button>
 
-      <div className="flex flex-col gap-6 p-8 pt-16">
-        <div className="flex items-center gap-5">
-          {/* Main Icon Container */}
-          <div className="shrink-0 relative">
-            <div className="absolute inset-0 bg-bcb-primary/30 blur-xl rounded-full animate-pulse" />
-            <div className="relative w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-bcb-primary to-indigo-700 p-0.5 shadow-2xl overflow-hidden">
-              <div className="absolute inset-0 bg-black/10" />
-              {item.imagen_url ? (
-                <img
-                  src={api.getMediaUrl(item.imagen_url)}
-                  className="w-full h-full rounded-[1.4rem] object-cover"
-                  alt="BCB"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white">
-                  <BellRing size={28} strokeWidth={2.5} className="animate-bounce" />
-                </div>
-              )}
-            </div>
+      {/* Imagen de Ancho Completo */}
+      <div className="relative w-full aspect-video overflow-hidden">
+        {item.imagen_url ? (
+          <img
+            src={api.getMediaUrl(item.imagen_url)}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            alt="Anuncio BCB"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-bcb-primary to-indigo-600 flex items-center justify-center text-white">
+            <BellRing size={48} strokeWidth={1.5} className="animate-pulse" />
           </div>
-
-          <div className="flex-1 min-w-0 space-y-1.5">
-            <h4 className="text-xl font-black text-white uppercase tracking-tighter leading-none italic">
-              {item.titulo || 'BCB Global'}
-            </h4>
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-bcb-primary" />
-              <span className="text-[10px] font-bold text-bcb-primary uppercase tracking-[0.2em]">Importante</span>
-            </div>
-          </div>
-        </div>
+        )}
         
-        {/* Message: Elegant Silver Typography */}
-        <p className="text-[13px] font-bold text-slate-300 leading-relaxed uppercase tracking-wide">
-          {item.mensaje}
-        </p>
+        {/* Badge Flotante sobre Imagen */}
+        {!item.read && (
+          <div className="absolute bottom-4 left-4 z-10">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-bcb-primary text-white shadow-lg animate-bounce">
+              <span className="text-[10px] font-black uppercase tracking-widest">¡Nuevo Comunicado!</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Action Area */}
-      <div className="px-8 pb-8">
+      <div className="p-8 space-y-4">
+        {/* Título y Badge de Importancia */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-bcb-primary animate-ping" />
+            <span className="text-[10px] font-black text-bcb-primary uppercase tracking-[0.2em]">Importante</span>
+          </div>
+          <h4 className="text-2xl font-black text-slate-900 leading-tight tracking-tighter uppercase italic">
+            {item.titulo || 'BCB Global Institucional'}
+          </h4>
+        </div>
+        
+        {/* Mensaje */}
+        <p className="text-sm font-bold text-slate-500 leading-relaxed">
+          {item.mensaje}
+        </p>
+
+        {/* Botón de Acción Principal */}
         <button
           onClick={onRemove}
-          className="relative w-full py-4 rounded-[1.5rem] bg-white text-slate-950 text-[11px] font-black uppercase tracking-[0.3em] shadow-[0_15px_30px_-10px_rgba(255,255,255,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 group/btn overflow-hidden"
+          className="w-full py-4 mt-2 rounded-2xl bg-bcb-primary text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-bcb-primary/25 hover:brightness-110 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 group/btn"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/5 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
-          <span className="relative">Entendido</span>
-          <ChevronRightIcon size={16} strokeWidth={3} className="relative group-hover/btn:translate-x-1 transition-transform" />
+          <span>Entendido</span>
+          <ChevronRightIcon size={16} strokeWidth={3} className="group-hover/btn:translate-x-1 transition-transform" />
         </button>
       </div>
     </motion.div>
