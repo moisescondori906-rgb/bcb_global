@@ -58,39 +58,14 @@ export default function Dashboard() {
   const isSunday = now.getDay() === 0;
 
   useEffect(() => {
-    // Usamos sessionStorage para que los anuncios vuelvan a aparecer en cada nueva sesión
-    // Esto asegura que el sistema sea "automático" y "premium" como se requiere.
+    // Los anuncios aparecerán siempre al cargar el sistema o recargar la página
     if (comunicados.length > 0) {
-      const dismissedInSession = JSON.parse(sessionStorage.getItem('dismissed_announcements_session') || '[]');
-      
-      let newAnnouncements = comunicados.filter(ann => !dismissedInSession.includes(ann.id));
-      
-      if (isSunday && !sessionStorage.getItem('sunday_notice_dismissed_session')) {
-        newAnnouncements.push({
-          id: 'sunday_maintenance',
-          titulo: 'Mantenimiento Dominical',
-          mensaje: '¡Buen domingo! Hoy realizamos mantenimiento semanal para optimizar tu experiencia. ¡Feliz descanso!',
-          isSpecial: true,
-          read: false
-        });
-      }
-
-      setAnnouncementsToShow(newAnnouncements);
+      setAnnouncementsToShow(comunicados);
     }
-  }, [comunicados, isSunday]);
+  }, [comunicados]);
 
   const handleDismissAnnouncement = (id) => {
-    const dismissedInSession = JSON.parse(sessionStorage.getItem('dismissed_announcements_session') || '[]');
-    if (!dismissedInSession.includes(id)) {
-      dismissedInSession.push(id);
-      sessionStorage.setItem('dismissed_announcements_session', JSON.stringify(dismissedInSession));
-    }
-
     setAnnouncementsToShow(prev => prev.filter(ann => ann.id !== id));
-
-    if (id === 'sunday_maintenance') {
-      sessionStorage.setItem('sunday_notice_dismissed_session', 'true');
-    }
   };
 
   useEffect(() => {
