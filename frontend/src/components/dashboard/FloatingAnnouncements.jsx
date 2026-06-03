@@ -55,12 +55,18 @@ function NotificationItem({ item, onRemove }) {
       exit={{ opacity: 0, scale: 0.9, x: 20, transition: { duration: 0.3 } }}
       className={cn(
         "pointer-events-auto relative w-full",
-        "bg-white border border-slate-200 shadow-md", // Simpler styling
-        "rounded-xl flex flex-col overflow-hidden"
+        "bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 relative border border-gray-100 dark:border-gray-700", // Premium styling with glow effect
+        "flex flex-col",
+        "group" // Added group for potential hover effects on children
       )}
       style={{ maxHeight: '150px' }} // Enforce max height
     >
       {/* Close Button: Minimalist */}
+      <div className="absolute top-2 left-2 z-10">
+        <span className="bg-red-500 text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase shadow-lg">
+          NUEVO
+        </span>
+      </div>
       <button
         onClick={onRemove}
         className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-black/10 hover:bg-black/20 text-white transition-all flex items-center justify-center"

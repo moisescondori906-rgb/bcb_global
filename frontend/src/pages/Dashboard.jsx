@@ -60,24 +60,20 @@ export default function Dashboard() {
   useEffect(() => {
     // Filtrar comunicados que ya se mostraron en esta sesión
     if (comunicados.length > 0) {
-      const shownIds = JSON.parse(sessionStorage.getItem('shown_announcement_ids_v15_final') || '[]');
-      const newAnnouncements = comunicados.filter(ann => !shownIds.includes(ann.id));
-      
-      // Añadir mensaje de domingo si aplica y no se ha mostrado
-      if (isSunday && !sessionStorage.getItem('sunday_notice_shown_v15_final')) {
-        newAnnouncements.push({
+      let announcementsToProcess = [...comunicados];
+
+      // Añadir mensaje de domingo si aplica
+      if (isSunday) {
+        announcementsToProcess.push({
           id: 'sunday_maintenance',
           titulo: 'Mantenimiento Dominical',
           mensaje: '¡Buen domingo! Hoy realizamos mantenimiento semanal para optimizar tu experiencia. ¡Feliz descanso!',
           isSpecial: true
         });
-        sessionStorage.setItem('sunday_notice_shown_v15_final', 'true');
       }
 
-      if (newAnnouncements.length > 0) {
-        setAnnouncementsToShow(newAnnouncements);
-        const newShownIds = [...shownIds, ...newAnnouncements.filter(a => a.id !== 'sunday_maintenance').map(ann => ann.id)];
-        sessionStorage.setItem('shown_announcement_ids_v15_final', JSON.stringify(newShownIds));
+      if (announcementsToProcess.length > 0) {
+        setAnnouncementsToShow(announcementsToProcess);
       }
     }
   }, [comunicados, isSunday]);
