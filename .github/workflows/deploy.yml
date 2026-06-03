@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Deploy to VPS
 
 on:
   push:
@@ -8,40 +8,16 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20' # O la versión de Node.js que uses en tu proyecto
-
-    - name: Install SSH Key
-      uses: shimataro/ssh-key-action@v2
-      with:
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.KNOWN_HOSTS }} # Usar un secreto para known_hosts, si se proporciona
-
-    - name: Add Server to Known Hosts
-      run: |
-        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-
-    - name: Deploy Frontend
-      run: |
-        cd frontend
-        npm install
-        npm run build
-        rsync -avz --delete dist/ ${{ secrets.SSH_USERNAME }}@${{ secrets.SERVER_IP }}:/var/www/bcb_global/frontend/dist/
-
-    - name: Deploy Backend and Restart Services
-      run: |
-        ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SERVER_IP }} << 'EOF'
-          cd /var/www/bcb_global/backend
-          git pull origin main # Asume que el backend también es un repo git y tiene su propio origen
-          npm install # Instalar nuevas dependencias si las hay
-          pm2 reload ecosystem.config.cjs # Reiniciar el proceso PM2
-          pm2 save # Guardar la lista de procesos para persistencia tras reinicios
-          sudo nginx -t && sudo systemctl reload nginx # Recargar Nginx si la configuración es válida
-        EOF
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/bcb_global
+            bash deploy.sh

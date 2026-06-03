@@ -58,25 +58,40 @@ export default function Dashboard() {
   const isSunday = now.getDay() === 0;
 
   useEffect(() => {
-    // Filtrar comunicados que ya se mostraron en esta sesión
+    // Usamos sessionStorage para que los anuncios vuelvan a aparecer en cada nueva sesión
+    // Esto asegura que el sistema sea "automático" y "premium" como se requiere.
     if (comunicados.length > 0) {
-      let announcementsToProcess = [...comunicados];
-
-      // Añadir mensaje de domingo si aplica
-      if (isSunday) {
-        announcementsToProcess.push({
+      const dismissedInSession = JSON.parse(sessionStorage.getItem('dismissed_announcements_session') || '[]');
+      
+      let newAnnouncements = comunicados.filter(ann => !dismissedInSession.includes(ann.id));
+      
+      if (isSunday && !sessionStorage.getItem('sunday_notice_dismissed_session')) {
+        newAnnouncements.push({
           id: 'sunday_maintenance',
           titulo: 'Mantenimiento Dominical',
           mensaje: '¡Buen domingo! Hoy realizamos mantenimiento semanal para optimizar tu experiencia. ¡Feliz descanso!',
-          isSpecial: true
+          isSpecial: true,
+          read: false
         });
       }
 
-      if (announcementsToProcess.length > 0) {
-        setAnnouncementsToShow(announcementsToProcess);
-      }
+      setAnnouncementsToShow(newAnnouncements);
     }
   }, [comunicados, isSunday]);
+
+  const handleDismissAnnouncement = (id) => {
+    const dismissedInSession = JSON.parse(sessionStorage.getItem('dismissed_announcements_session') || '[]');
+    if (!dismissedInSession.includes(id)) {
+      dismissedInSession.push(id);
+      sessionStorage.setItem('dismissed_announcements_session', JSON.stringify(dismissedInSession));
+    }
+
+    setAnnouncementsToShow(prev => prev.filter(ann => ann.id !== id));
+
+    if (id === 'sunday_maintenance') {
+      sessionStorage.setItem('sunday_notice_dismissed_session', 'true');
+    }
+  };
 
   useEffect(() => {
     if (user?.security_alert) {
@@ -173,11 +188,10 @@ export default function Dashboard() {
   ];
 
   if (loading) return <GlobalLoader />;
-
   return (
     <>
       {/* Sistema de Anuncios Flotantes (Modernos y No-Bloqueantes) */}
-      <FloatingAnnouncements announcements={announcementsToShow} />
+      <FloatingAnnouncements announcements={announcementsToShow} onClose={handleDismissAnnouncement} />
 
       <Layout>
         <div className="fixed inset-0 bg-bcb-dark -z-10" />
