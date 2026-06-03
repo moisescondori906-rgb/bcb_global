@@ -1,4 +1,4 @@
-name: Deploy to VPS
+name: Deploy to VPS (Production)
 
 on:
   push:
@@ -7,24 +7,52 @@ on:
 
 jobs:
   deploy:
+    name: Production Deployment
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Deploy to VPS
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /var/www/bcb_global
-            git pull origin main
+            # Ir al directorio del proyecto
+            cd /var/www/bcb_global || exit 1
+
+            # 1. Actualización de Código
+            echo "📥 Actualizando código..."
+            git fetch --all
+            git reset --hard origin/main
+
+            # 2. Instalación de dependencias (Root)
+            echo "📦 Instalando dependencias del Backend/Root..."
             npm install --legacy-peer-deps
-            cd frontend
+
+            # 3. Construcción del Frontend
+            echo "🎨 Construyendo el Frontend..."
+            cd frontend || exit 1
             npm install
             npm run build
             cd ..
-            pm2 restart all
-            sudo systemctl reload nginx
+
+            # 4. Reinicio de Servicios
+            echo "🔄 Reiniciando PM2..."
+            pm2 restart all || { echo "❌ Error al reiniciar PM2"; exit 1; }
+
+            echo "🌐 Recargando Nginx..."
+            sudo systemctl reload nginx || { echo "❌ Error al recargar Nginx"; exit 1; }
+
+            # 5. Verificación de Estado
+            echo "🩺 Verificando salud del sistema..."
+            echo "--- PM2 Status ---"
+            pm2 status
+            echo "--- Nginx Status ---"
+            sudo systemctl status nginx --no-pager
+            echo "--- Build Verification ---"
+            ls -lh frontend/dist/index.html || { echo "❌ Frontend build fallido"; exit 1; }
+            
+            echo "✅ DESPLIEGUE COMPLETADO EXITOSAMENTE"
