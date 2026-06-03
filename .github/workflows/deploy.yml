@@ -16,13 +16,13 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18' # O la versión de Node.js que uses en tu proyecto
+        node-version: '20' # O la versión de Node.js que uses en tu proyecto
 
     - name: Install SSH Key
       uses: shimataro/ssh-key-action@v2
       with:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        known_hosts: 'placeholder-known-hosts' # Esto se rellenará dinámicamente
+        known_hosts: ${{ secrets.KNOWN_HOSTS }} # Usar un secreto para known_hosts, si se proporciona
 
     - name: Add Server to Known Hosts
       run: |
