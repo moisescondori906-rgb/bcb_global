@@ -68,12 +68,15 @@ router.get('/stats', asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const user = req.requestUser;
 
-  // 1. Ingresos Hoy (v13.1.2) - Sumamos ambos saldos si es necesario para el total acumulado
+  // 1. Ingresos Hoy (v13.1.2) - Solo ganancias (tareas + comisiones), no recargas
   const statsHoy = await queryOne(`
     SELECT 
       COALESCE(SUM(monto), 0) as total 
     FROM movimientos_saldo 
-    WHERE usuario_id = ? AND DATE(fecha) = CURDATE() AND monto > 0
+    WHERE usuario_id = ? 
+    AND DATE(fecha) = CURDATE() 
+    AND monto > 0
+    AND tipo_movimiento IN ('tarea_completada', 'ganancia_tarea', 'comision_subordinado', 'comision_red', 'comision_inversion', 'comision_tarea', 'recompensa_invitacion', 'bono_invitado', 'premio_ruleta')
   `, [userId]);
 
   // 2. Ingresos Ayer
@@ -81,7 +84,10 @@ router.get('/stats', asyncHandler(async (req, res) => {
     SELECT 
       COALESCE(SUM(monto), 0) as total 
     FROM movimientos_saldo 
-    WHERE usuario_id = ? AND DATE(fecha) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND monto > 0
+    WHERE usuario_id = ? 
+    AND DATE(fecha) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) 
+    AND monto > 0
+    AND tipo_movimiento IN ('tarea_completada', 'ganancia_tarea', 'comision_subordinado', 'comision_red', 'comision_inversion', 'comision_tarea', 'recompensa_invitacion', 'bono_invitado', 'premio_ruleta')
   `, [userId]);
 
   // 3. Ingresos Semana
@@ -89,7 +95,10 @@ router.get('/stats', asyncHandler(async (req, res) => {
     SELECT 
       COALESCE(SUM(monto), 0) as total 
     FROM movimientos_saldo 
-    WHERE usuario_id = ? AND YEARWEEK(fecha, 1) = YEARWEEK(CURDATE(), 1) AND monto > 0
+    WHERE usuario_id = ? 
+    AND YEARWEEK(fecha, 1) = YEARWEEK(CURDATE(), 1) 
+    AND monto > 0
+    AND tipo_movimiento IN ('tarea_completada', 'ganancia_tarea', 'comision_subordinado', 'comision_red', 'comision_inversion', 'comision_tarea', 'recompensa_invitacion', 'bono_invitado', 'premio_ruleta')
   `, [userId]);
 
   // 4. Ingresos Mes
@@ -97,16 +106,22 @@ router.get('/stats', asyncHandler(async (req, res) => {
     SELECT 
       COALESCE(SUM(monto), 0) as total 
     FROM movimientos_saldo 
-    WHERE usuario_id = ? AND MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE()) AND monto > 0
+    WHERE usuario_id = ? 
+    AND MONTH(fecha) = MONTH(CURDATE()) 
+    AND YEAR(fecha) = YEAR(CURDATE()) 
+    AND monto > 0
+    AND tipo_movimiento IN ('tarea_completada', 'ganancia_tarea', 'comision_subordinado', 'comision_red', 'comision_inversion', 'comision_tarea', 'recompensa_invitacion', 'bono_invitado', 'premio_ruleta')
   `, [userId]);
 
-  // 5. Total Acumulado (Todas las ganancias históricas)
+  // 5. Total Acumulado (Todas las ganancias históricas - Solo ingresos por actividad)
   const statsTotal = await queryOne(`
     SELECT 
       COALESCE(SUM(monto), 0) as total,
       COUNT(CASE WHEN tipo_movimiento IN ('tarea_completada', 'ganancia_tarea') THEN 1 END) as completadas
     FROM movimientos_saldo 
-    WHERE usuario_id = ? AND monto > 0
+    WHERE usuario_id = ? 
+    AND monto > 0
+    AND tipo_movimiento IN ('tarea_completada', 'ganancia_tarea', 'comision_subordinado', 'comision_red', 'comision_inversion', 'comision_tarea', 'recompensa_invitacion', 'bono_invitado', 'premio_ruleta')
   `, [userId]);
 
   res.json({

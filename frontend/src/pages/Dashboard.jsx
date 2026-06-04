@@ -161,7 +161,7 @@ export default function Dashboard() {
         </div>
       ) : null
     },
-    { to: '/movimientos', icon: FileTextIcon, label: 'Movimientos', color: 'text-emerald-700', bg: 'bg-emerald-100' },
+    { to: '/ganancias', icon: FileTextIcon, label: 'Billetera', color: 'text-emerald-700', bg: 'bg-emerald-100' },
     { to: '/acerca-de', icon: InfoIcon, label: 'Nosotros', color: 'text-cyan-700', bg: 'bg-cyan-100' },
   ];
 
@@ -297,7 +297,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-baseline gap-2 overflow-hidden">
                     <p className="text-5xl sm:text-7xl font-black text-white tracking-tighter truncate drop-shadow-2xl">
-                      {formatCurrency(user?.saldo_principal || 0, 'Bs').trim()}
+                      {formatCurrency(stats?.saldo_total_actual || user?.saldo_principal || 0, 'Bs').trim()}
                     </p>
                   </div>
                 </div>
@@ -330,33 +330,38 @@ export default function Dashboard() {
         </Card>
 
         {/* Quick Stats Grid */}
-        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)] p-8 sm:p-10 space-y-8 border border-slate-100 relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 opacity-50" />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm border border-indigo-100 group-hover:rotate-12 transition-transform">
-                <TrendingUpIcon size={20} strokeWidth={2.5} />
+        <Link to="/ganancias" className="block px-1">
+          <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)] p-8 sm:p-10 space-y-8 border border-slate-100 relative overflow-hidden group active:scale-[0.98] transition-all">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 opacity-50" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm border border-indigo-100 group-hover:rotate-12 transition-transform">
+                  <TrendingUpIcon size={20} strokeWidth={2.5} />
+                </div>
+                <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Rendimiento Financiero</h3>
               </div>
-              <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Rendimiento Financiero</h3>
+              <div className="flex items-center gap-2">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full">Hoy</div>
+                <ChevronRightIcon size={14} className="text-slate-300 group-hover:text-bcb-primary transition-colors" />
+              </div>
             </div>
-            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full">Hoy</div>
+            <div className="grid grid-cols-2 gap-8 sm:gap-12 relative">
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-12 bg-slate-100" />
+              <div className="space-y-2">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Ingresos (Hoy)</p>
+                <p className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tighter">
+                  +{formatCurrency(stats?.ingresos_hoy || 0, 'Bs').trim()}
+                </p>
+              </div>
+              <div className="space-y-2 text-right">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Capital Acumulado</p>
+                <p className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tighter">
+                  {formatCurrency(stats?.total_acumulado || 0, 'Bs').trim()}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-8 sm:gap-12 relative">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-12 bg-slate-100" />
-            <div className="space-y-2">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Ingresos del Día</p>
-              <p className="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tighter">
-                +{formatCurrency(stats?.ingresos_hoy || 0, 'Bs').trim()}
-              </p>
-            </div>
-            <div className="space-y-2 text-right">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Acumulado Total</p>
-              <p className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tighter">
-                {formatCurrency(stats?.total_acumulado || 0, 'Bs').trim()}
-              </p>
-            </div>
-          </div>
-        </div>
+        </Link>
 
         {/* Investment Opportunities */}
         <section className="space-y-5">
