@@ -58,9 +58,13 @@ export default function Dashboard() {
   const isSunday = now.getDay() === 0;
 
   useEffect(() => {
-    // Los anuncios aparecerán siempre al cargar el sistema o recargar la página
-    if (comunicados.length > 0) {
+    // Los anuncios aparecerán solo la primera vez que se entra al sistema en esta sesión
+    const hasShownInSession = sessionStorage.getItem('announcements_shown_session');
+    
+    if (comunicados.length > 0 && !hasShownInSession) {
       setAnnouncementsToShow(comunicados);
+      // Marcamos como mostrado inmediatamente para que al navegar y volver no aparezca
+      sessionStorage.setItem('announcements_shown_session', 'true');
     }
   }, [comunicados]);
 
