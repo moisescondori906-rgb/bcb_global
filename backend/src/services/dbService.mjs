@@ -350,28 +350,12 @@ export async function canWithdraw(userId, dateStr = peruTime.todayStr()) {
     schedule = typeof config.horario_retiro === 'string' ? JSON.parse(config.horario_retiro) : config.horario_retiro;
   }
 
-  // --- VALIDACIÓN DE DÍAS (Prioridad: Nivel > Global) ---
-  let isAllowedDay = false;
-  if (userLevel.retiro_horario_habilitado) {
-    const start = Number(userLevel.retiro_dia_inicio);
-    const end = Number(userLevel.retiro_dia_fin);
-    if (start <= end) isAllowedDay = today >= start && today <= end;
-    else isAllowedDay = today >= start || today <= end;
-  } else {
-    // Usar la configuración global (Martes a Jueves por defecto)
-    isAllowedDay = Array.isArray(schedule.dias_semana) && schedule.dias_semana.includes(today);
-  }
+  // --- VALIDACIÓN DE DÍAS (Sincronizado con v13.0.0: Lunes a Viernes G1+) ---
+  const globalAllowedDays = [1, 2, 3, 4, 5];
+  const isAllowedDay = globalAllowedDays.includes(today);
 
   if (!isAllowedDay) {
-    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    let msg = '';
-    if (userLevel.retiro_horario_habilitado) {
-      msg = `Tu nivel permite retiros de ${dayNames[userLevel.retiro_dia_inicio]} a ${dayNames[userLevel.retiro_dia_fin]}.`;
-    } else {
-      const allowedNames = schedule.dias_semana.map(d => dayNames[d]).join(', ');
-      msg = `Los retiros están disponibles los días: ${allowedNames}.`;
-    }
-    return { ok: false, message: msg };
+    return { ok: false, message: 'Los retiros están disponibles de Lunes a Viernes para niveles Global 1 en adelante.' };
   }
 
   if (schedule.enabled && !peruTime.isTimeInWindow(time, schedule.hora_inicio, schedule.hora_fin)) {

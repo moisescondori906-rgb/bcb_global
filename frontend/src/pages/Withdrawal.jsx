@@ -260,25 +260,15 @@ export default function Withdrawal() {
   const fueraHorario = horarioRet?.enabled && !schedRet.ok;
   const msgHorario = !schedRet.ok ? schedRet.message : '';
 
-  // --- VALIDACIÓN DE DÍAS (Sincronizado con Backend v12.0.0) ---
+  // --- VALIDACIÓN DE DÍAS (Sincronizado con Backend v13.0.0) ---
   const boliviaNow = getBoliviaNow();
   const today = boliviaNow.getDay(); // 0=Dom, 1=Lun, 2=Mar... 6=Sab
   
-  // Reglas Globales desde Configuración (Lunes a Viernes: 1, 2, 3, 4, 5)
-  const globalSchedule = pc?.horario_retiro || { enabled: true, dias_semana: [1, 2, 3, 4, 5] };
-  const globalAllowedDays = Array.isArray(globalSchedule.dias_semana) ? globalSchedule.dias_semana : [1, 2, 3, 4, 5];
+  // Regla General: Lunes a Viernes (1, 2, 3, 4, 5) para todos los niveles G1+
+  const globalAllowedDays = [1, 2, 3, 4, 5];
 
-  // Si el nivel tiene horario específico configurado, usamos ese rango
-  let isAllowedDay = false;
-  if (userLevel?.retiro_horario_habilitado) {
-    const start = Number(userLevel.retiro_dia_inicio);
-    const end = Number(userLevel.retiro_dia_fin);
-    if (start <= end) isAllowedDay = today >= start && today <= end;
-    else isAllowedDay = today >= start || today <= end;
-  } else {
-    // Usar la regla general (Martes a Jueves por defecto)
-    isAllowedDay = globalAllowedDays.includes(today);
-  }
+  // La lógica de niveles específicos se anula para seguir la regla general de Lunes a Viernes
+  const isAllowedDay = globalAllowedDays.includes(today);
 
   const isInternar = userLevel?.codigo === 'internar' || userLevel?.codigo === 'pasantia';
   const canWithdrawToday = isAllowedDay && !isInternar;
@@ -528,15 +518,7 @@ export default function Withdrawal() {
                       </div>
                       <div className="grid grid-cols-7 gap-1.5">
                         {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, i) => {
-                          let isAllowed = false;
-                          if (userLevel?.retiro_horario_habilitado) {
-                            const start = Number(userLevel.retiro_dia_inicio);
-                            const end = Number(userLevel.retiro_dia_fin);
-                            if (start <= end) isAllowed = today >= start && today <= end;
-                            else isAllowed = today >= start || today <= end;
-                          } else {
-                            isAllowed = globalAllowedDays.includes(i);
-                          }
+                          const isAllowed = globalAllowedDays.includes(i);
                           const isToday = today === i;
                           return (
                             <div key={i} className="flex flex-col items-center gap-1.5">
