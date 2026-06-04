@@ -82,24 +82,11 @@ function NotificationItem({ item, onRemove }) {
             <BellRing size={48} strokeWidth={1.5} className="animate-pulse" />
           </div>
         )}
-        
-        {/* Badge Flotante sobre Imagen */}
-        {!item.read && (
-          <div className="absolute bottom-4 left-4 z-10">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-bcb-primary text-white shadow-lg animate-bounce">
-              <span className="text-[10px] font-black uppercase tracking-widest">¡Nuevo Comunicado!</span>
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="p-8 space-y-4">
-        {/* Título y Badge de Importancia */}
+        {/* Título */}
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-bcb-primary animate-ping" />
-            <span className="text-[10px] font-black text-bcb-primary uppercase tracking-[0.2em]">Importante</span>
-          </div>
           <h4 className="text-2xl font-black text-slate-900 leading-tight tracking-tighter uppercase italic">
             {item.titulo || 'BCB Global Institucional'}
           </h4>
