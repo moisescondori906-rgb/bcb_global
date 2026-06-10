@@ -22,7 +22,6 @@ import {
   Heart as HeartIcon,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getBoliviaNow } from '../utils/time';
 import { formatCurrency, formatDate } from '../lib/utils/format';
 import Layout from '../components/Layout';
 import { Card } from '../components/ui/Card';
