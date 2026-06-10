@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getBoliviaNow } from '../utils/time';
 import { 
   Wallet as WalletIcon, 
   TrendingUp as TrendingUpIcon, 
@@ -18,7 +19,7 @@ import {
   X as CloseIcon,
   ShieldAlert as ShieldAlertIcon,
   Medal as MedalIcon,
-  Coffee as CoffeeIcon
+  Heart as HeartIcon,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getBoliviaNow } from '../utils/time';
@@ -60,9 +61,24 @@ export default function Dashboard() {
   useEffect(() => {
     // Los anuncios aparecerán solo la primera vez que se entra al sistema en esta sesión
     const hasShownInSession = sessionStorage.getItem('announcements_shown_session');
+    const boliviaNow = getBoliviaNow();
+    const isSunday = boliviaNow.getDay() === 0;
+
+    let itemsToShow = [...comunicados];
+
+    // REGLA DOMINICAL AUTOMÁTICA (v14.0.0)
+    if (isSunday) {
+      itemsToShow.unshift({
+        id: 'sunday_maintenance_v14',
+        titulo: 'DOMINGO DE DESCANSO',
+        mensaje: 'Hoy no hay tareas disponibles. En BCB Global también valoramos el descanso. Aprovecha este día para compartir con tu familia y disfrutar de un lindo domingo. Las tareas volverán a estar disponibles mañana.',
+        isSpecial: true,
+        read: false
+      });
+    }
     
-    if (comunicados.length > 0 && !hasShownInSession) {
-      setAnnouncementsToShow(comunicados);
+    if (itemsToShow.length > 0 && !hasShownInSession) {
+      setAnnouncementsToShow(itemsToShow);
       // Marcamos como mostrado inmediatamente para que al navegar y volver no aparezca
       sessionStorage.setItem('announcements_shown_session', 'true');
     }

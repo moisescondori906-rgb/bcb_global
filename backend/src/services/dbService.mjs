@@ -243,9 +243,14 @@ export async function getUserTeamReport(userId) {
 export async function canPerformTasks(userId, dateStr = peruTime.todayStr()) {
   try {
     const status = await getDayStatus(dateStr);
-    if (!status) return { ok: true }; 
+    
+    // REGLA DOMINICAL AUTOMÁTICA (v14.0.0)
+    const today = peruTime.getDay();
+    if (today === 0) { // 0 = Domingo
+      return { ok: false, message: 'DOMINGO DE DESCANSO: Hoy no hay tareas disponibles. En BCB Global también valoramos el descanso. Aprovecha este día para compartir con tu familia y disfrutar de un lindo domingo. Las tareas volverán a estar disponibles mañana.' };
+    }
 
-    if (!status.tareas_habilitadas) {
+    if (status && !status.tareas_habilitadas) {
       return { ok: false, message: status.motivo || 'Las tareas están suspendidas por hoy.' };
     }
 

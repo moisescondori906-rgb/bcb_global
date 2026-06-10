@@ -193,9 +193,16 @@ export default function TaskRoom() {
     let iconColor = "bg-amber-500/10 text-amber-500";
     let isSunday = false;
 
-    const msg = (error || data?.mensaje || '').toLowerCase();
-    
-    if (msg.includes('domingo')) {
+    const boliviaNow = getBoliviaNow();
+    const today = boliviaNow.getDay();
+
+    if (today === 0) { // Domingo
+      isSunday = true;
+      displayTitle = 'DOMINGO DE DESCANSO';
+      displayMessage = 'Hoy no hay tareas disponibles. En BCB Global también valoramos el descanso. Aprovecha este día para compartir con tu familia, relajarte y disfrutar de un lindo domingo. Las tareas volverán a estar disponibles mañana.';
+      Icon = Heart;
+      iconColor = "bg-bcb-primary/10 text-bcb-primary";
+    } else if (msg.includes('domingo')) {
       isSunday = true;
       displayTitle = 'DOMINGO DE DESCANSO';
       displayMessage = 'Hoy no hay tareas disponibles. En BCB Global también valoramos el descanso. Aprovecha este día para compartir con tu familia, relajarte y disfrutar de un lindo domingo. Las tareas volverán a estar disponibles mañana.';
@@ -280,7 +287,7 @@ export default function TaskRoom() {
               <video 
                 ref={videoRef}
                 src={api.getMediaUrl(activeTask.video_url)}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 onEnded={handleVideoEnd}
                 playsInline
                 autoPlay
@@ -445,12 +452,12 @@ export default function TaskRoom() {
               <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-black/5 shrink-0 bg-black">
                 {/* Previsualización del video optimizada para Android v11.3.1 */}
                 <video 
-                  src={`${api.getMediaUrl(t.video_url)}#t=0.1`} 
+                  src={`${api.getMediaUrl(t.video_url)}`} 
                   className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
                   muted
                   playsInline
                   loop
-                  preload="metadata" // CARGAR SOLO EL INICIO PARA MOSTRAR EL THUMBNAIL EN ANDROID
+                  preload="metadata"
                   onMouseOver={(e) => {
                     e.target.play().catch(() => {});
                   }}

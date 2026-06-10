@@ -15,7 +15,12 @@ import logger, { createModuleLogger } from './utils/logger.mjs';
 import { errorHandler } from './handlers/errorHandler.mjs';
 import { initTelegramHandlers } from './services/telegramInitializer.mjs';
 import { query } from './config/db.mjs';
-import { syncLevels, preloadLevels, preloadConfig, peruTime } from './services/dbService.mjs';
+import { syncLevels, preloadLevels, preloadConfig } from './services/dbService.mjs';
+
+// Función para obtener la fecha y hora actual en Bolivia
+export function getBoliviaNow() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/La_Paz' }));
+}
 import { safeAsync } from './utils/safe.mjs';
 import { initSocket } from './services/socketService.mjs';
 import { startUploadCleanupService } from './services/uploadCleanupService.mjs';
