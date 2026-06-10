@@ -41,6 +41,7 @@ export default function TaskRoom() {
   const [quizOptions, setQuizOptions] = useState([]);
   const [correctAnswer, setCorrectAnswer] = useState('');
   const [quizError, setQuizError] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(false);
   const videoRef = useRef(null);
 
   // Generar opciones aleatorias para el cuestionario
@@ -96,11 +97,21 @@ export default function TaskRoom() {
 
   useEffect(() => {
     if (activeTask && videoRef.current) {
+      setVideoLoading(true);
       videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {
-        videoRef.current.muted = true;
-        videoRef.current.play();
-      });
+      
+      const handleCanPlay = () => {
+        setVideoLoading(false);
+        videoRef.current.play().catch(() => {
+          videoRef.current.muted = true;
+          videoRef.current.play();
+        });
+        videoRef.current.removeEventListener('canplay', handleCanPlay);
+      };
+      
+      videoRef.current.addEventListener('canplay', handleCanPlay);
+      
+      videoRef.current.load(); // Forzar carga inmediata
     }
   }, [activeTask?.id]);
 
@@ -288,7 +299,7 @@ export default function TaskRoom() {
               <video 
                 ref={videoRef}
                 src={api.getMediaUrl(activeTask.video_url)}
-                className="w-full h-full object-cover"
+                className={cn("w-full h-full object-cover transition-opacity", videoLoading ? "opacity-50" : "opacity-100")}
                 onEnded={handleVideoEnd}
                 playsInline
                 autoPlay
@@ -296,13 +307,22 @@ export default function TaskRoom() {
                 preload="auto"
                 controls={false}
               />
-              {!videoFinished && !showResult && (
+              
+              {/* Indicador de carga de video */}
+              {videoLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
+                  <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mb-3" />
+                  <p className="text-xs font-black text-white uppercase tracking-widest">Cargando video...</p>
+                </div>
+              )}
+
+              {!videoFinished && !showResult && !videoLoading && (
                 <div className="absolute top-4 right-4 px-3 py-1.5 bg-bcb-dark/60 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-bcb-primary rounded-full animate-ping" />
                   <span className="text-xs font-black text-white">{timer}s</span>
                 </div>
               )}
-              {!videoFinished && (
+              {!videoFinished && !videoLoading && (
                 <div className="absolute top-6 right-6 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
                   <p className="text-[10px] font-black text-white uppercase tracking-widest">Visualización en curso</p>
                 </div>
@@ -451,23 +471,10 @@ export default function TaskRoom() {
               onClick={() => startTask(t)}
               delay={i * 0.05}
             >
-              <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-black/5 shrink-0 bg-black">
-                {/* Previsualización del video optimizada para Android v11.3.1 */}
-                <video 
-                  src={`${api.getMediaUrl(t.video_url)}`} 
-                  className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
-                  muted
-                  playsInline
-                  loop
-                  preload="metadata"
-                  onMouseOver={(e) => {
-                    e.target.play().catch(() => {});
-                  }}
-                  onMouseOut={(e) => e.target.pause()}
-                />
-                <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity pointer-events-none">
-                  <Play size={20} className="text-white fill-white/80" />
-                </div>
+              <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-black/5 shrink-0 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                {/* Quitar miniaturas de video para optimizar velocidad */}
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900/10 to-slate-700/10" />
+                <Play size={24} className="text-bcb-primary fill-bcb-primary/30 z-10 group-hover:scale-110 transition-transform" />
               </div>
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center justify-between">
