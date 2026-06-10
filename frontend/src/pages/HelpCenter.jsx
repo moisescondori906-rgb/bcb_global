@@ -107,7 +107,7 @@ export default function HelpCenter() {
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-[11px] font-black text-white/40 uppercase tracking-[0.3em] ml-1">Contactos Directos</h2>
+          <h2 className="text-[11px] font-black text-black uppercase tracking-[0.3em] ml-1">Contactos Directos</h2>
           
           <div className="grid grid-cols-1 gap-4">
             <a href={pc?.soporte_gerente_url || '#'} target="_blank" rel="noopener noreferrer">
@@ -117,11 +117,11 @@ export default function HelpCenter() {
                     <MessageIcon size={24} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-white uppercase tracking-widest">WhatsApp Gerente</h3>
-                    <p className="text-[9px] text-bcb-muted font-bold uppercase tracking-widest">Atención personalizada</p>
+                    <h3 className="text-sm font-black text-black uppercase tracking-widest">WhatsApp Gerente</h3>
+                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">Atención personalizada</p>
                   </div>
                 </div>
-                <ChevronIcon size={18} className="text-bcb-muted group-hover:text-white transition-colors" />
+                <ChevronIcon size={18} className="text-gray-500 group-hover:text-black transition-colors" />
               </Card>
             </a>
 
@@ -132,23 +132,23 @@ export default function HelpCenter() {
                     <UsersIcon size={24} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-white uppercase tracking-widest">Canal Oficial</h3>
-                    <p className="text-[9px] text-bcb-muted font-bold uppercase tracking-widest">Noticias y Actualizaciones</p>
+                    <h3 className="text-sm font-black text-black uppercase tracking-widest">Canal Oficial</h3>
+                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">Noticias y Actualizaciones</p>
                   </div>
                 </div>
-                <ChevronIcon size={18} className="text-bcb-muted group-hover:text-white transition-colors" />
+                <ChevronIcon size={18} className="text-gray-500 group-hover:text-black transition-colors" />
               </Card>
             </a>
           </div>
         </div>
 
-        <Card variant="premium" className="p-8 relative overflow-hidden text-center space-y-4 bg-bcb-dark border-white/5 shadow-2xl">
+        <Card variant="premium" className="p-8 relative overflow-hidden text-center space-y-4 shadow-2xl">
           <div className="absolute top-0 right-0 p-6 opacity-10">
             <SparklesIcon size={60} />
           </div>
           <div className="relative z-10">
-            <h3 className="text-lg font-black text-white uppercase tracking-tighter">¿Problemas Técnicos?</h3>
-            <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest leading-relaxed mt-2">
+            <h3 className="text-lg font-black text-black uppercase tracking-tighter">¿Problemas Técnicos?</h3>
+            <p className="text-[10px] text-gray-700 font-bold uppercase tracking-widest leading-relaxed mt-2">
               Nuestro equipo de soporte está disponible 24/7 para resolver tus dudas institucionales.
             </p>
             <div className="pt-6">
