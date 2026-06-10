@@ -119,11 +119,11 @@ export default function Ganancias() {
                 <div className="space-y-1.5">
                   <p className="text-[11px] font-extrabold text-bcb-muted uppercase tracking-[0.2em]">Capital Acumulado</p>
                   <div className="flex items-baseline gap-2">
-                    <h2 className="text-5xl font-black text-bcb-text-main tracking-tighter">
-                      {(data?.summary?.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </h2>
-                    <span className="text-lg font-black text-bcb-primary uppercase tracking-widest">Bs</span>
-                  </div>
+                <h2 className="text-5xl font-black text-black tracking-tighter">
+                  {(data?.summary?.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </h2>
+                <span className="text-lg font-black text-bcb-primary uppercase tracking-widest">Bs</span>
+              </div>
                 </div>
                 <div className="w-14 h-14 rounded-2xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary shadow-sm border border-bcb-primary/20">
                    <Wallet size={28} strokeWidth={1.5} />
@@ -178,7 +178,7 @@ export default function Ganancias() {
           {/* Activity List */}
           <section className="space-y-6 pb-12">
             <div className="flex items-center justify-between px-1">
-              <h2 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-[0.15em] flex items-center gap-2">
+              <h2 className="text-[13px] font-extrabold text-black uppercase tracking-[0.15em] flex items-center gap-2">
                 <History size={18} className="text-bcb-primary" strokeWidth={2.5} /> Actividad Reciente
               </h2>
               <Badge variant="info">{historyList.length} EVENTOS</Badge>

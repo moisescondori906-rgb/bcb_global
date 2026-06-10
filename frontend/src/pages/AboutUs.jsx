@@ -119,9 +119,9 @@ export default function AboutUs() {
               <div className="relative z-10 space-y-6">
                 <div className="space-y-2">
                   <Badge variant="info" className="mb-2 bg-bcb-primary text-white border-bcb-primary shadow-sm">BCB GLOBAL OFFICIAL</Badge>
-                  <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none drop-shadow-sm">
-                    {content[activeTab].title}
-                  </h2>
+                  <h2 className="text-3xl font-black text-black uppercase tracking-tighter leading-none drop-shadow-sm">
+                  {content[activeTab].title}
+                </h2>
                   <p className="text-[13px] font-black text-bcb-primary uppercase tracking-[0.25em] bg-bcb-primary/5 py-1 px-3 rounded-lg inline-block">
                     {content[activeTab].subtitle}
                   </p>

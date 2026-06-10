@@ -41,17 +41,17 @@ export default function CambiarContrasena() {
       <main className="p-5 space-y-6 animate-fade">
         
         {/* Banner Informativo */}
-        <Card variant="flat" className="p-6 bg-bcb-primary/5 border-bcb-primary/10 rounded-[2rem]">
+        <Card variant="flat" className="p-6 bg-white border-gray-200 rounded-[2rem]">
           <div className="flex items-center gap-4 mb-3">
             <div className="w-12 h-12 rounded-2xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary">
               <KeyRound size={24} />
             </div>
             <div>
-              <h3 className="text-xs font-black text-white uppercase tracking-widest leading-none mb-1">Cambio de Clave</h3>
-              <p className="text-[10px] text-bcb-muted font-bold uppercase tracking-tight">Acceso a la plataforma</p>
+              <h3 className="text-xs font-black text-black uppercase tracking-widest leading-none mb-1">Cambio de Clave</h3>
+              <p className="text-[10px] text-gray-600 font-bold uppercase tracking-tight">Acceso a la plataforma</p>
             </div>
           </div>
-          <p className="text-[11px] text-bcb-muted font-medium leading-relaxed">
+          <p className="text-[11px] text-gray-600 font-medium leading-relaxed">
             Para proteger tu cuenta, es obligatorio ingresar tu contraseña actual antes de establecer una nueva. Usa una combinación segura.
           </p>
         </Card>

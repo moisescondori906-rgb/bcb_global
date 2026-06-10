@@ -145,8 +145,8 @@ export default function Invite() {
                 <Users size={40} strokeWidth={1.5} />
               </div>
               <div className="space-y-2">
-                <h2 className="text-3xl font-black text-bcb-text-main uppercase tracking-tight leading-none">¡Expande tu Red!</h2>
-                <p className="text-[11px] font-bold text-bcb-muted uppercase tracking-[0.3em] mt-1">Gana comisiones por cada nuevo socio</p>
+                <h2 className="text-3xl font-black text-black uppercase tracking-tight leading-none">¡Expande tu Red!</h2>
+                <p className="text-[11px] font-bold text-gray-600 uppercase tracking-[0.3em] mt-1">Gana comisiones por cada nuevo socio</p>
               </div>
             </Card>
           </section>

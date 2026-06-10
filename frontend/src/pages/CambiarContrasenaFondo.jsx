@@ -51,17 +51,17 @@ export default function CambiarContrasenaFondo() {
       <main className="p-5 space-y-6 animate-fade">
         
         {/* Banner de Advertencia/Información */}
-        <Card variant="flat" className="p-6 bg-amber-500/5 border-amber-500/10 rounded-[2rem]">
+        <Card variant="flat" className="p-6 bg-white border-amber-200 rounded-[2rem]">
           <div className="flex items-center gap-4 mb-3">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
               <Zap size={24} />
             </div>
             <div>
-              <h3 className="text-xs font-black text-white uppercase tracking-widest leading-none mb-1">Firma Digital</h3>
-              <p className="text-[10px] text-bcb-muted font-bold uppercase tracking-tight">Autorización de Retiros</p>
+              <h3 className="text-xs font-black text-black uppercase tracking-widest leading-none mb-1">Firma Digital</h3>
+              <p className="text-[10px] text-gray-600 font-bold uppercase tracking-tight">Autorización de Retiros</p>
             </div>
           </div>
-          <p className="text-[11px] text-bcb-muted font-medium leading-relaxed">
+          <p className="text-[11px] text-gray-600 font-medium leading-relaxed">
             {tieneFondo
               ? 'Por seguridad, ingresa tu clave de fondo actual antes de realizar el cambio. Esta clave es obligatoria para procesar cualquier retiro.'
               : 'Configura una clave de 6 dígitos para autorizar tus movimientos financieros. Es diferente a tu clave de acceso.'}

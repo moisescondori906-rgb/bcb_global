@@ -72,8 +72,8 @@ export default function HelpCenter() {
       
       <main className="p-6 space-y-8 pb-32 animate-fade">
         <div className="space-y-2">
-          <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Guías de Usuario</h2>
-          <p className="text-[10px] text-bcb-muted font-bold uppercase tracking-widest">Aprende a usar BCB Global como un profesional</p>
+          <h2 className="text-2xl font-black text-black uppercase tracking-tighter">Guías de Usuario</h2>
+          <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Aprende a usar BCB Global como un profesional</p>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
@@ -83,7 +83,7 @@ export default function HelpCenter() {
               <Card 
                 key={guide.id}
                 onClick={() => setSelectedVideo(guide)}
-                className="p-5 flex items-center gap-5 bg-white/[0.02] border-white/5 hover:border-bcb-primary/30 transition-all group cursor-pointer"
+                className="p-5 flex items-center gap-5 bg-white border-gray-100 hover:border-bcb-primary/30 transition-all group cursor-pointer"
               >
                 <div className={cn(
                   "w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-inner",
@@ -93,12 +93,12 @@ export default function HelpCenter() {
                   <Icon size={28} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-black text-white uppercase tracking-wider truncate">{guide.title}</h3>
-                  <p className="text-[10px] text-bcb-muted font-bold leading-relaxed mt-0.5 uppercase tracking-wide line-clamp-2">
+                  <h3 className="text-sm font-black text-black uppercase tracking-wider truncate">{guide.title}</h3>
+                  <p className="text-[10px] text-gray-600 font-bold leading-relaxed mt-0.5 uppercase tracking-wide line-clamp-2">
                     {guide.description}
                   </p>
                 </div>
-                <div className="p-2 rounded-xl bg-white/5 group-hover:bg-bcb-primary group-hover:text-white transition-all">
+                <div className="p-2 rounded-xl bg-gray-100 group-hover:bg-bcb-primary group-hover:text-white transition-all">
                   <PlayIcon size={20} />
                 </div>
               </Card>

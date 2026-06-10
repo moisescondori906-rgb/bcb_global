@@ -98,10 +98,10 @@ const DownloadButton = ({ variant = 'default' }) => {
                 )}
               </div>
               <div className="text-center md:text-left">
-                <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                <h3 className="text-sm font-black text-black uppercase tracking-wider">
                   {device === 'ios' ? 'BCB Global en iPhone' : 'BCB Global en Android'}
                 </h3>
-                <p className="text-[10px] font-bold text-bcb-muted uppercase tracking-widest mt-0.5">
+                <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mt-0.5">
                   {device === 'ios' ? 'Disponible para Android' : 'Descarga la aplicación nativa'}
                 </p>
               </div>
