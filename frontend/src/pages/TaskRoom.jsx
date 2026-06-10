@@ -195,6 +195,7 @@ export default function TaskRoom() {
 
     const boliviaNow = getBoliviaNow();
     const today = boliviaNow.getDay();
+    const msg = (error || data?.mensaje || '').toLowerCase();
 
     if (today === 0) { // Domingo
       isSunday = true;
@@ -287,12 +288,13 @@ export default function TaskRoom() {
               <video 
                 ref={videoRef}
                 src={api.getMediaUrl(activeTask.video_url)}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
                 onEnded={handleVideoEnd}
                 playsInline
                 autoPlay
+                muted
                 preload="auto"
-                muted={false}
+                controls={false}
               />
               {!videoFinished && !showResult && (
                 <div className="absolute top-4 right-4 px-3 py-1.5 bg-bcb-dark/60 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-2">
