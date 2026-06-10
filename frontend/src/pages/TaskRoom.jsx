@@ -489,11 +489,11 @@ export default function TaskRoom() {
               onClick={() => startTask(t)}
               delay={i * 0.05}
             >
-              <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-black/5 shrink-0 bg-white flex items-center justify-center p-3">
+              <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-black/5 shrink-0 bg-white">
                 <img 
                   src={`/imag/logotareas/${getLogoForTask(t.nombre)}`} 
                   alt={`Logo ${t.nombre}`}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex-1 min-w-0 space-y-1">
