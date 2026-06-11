@@ -111,7 +111,7 @@ export default function Recompensas() {
         particleCount: 150,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#4f46e5', '#10b981', '#f59e0b', '#ec4899']
+        colors: ['#f59e0b', '#10b981', '#ec4899', '#a855f7']
       });
     }
 
@@ -123,8 +123,8 @@ export default function Recompensas() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#1a1f36] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -137,7 +137,7 @@ export default function Recompensas() {
             <AlertCircle size={48} strokeWidth={1.5} />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-black text-[#1a1f36] uppercase tracking-tighter">Premios Bloqueados</h2>
+            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Premios Bloqueados</h2>
             <p className="text-sm text-gray-400 font-medium leading-relaxed max-w-xs mx-auto">
               Tu acceso a la ruleta de premios ha sido <span className="text-rose-600 font-bold uppercase">bloqueado por hoy</span> como castigo por no responder el cuestionario obligatorio de ayer.
             </p>
@@ -164,7 +164,7 @@ export default function Recompensas() {
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-400">
               <Lock size={40} />
             </div>
-            <h2 className="text-xl font-black text-[#1a1f36] uppercase tracking-tighter mb-2">Sección Bloqueada</h2>
+            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-2">Sección Bloqueada</h2>
             <p className="text-xs text-gray-400 font-bold uppercase tracking-widest leading-relaxed">
               El administrador ha desactivado temporalmente el centro de recompensas.
             </p>
@@ -190,34 +190,24 @@ export default function Recompensas() {
   return (
     <Layout>
       <div className="bg-gray-50 min-h-screen pb-24">
-        {isInternar && (
-          <div className="bg-emerald-500/10 border-b border-emerald-500/20 p-4 text-center">
-            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center justify-center gap-2">
-               <Sparkles size={14} className="animate-pulse" /> ¡Bienvenido! Tienes 1 giro gratis de cortesía
-            </p>
-          </div>
-        )}
         {/* Header Section */}
-        <div className="bg-gradient-to-b from-slate-900 to-indigo-950 pt-12 pb-32 px-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full -mr-64 -mt-64 blur-[120px] animate-pulse" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-500/10 rounded-full -ml-48 -mb-48 blur-[100px]" />
-          
-          <div className="relative z-10 max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl mb-6 shadow-2xl">
-              <Sparkles className="text-amber-400 animate-pulse" size={16} />
-              <span className="text-[10px] font-black text-white uppercase tracking-[0.4em]">Sorteo Premium Global</span>
+        <div className="pt-12 pb-8 px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-100 border border-amber-200 mb-6 shadow-xl">
+              <Sparkles className="text-amber-500 animate-pulse" size={16} />
+              <span className="text-[10px] font-black text-amber-700 uppercase tracking-[0.4em]">Sorteo Premium Global</span>
             </div>
-            <h1 className="text-5xl sm:text-7xl font-black text-white uppercase tracking-tighter mb-4 leading-none drop-shadow-2xl">
-              GIRA Y <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-emerald-400">GANA</span>
+            <h1 className="text-5xl sm:text-7xl font-black text-slate-900 uppercase tracking-tighter mb-4 leading-none drop-shadow-sm">
+              GIRA Y <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-emerald-500 to-pink-500">GANA</span>
             </h1>
-            <p className="text-white/40 text-[10px] sm:text-xs font-bold max-w-xs mx-auto uppercase tracking-[0.2em] leading-relaxed">
+            <p className="text-slate-400 text-[10px] sm:text-xs font-bold max-w-xs mx-auto uppercase tracking-[0.2em] leading-relaxed">
               Sistema de recompensas verificado. Premios instantáneos acreditados a tu balance.
             </p>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="px-6 -mt-20 max-w-4xl mx-auto space-y-8">
+        <div className="px-6 max-w-4xl mx-auto space-y-8">
           {/* Wheel Container */}
           <div className="relative flex flex-col items-center">
             <RouletteWheel 
@@ -236,7 +226,7 @@ export default function Recompensas() {
                   w-full h-16 rounded-[2rem] font-black uppercase tracking-[0.2em] transition-all duration-500 relative overflow-hidden group
                   ${spinning || premios.length === 0 || (Number(user?.tickets_ruleta) || 0) < 1
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    : 'bg-bcb-primary text-white shadow-[0_20px_50px_-10px_rgba(30,27,75,0.5)] hover:scale-[1.02] active:scale-[0.98]'
+                    : 'bg-gradient-to-r from-amber-500 to-emerald-500 text-white shadow-[0_20px_50px_-10px_rgba(245,158,11,0.5)] hover:scale-[1.02] active:scale-[0.98]'
                   }
                 `}
               >
@@ -249,14 +239,14 @@ export default function Recompensas() {
                     </>
                   ) : (
                     <>
-                      <Sparkles size={20} className="text-amber-400" />
+                      <Sparkles size={20} className="text-amber-200" />
                       Girar Ahora
                     </>
                   )}
                 </span>
               </button>
 
-              <div className="flex items-center justify-center gap-8 py-4 bg-white/50 backdrop-blur-sm rounded-3xl border border-white/20">
+              <div className="flex items-center justify-center gap-8 py-4 bg-white backdrop-blur-sm rounded-3xl border border-amber-100 shadow-xl">
                 <div className="text-center">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Costo</p>
                   <div className="flex items-center gap-1.5 justify-center">
@@ -297,28 +287,28 @@ export default function Recompensas() {
                   initial={{ y: 50 }}
                   animate={{ y: 0 }}
                 >
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 via-indigo-500 to-emerald-400" />
+                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 via-emerald-400 to-pink-500" />
                   <div className="w-24 h-24 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto shadow-inner border-4 border-white">
                     <Trophy size={48} />
                   </div>
                   <div className="space-y-2">
                     <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">¡FELICIDADES!</h2>
                     <p className="text-sm font-bold text-slate-500 uppercase tracking-widest leading-tight">Has ganado un premio de:</p>
-                    <p className="text-5xl font-black text-bcb-primary tracking-tighter">{result.nombre}</p>
+                    <p className="text-5xl font-black text-amber-600 tracking-tighter">{result.nombre}</p>
                   </div>
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Acreditado a:</p>
                     <p className="text-sm font-black text-slate-900 flex items-center justify-center gap-2">
-                      <Wallet size={16} className="text-indigo-500" />
+                      <Wallet size={16} className="text-amber-500" />
                       SALDO DE COMISIONES
                     </p>
                   </div>
-                  <Button 
+                  <button 
                     onClick={() => setResult(null)}
-                    className="w-full h-14 rounded-2xl bg-bcb-primary text-white font-black uppercase tracking-widest"
+                    className="w-full h-14 rounded-2xl bg-slate-900 text-white font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95"
                   >
                     CONTINUAR
-                  </Button>
+                  </button>
                 </motion.div>
               </motion.div>
             )}
@@ -327,7 +317,7 @@ export default function Recompensas() {
           {/* User Stats Card */}
           <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-black/5 border border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100">
+              <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-100">
                 <Trophy size={28} />
               </div>
               <div>
@@ -388,7 +378,7 @@ export default function Recompensas() {
                     {retoAmigosHabilitado ? (
                       <button 
                         onClick={spinWheel}
-                        className="flex items-center gap-2 bg-bcb-dark text-gray-900 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-colors group/btn"
+                        className="flex items-center gap-2 bg-amber-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 transition-colors group/btn shadow-lg"
                       >
                         Girar Ahora
                         <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
@@ -409,25 +399,25 @@ export default function Recompensas() {
           {/* Winners History (Estilo Ultra Llamativo) */}
           <div className="relative group px-2">
             {/* Efecto de resplandor de fondo */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-pink-500 rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
             
-            <div className="relative bg-white rounded-[2.2rem] p-7 shadow-2xl border border-emerald-50 overflow-hidden">
+            <div className="relative bg-white rounded-[2.2rem] p-7 shadow-2xl border border-amber-50 overflow-hidden">
               {/* Adornos de fondo */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-teal-50 rounded-full -ml-12 -mb-12 blur-2xl opacity-30" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-pink-50 rounded-full -ml-12 -mb-12 blur-2xl opacity-30" />
 
               <div className="flex items-center justify-between mb-8 relative z-10">
                 <div className="flex items-center gap-3">
-                  <div className="w-2 h-6 bg-gradient-to-b from-emerald-400 to-teal-600 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                  <div className="w-2 h-6 bg-gradient-to-b from-amber-400 to-pink-500 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.5)]" />
                   <div>
                     <h3 className="text-sm font-black text-gray-900 uppercase tracking-[0.25em] leading-none mb-1">Ganadores en Vivo</h3>
                     <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                      <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Actividad en tiempo real</span>
+                      <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                      <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Actividad en tiempo real</span>
                     </div>
                   </div>
                 </div>
-                <div className="px-3 py-1.5 rounded-xl bg-bcb-dark text-gray-900 border border-bcb-border text-[8px] font-black uppercase tracking-[0.2em] shadow-lg">
+                <div className="px-3 py-1.5 rounded-xl bg-slate-900 text-white border border-slate-800 text-[8px] font-black uppercase tracking-[0.2em] shadow-lg">
                   LIVE FEED
                 </div>
               </div>
@@ -436,11 +426,11 @@ export default function Recompensas() {
                 {historial.length > 0 ? historial.slice(0, 5).map((win, i) => (
                   <div 
                     key={win.id}
-                    className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:border-emerald-200 hover:shadow-md transition-all duration-300 animate-fade-in group/item"
+                    className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:border-amber-200 hover:shadow-md transition-all duration-300 animate-fade-in group/item"
                     style={{ animationDelay: `${i * 150}ms` }}
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-11 h-11 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-500 border border-emerald-50 / group-hover/item:scale-110 transition-transform duration-500">
+                      <div className="w-11 h-11 rounded-xl bg-white shadow-sm flex items-center justify-center text-amber-500 border border-amber-100 group-hover/item:scale-110 transition-transform duration-500">
                         <Trophy size={20} strokeWidth={2.5} />
                       </div>
                       <div className="flex flex-col">
@@ -456,10 +446,10 @@ export default function Recompensas() {
                       </div>
                     </div>
                     <div className="text-right flex flex-col items-end">
-                      <div className="flex items-center gap-1 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100 mb-1">
-                        <Sparkles size={12} className="text-emerald-500" />
-                        <span className="text-sm font-black text-emerald-600 tracking-tight">+{win.monto || win.valor_premio}</span>
-                        <span className="text-[8px] font-black text-emerald-400">Bs</span>
+                      <div className="flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-lg border border-amber-100 mb-1">
+                        <Sparkles size={12} className="text-amber-500" />
+                        <span className="text-sm font-black text-amber-600 tracking-tight">+{win.monto || win.valor_premio}</span>
+                        <span className="text-[8px] font-black text-amber-400">Bs</span>
                       </div>
                       <span className="text-[7px] font-black text-gray-300 uppercase tracking-[0.2em]">{win.premio_nombre || 'Premio'}</span>
                     </div>
@@ -490,18 +480,18 @@ export default function Recompensas() {
                 initial={{ scale: 0.8, y: 20, rotate: -5 }}
                 animate={{ scale: 1, y: 0, rotate: 0 }}
                 exit={{ scale: 0.8, y: 20, rotate: 5 }}
-                className="w-full max-w-sm bg-white rounded-[3.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.5)] p-12 text-center relative overflow-hidden"
+                className="w-full max-w-sm bg-white rounded-[3.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.3)] p-12 text-center relative overflow-hidden"
               >
                 {/* Adornos Premium */}
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 via-emerald-400 to-indigo-500" />
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 via-emerald-400 to-pink-500" />
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl" />
-                <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl" />
+                <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl" />
 
                 <motion.div 
                   initial={{ rotate: -180, scale: 0 }}
                   animate={{ rotate: 0, scale: 1 }}
                   transition={{ type: "spring", damping: 15, stiffness: 100 }}
-                  className="w-32 h-32 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-emerald-500/30 relative overflow-hidden"
+                  className="w-32 h-32 bg-gradient-to-tr from-amber-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-amber-500/30 relative overflow-hidden"
                 >
                   {result.imagen_url && result.imagen_url !== 'null' ? (
                     <img src={api.getMediaUrl(result.imagen_url)} className="w-full h-full object-cover" alt={result.nombre} />
@@ -511,14 +501,14 @@ export default function Recompensas() {
                   <motion.div 
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ repeat: Infinity, duration: 2 }}
-                    className="absolute -inset-2 border-2 border-emerald-500/20 rounded-full" 
+                    className="absolute -inset-2 border-2 border-amber-500/20 rounded-full" 
                   />
                 </motion.div>
                 
-                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] mb-3">{result.nombre || '¡Giro Exitoso!'}</p>
+                <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] mb-3">{result.nombre || '¡Giro Exitoso!'}</p>
                 <h2 className="text-4xl font-black text-gray-900 uppercase tracking-tighter mb-2 leading-none">
                   {result.valor > 0 ? (
-                    <><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">{result.valor} Bs</span></>
+                    <><span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-pink-600">{result.valor} Bs</span></>
                   ) : (
                     <span className="text-gray-400">¡GRACIAS POR PARTICIPAR!</span>
                   )}
@@ -530,7 +520,7 @@ export default function Recompensas() {
                 <button
                   type="button"
                   onClick={() => setResult(null)}
-                  className="w-full py-5 rounded-[2rem] bg-gray-900 text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl hover:bg-gray-800 active:scale-95 transition-all"
+                  className="w-full py-5 rounded-[2rem] bg-slate-900 text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl hover:bg-slate-800 active:scale-95 transition-all"
                 >
                   Confirmar y Continuar
                 </button>
@@ -542,4 +532,3 @@ export default function Recompensas() {
     </Layout>
   );
 }
-

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { motion, useAnimation } from 'framer-motion';
 import { cn } from '../../lib/utils/cn';
+import { api } from '../../lib/api';
 
 const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
   const wheelControls = useAnimation();
@@ -87,19 +88,31 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
     onSpinComplete();
   };
 
+  const getGradient = (i) => {
+    const gradients = [
+      ['#fef3c7', '#f59e0b'], // Amber
+      ['#fce7f3', '#ec4899'], // Pink
+      ['#d1fae5', '#10b981'], // Emerald
+      ['#dbeafe', '#3b82f6'], // Blue
+      ['#f3e8ff', '#a855f7'], // Purple
+      ['#fef3c7', '#f59e0b'], // Amber again for more segments
+    ];
+    return gradients[i % gradients.length];
+  };
+
   return (
     <div className="relative w-80 h-80 md:w-[450px] md:h-[450px] flex items-center justify-center">
       {/* Outer Glow Ring */}
-      <div className="absolute inset-[-20px] rounded-full bg-bcb-primary/20 blur-[60px] animate-pulse" />
+      <div className="absolute inset-[-20px] rounded-full bg-amber-400/30 blur-[60px] animate-pulse" />
       
       {/* LED Lights Ring */}
-      <div className="absolute inset-[-10px] rounded-full border-4 border-slate-800/50 shadow-2xl flex items-center justify-center">
+      <div className="absolute inset-[-10px] rounded-full border-4 border-amber-100 shadow-2xl flex items-center justify-center bg-white">
         {[...Array(12)].map((_, i) => (
           <div 
             key={i}
             className={cn(
               "absolute w-3 h-3 rounded-full transition-all duration-300",
-              ledActive === i ? "bg-amber-400 shadow-[0_0_15px_#f59e0b] scale-125" : "bg-slate-700 shadow-inner"
+              ledActive === i ? "bg-amber-500 shadow-[0_0_15px_#f59e0b] scale-125" : "bg-slate-300 shadow-inner"
             )}
             style={{
               transform: `rotate(${i * 30}deg) translateY(-210px) md:translateY(-220px)`
@@ -109,7 +122,7 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
       </div>
 
       {/* Main Wheel Container */}
-      <div className="relative w-full h-full rounded-full p-4 bg-slate-900 shadow-[0_0_50px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(255,255,255,0.05)] border-8 border-slate-800 overflow-hidden">
+      <div className="relative w-full h-full rounded-full p-4 bg-white shadow-[0_0_50px_rgba(0,0,0,0.15),inset_0_0_20px_rgba(0,0,0,0.05)] border-8 border-amber-100 overflow-hidden">
         <motion.div 
           animate={wheelControls}
           className="w-full h-full rounded-full overflow-hidden"
@@ -118,18 +131,15 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
           <svg viewBox="0 0 100 100" className="w-full h-full">
             <defs>
               {/* Gradients for segments */}
-              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#1e1b4b" />
-                <stop offset="100%" stopColor="#312e81" />
-              </linearGradient>
-              <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#4338ca" />
-                <stop offset="100%" stopColor="#3730a3" />
-              </linearGradient>
-              <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#4f46e5" />
-                <stop offset="100%" stopColor="#4338ca" />
-              </linearGradient>
+              {premios.map((_, i) => {
+                const [start, end] = getGradient(i);
+                return (
+                  <linearGradient key={`grad${i}`} id={`grad${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor={start} />
+                    <stop offset="100%" stopColor={end} />
+                  </linearGradient>
+                );
+              })}
             </defs>
             {premios.map((premio, i) => {
               const count = premios.length;
@@ -145,21 +155,19 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
               const largeArcFlag = angle > 180 ? 1 : 0;
               const d = `M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
 
-              const gradients = ['url(#grad1)', 'url(#grad2)', 'url(#grad3)'];
-
               return (
                 <g key={i}>
-                  <path d={d} fill={gradients[i % gradients.length]} stroke="#ffffff10" strokeWidth="0.5" />
+                  <path d={d} fill={`url(#grad${i})`} stroke="#ffffff" strokeWidth="1" />
                   <g transform={`rotate(${startAngle + angle / 2} 50 50)`}>
                     <text
                       x="50"
-                      y="15"
-                      fill="white"
-                      fontSize="3.5"
+                      y="18"
+                      fill="#1f2937"
+                      fontSize="2.5"
                       fontWeight="900"
                       textAnchor="middle"
                       className="uppercase tracking-tighter"
-                      style={{ filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.5))' }}
+                      style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))' }}
                     >
                       {premio.nombre}
                     </text>
@@ -171,8 +179,8 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
         </motion.div>
 
         {/* Center Cap Premium */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-slate-900 rounded-full shadow-[0_0_30px_rgba(0,0,0,1)] border-4 border-slate-700 flex items-center justify-center z-20">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full border-2 border-white/20 shadow-[inset_0_2px_10px_rgba(255,255,255,0.5)] flex items-center justify-center animate-pulse">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-white rounded-full shadow-[0_0_30px_rgba(0,0,0,0.2)] border-4 border-amber-200 flex items-center justify-center z-20">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full border-2 border-amber-300 shadow-[inset_0_2px_10px_rgba(255,255,255,0.5)] flex items-center justify-center animate-pulse">
              <div className="w-2 h-2 bg-white rounded-full" />
           </div>
         </div>
@@ -185,10 +193,10 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
           transition={{ repeat: Infinity, duration: 0.2 }}
           className="relative"
         >
-          <div className="w-10 h-14 bg-gradient-to-b from-rose-500 to-rose-700 rounded-b-full shadow-2xl border-2 border-white/20 flex items-center justify-center">
-            <div className="w-1 h-6 bg-white/30 rounded-full mb-2" />
+          <div className="w-10 h-14 bg-gradient-to-b from-amber-500 to-amber-700 rounded-b-full shadow-2xl border-2 border-amber-400 flex items-center justify-center">
+            <div className="w-1 h-6 bg-amber-200/50 rounded-full mb-2" />
           </div>
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full blur-md opacity-50" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-400 rounded-full blur-md opacity-50" />
         </motion.div>
       </div>
     </div>

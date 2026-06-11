@@ -35,7 +35,7 @@ import ActionGrid from '../components/dashboard/ActionGrid';
 import GuideSection from '../components/dashboard/GuideSection';
 import GlobalLoader from '../components/ui/GlobalLoader';
 import DownloadButton from '../components/DownloadButton';
-import FloatingAnnouncements from '../components/dashboard/FloatingAnnouncements';
+
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -52,40 +52,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [pc, setPc] = useState(null);
   const [comunicados, setComunicados] = useState([]);
-  const [announcementsToShow, setAnnouncementsToShow] = useState([]);
   const [showSupportMenu, setShowSupportMenu] = useState(false);
   const [securityAlert, setSecurityAlert] = useState(null);
   const isSunday = now.getDay() === 0;
-
-  useEffect(() => {
-    // Los anuncios aparecerán solo la primera vez que se entra al sistema en esta sesión
-    const hasShownInSession = sessionStorage.getItem('announcements_shown_session');
-    const boliviaNow = getBoliviaNow();
-    const isSunday = boliviaNow.getDay() === 0;
-
-    let itemsToShow = [...comunicados];
-
-    // REGLA DOMINICAL AUTOMÁTICA (v14.0.0)
-    if (isSunday) {
-      itemsToShow.unshift({
-        id: 'sunday_maintenance_v14',
-        titulo: 'DOMINGO DE DESCANSO',
-        mensaje: 'Hoy no hay tareas disponibles. En BCB Global también valoramos el descanso. Aprovecha este día para compartir con tu familia y disfrutar de un lindo domingo. Las tareas volverán a estar disponibles mañana.',
-        isSpecial: true,
-        read: false
-      });
-    }
-    
-    if (itemsToShow.length > 0 && !hasShownInSession) {
-      setAnnouncementsToShow(itemsToShow);
-      // Marcamos como mostrado inmediatamente para que al navegar y volver no aparezca
-      sessionStorage.setItem('announcements_shown_session', 'true');
-    }
-  }, [comunicados]);
-
-  const handleDismissAnnouncement = (id) => {
-    setAnnouncementsToShow(prev => prev.filter(ann => ann.id !== id));
-  };
 
   useEffect(() => {
     if (user?.security_alert) {
@@ -183,9 +152,6 @@ export default function Dashboard() {
   if (loading) return <GlobalLoader />;
   return (
     <>
-      {/* Sistema de Anuncios Flotantes (Modernos y No-Bloqueantes) */}
-      <FloatingAnnouncements announcements={announcementsToShow} onClose={handleDismissAnnouncement} />
-
       <Layout>
         <div className="fixed inset-0 bg-bcb-dark -z-10" />
         {/* Dynamic Background Effects */}
