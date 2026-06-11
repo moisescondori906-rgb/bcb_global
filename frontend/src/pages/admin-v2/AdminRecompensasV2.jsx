@@ -36,6 +36,7 @@ export default function AdminRecompensasV2() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [giftUserSearchTerm, setGiftUserSearchTerm] = useState('');
   
   const [showModal, setShowModal] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -670,7 +671,7 @@ export default function AdminRecompensasV2() {
                       <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
                       <input 
                         type="text" 
-                        placeholder="Username..." 
+                        placeholder="Nombre o teléfono..." 
                         value={userSearchTerm} 
                         onChange={e => setUserSearchTerm(e.target.value)}
                         className="w-full bg-[#0f111a] border border-white/5 rounded-2xl pl-10 pr-4 py-3 text-[10px] font-black text-white uppercase outline-none focus:border-amber-500/30 shadow-inner"
@@ -682,8 +683,11 @@ export default function AdminRecompensasV2() {
                       className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase outline-none focus:border-amber-500/30 shadow-inner appearance-none cursor-pointer"
                     >
                       <option value="">-- Seleccionar Usuario --</option>
-                      {usuarios.filter(u => u.nombre_usuario.toLowerCase().includes(userSearchTerm.toLowerCase())).slice(0, 10).map(u => (
-                        <option key={u.id} value={u.id}>{u.nombre_usuario}</option>
+                      {usuarios.filter(u => 
+                        u.nombre_usuario.toLowerCase().includes(userSearchTerm.toLowerCase()) || 
+                        u.telefono.includes(userSearchTerm)
+                      ).slice(0, 10).map(u => (
+                        <option key={u.id} value={u.id}>{u.nombre_usuario} ({u.telefono})</option>
                       ))}
                     </select>
                   </div>
@@ -788,14 +792,29 @@ export default function AdminRecompensasV2() {
 
                 {giftForm.tipo === 'usuario' && (
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Target Username</label>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Buscar Usuario</label>
+                    <div className="relative">
+                      <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <input 
+                        type="text" 
+                        placeholder="Nombre o teléfono..." 
+                        value={giftUserSearchTerm} 
+                        onChange={e => setGiftUserSearchTerm(e.target.value)}
+                        className="w-full bg-[#0f111a] border border-white/5 rounded-2xl pl-10 pr-4 py-3 text-[10px] font-black text-white uppercase outline-none focus:border-bcb-primary/30 shadow-inner"
+                      />
+                    </div>
                     <select 
                       value={giftForm.targetId} 
                       onChange={e => setGiftForm({...giftForm, targetId: e.target.value})}
                       className="w-full bg-[#0f111a] border border-white/5 rounded-2xl px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest outline-none focus:border-bcb-primary/30 shadow-inner appearance-none cursor-pointer"
                     >
-                      <option value="">-- Choose User --</option>
-                      {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre_usuario}</option>)}
+                      <option value="">-- Seleccionar Usuario --</option>
+                      {usuarios.filter(u => 
+                        u.nombre_usuario.toLowerCase().includes(giftUserSearchTerm.toLowerCase()) || 
+                        u.telefono.includes(giftUserSearchTerm)
+                      ).slice(0, 10).map(u => (
+                        <option key={u.id} value={u.id}>{u.nombre_usuario} ({u.telefono})</option>
+                      ))}
                     </select>
                   </div>
                 )}
