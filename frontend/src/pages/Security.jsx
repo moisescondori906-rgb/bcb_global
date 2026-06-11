@@ -92,7 +92,7 @@ export default function Security() {
               </div>
               
               <div className="space-y-1.5">
-                <h2 className="text-2xl font-black text-bcb-text-main tracking-tight uppercase leading-none">{user?.nombre_usuario}</h2>
+                <h2 className="text-2xl font-black text-black tracking-tight uppercase leading-none">{user?.nombre_usuario}</h2>
                 <div className="flex items-center justify-center gap-2">
                   <Badge variant="info" className="py-0.5 px-2 text-[8px]">
                     {displayLevelCode(user?.nivel_codigo || 'internar')}
@@ -106,7 +106,7 @@ export default function Security() {
           <section className="space-y-5">
             <div className="flex items-center gap-2 px-1">
               <div className="w-1.5 h-4 bg-bcb-primary rounded-full" />
-              <h3 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-[0.15em]">Identidad Digital</h3>
+              <h3 className="text-[13px] font-extrabold text-black uppercase tracking-[0.15em]">Identidad Digital</h3>
             </div>
             
             <div className="grid gap-4">
@@ -117,7 +117,7 @@ export default function Security() {
                   </div>
                   <div>
                     <p className="text-[9px] font-extrabold text-bcb-muted uppercase tracking-widest mb-0.5">Línea Móvil</p>
-                    <p className="text-[15px] font-black text-bcb-text-main tracking-tight">{user?.telefono || '—'}</p>
+                    <p className="text-[15px] font-black text-black tracking-tight">{user?.telefono || '—'}</p>
                   </div>
                 </div>
                 <Badge variant="success" className="text-[8px] py-0.5">VERIFICADO</Badge>
@@ -130,7 +130,7 @@ export default function Security() {
                   </div>
                   <div>
                     <p className="text-[9px] font-extrabold text-bcb-muted uppercase tracking-widest mb-0.5">Nombre Institucional</p>
-                    <p className="text-[15px] font-black text-bcb-text-main tracking-tight truncate max-w-[150px]">{user?.nombre_real || 'No configurado'}</p>
+                    <p className="text-[15px] font-black text-black tracking-tight truncate max-w-[150px]">{user?.nombre_real || 'No configurado'}</p>
                   </div>
                 </div>
                 <ChevronRight size={20} className="text-bcb-muted" strokeWidth={2.5} />
@@ -142,7 +142,7 @@ export default function Security() {
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-4 bg-emerald-400 rounded-full" />
-                <h3 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-[0.15em]">Cuentas de Retiro</h3>
+                <h3 className="text-[13px] font-extrabold text-black uppercase tracking-[0.15em]">Cuentas de Retiro</h3>
               </div>
               <Link to="/vincular-tarjeta" className="text-[11px] font-black text-bcb-primary uppercase tracking-widest flex items-center gap-1 hover:translate-x-1 transition-all">
                 + Vincular <ChevronRight size={14} strokeWidth={3} />
@@ -166,7 +166,7 @@ export default function Security() {
                         <p className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-widest mb-0.5">
                           {t.tipo === 'qr' ? 'BANCO / QR' : (t.nombre_banco || 'BANCO')}
                         </p>
-                        <p className="text-[15px] font-black text-bcb-text-main tracking-[0.1em]">****{t.numero_masked}</p>
+                        <p className="text-[15px] font-black text-black tracking-[0.1em]">****{t.numero_masked}</p>
                       </div>
                     </div>
                     <Badge variant="success" className="text-[8px] py-0.5">ACTIVA</Badge>
@@ -179,7 +179,7 @@ export default function Security() {
           <section className="space-y-5">
             <div className="flex items-center gap-2 px-1">
               <div className="w-1.5 h-4 bg-amber-400 rounded-full" />
-              <h3 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-[0.15em]">Gestión de Seguridad</h3>
+              <h3 className="text-[13px] font-extrabold text-black uppercase tracking-[0.15em]">Gestión de Seguridad</h3>
             </div>
 
             <div className="bg-white rounded-[2.5rem] border border-black/[0.03] overflow-hidden shadow-m3-2 divide-y divide-black/[0.03]">
@@ -189,7 +189,7 @@ export default function Security() {
                     <Lock size={20} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <p className="text-[12px] font-black text-bcb-text-main uppercase tracking-widest mb-0.5">Acceso al Sistema</p>
+                    <p className="text-[12px] font-black text-black uppercase tracking-widest mb-0.5">Acceso al Sistema</p>
                     <p className="text-[9px] font-bold text-bcb-muted uppercase tracking-widest">Actualizar contraseña de login</p>
                   </div>
                 </div>
@@ -202,7 +202,7 @@ export default function Security() {
                     <Zap size={20} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <p className="text-[12px] font-black text-bcb-text-main uppercase tracking-widest mb-0.5">PIN de Transacciones</p>
+                    <p className="text-[12px] font-black text-black uppercase tracking-widest mb-0.5">PIN de Transacciones</p>
                     <p className="text-[9px] font-bold text-bcb-muted uppercase tracking-widest">
                       {user?.tiene_password_fondo ? 'Actualizar código PIN de retiro' : 'Configurar por primera vez'}
                     </p>

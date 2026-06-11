@@ -24,7 +24,7 @@ const GlobalLoader = () => (
   <div className="min-h-screen flex flex-col items-center justify-center bg-bcb-bg space-y-6">
     <div className="w-16 h-16 border-4 border-bcb-surface border-t-bcb-primary rounded-full animate-spin" />
     <div className="text-center">
-      <p className="text-bcb-text-main font-bold uppercase tracking-[0.4em] text-[10px] animate-pulse">Sincronizando Red</p>
+      <p className="text-black font-bold uppercase tracking-[0.4em] text-[10px] animate-pulse">Sincronizando Red</p>
       <p className="text-bcb-muted text-[8px] uppercase tracking-widest mt-2">BCB Global Institutional Network</p>
     </div>
   </div>
@@ -116,7 +116,7 @@ export default function Invite() {
               <AlertCircle size={48} strokeWidth={1.5} />
             </div>
             <div className="space-y-4">
-              <h2 className="text-3xl font-extrabold text-bcb-text-main uppercase tracking-tight">Acceso Restringido</h2>
+              <h2 className="text-3xl font-extrabold text-black uppercase tracking-tight">Acceso Restringido</h2>
               <p className="text-sm text-bcb-text-dim font-medium leading-relaxed max-w-xs mx-auto">
                 Tu acceso a invitaciones ha sido <span className="text-rose-600 font-extrabold uppercase">bloqueado temporalmente</span> como sanción institucional.
               </p>
@@ -155,7 +155,7 @@ export default function Invite() {
           <section className="space-y-6">
             <div className="flex items-center gap-2 px-1">
               <div className="w-1.5 h-4 bg-bcb-primary rounded-full" />
-              <h3 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-[0.15em]">Herramientas de Invitación</h3>
+              <h3 className="text-[13px] font-extrabold text-black uppercase tracking-[0.15em]">Herramientas de Invitación</h3>
             </div>
 
             <Card className="p-8 space-y-8 bg-white border-black/[0.03] shadow-m3-2">
@@ -163,7 +163,7 @@ export default function Invite() {
                 <p className="text-[10px] font-extrabold text-bcb-muted uppercase tracking-[0.25em]">Código Institucional</p>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-16 bg-bcb-surface rounded-2xl flex items-center justify-center border border-black/[0.03] shadow-inner">
-                    <span className="text-3xl font-black text-bcb-text-main tracking-[0.3em] uppercase">
+                    <span className="text-3xl font-black text-black tracking-[0.3em] uppercase">
                       {user?.codigo_invitacion || '------'}
                     </span>
                   </div>
@@ -207,7 +207,7 @@ export default function Invite() {
           <section className="space-y-5">
             <div className="flex items-center gap-2 px-1">
               <div className="w-1.5 h-4 bg-emerald-400 rounded-full" />
-              <h3 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-[0.15em]">Beneficios de Red</h3>
+              <h3 className="text-[13px] font-extrabold text-black uppercase tracking-[0.15em]">Beneficios de Red</h3>
             </div>
             <div className="grid grid-cols-1 gap-4">
               {[
@@ -220,7 +220,7 @@ export default function Invite() {
                     <b.icon size={26} strokeWidth={2.5} />
                   </div>
                   <div className="min-w-0">
-                    <h4 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-tight">{b.title}</h4>
+                    <h4 className="text-[13px] font-extrabold text-black uppercase tracking-tight">{b.title}</h4>
                     <p className="text-[10px] text-bcb-muted font-bold uppercase tracking-tight leading-relaxed mt-0.5">{b.desc}</p>
                   </div>
                 </Card>
@@ -247,7 +247,7 @@ export default function Invite() {
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-4 bg-bcb-accent rounded-full" />
-                <h3 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-[0.15em]">Mi Equipo de Red</h3>
+                <h3 className="text-[13px] font-extrabold text-black uppercase tracking-[0.15em]">Mi Equipo de Red</h3>
               </div>
               <div className="flex bg-bcb-surface p-1.5 rounded-2xl border border-black/[0.03] shadow-inner">
                 {['A', 'B', 'C'].map(n => (
@@ -256,7 +256,7 @@ export default function Invite() {
                     onClick={() => setSelectedNivel(n)}
                     className={cn(
                       "px-5 py-2 rounded-xl text-[10px] font-black transition-all",
-                      selectedNivel === n ? "bg-white text-bcb-primary shadow-m3-1" : "text-bcb-muted hover:text-bcb-text-main"
+                      selectedNivel === n ? "bg-white text-bcb-primary shadow-m3-1" : "text-bcb-muted hover:text-black"
                     )}
                   >
                     NIVEL {n}
@@ -280,7 +280,7 @@ export default function Invite() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-tight truncate">{ref.nombre_usuario}</h4>
+                          <h4 className="text-[13px] font-extrabold text-black uppercase tracking-tight truncate">{ref.nombre_usuario}</h4>
                           <Badge variant="info" className="text-[8px] py-0 px-2">{displayLevelCode(ref.nivel_codigo)}</Badge>
                         </div>
                         <p className="text-[11px] font-bold text-bcb-muted tracking-widest">{ref.telefono}</p>
@@ -303,7 +303,7 @@ export default function Invite() {
                       <Users size={32} />
                    </div>
                    <div className="space-y-2">
-                      <p className="text-[12px] font-extrabold text-bcb-text-main uppercase tracking-widest">Sin socios registrados</p>
+                      <p className="text-[12px] font-extrabold text-black uppercase tracking-widest">Sin socios registrados</p>
                       <p className="text-[10px] font-bold text-bcb-muted uppercase tracking-tight leading-relaxed max-w-[180px] mx-auto">Comparte tu enlace para comenzar a construir tu red institucional.</p>
                    </div>
                 </div>

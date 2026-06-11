@@ -94,7 +94,7 @@ export default function Ganancias() {
               <AlertCircle size={48} strokeWidth={1.5} />
             </div>
             <div className="space-y-4">
-              <h2 className="text-3xl font-extrabold text-bcb-text-main uppercase tracking-tight">Acceso Restringido</h2>
+              <h2 className="text-3xl font-extrabold text-black uppercase tracking-tight">Acceso Restringido</h2>
               <p className="text-sm text-bcb-text-dim font-medium leading-relaxed max-w-xs mx-auto">
                 Tu sistema de ganancias ha sido <span className="text-rose-600 font-extrabold uppercase">restringido por hoy</span> debido a normativas de seguridad institucional.
               </p>
@@ -133,7 +133,7 @@ export default function Ganancias() {
               <div className="grid grid-cols-2 gap-8 pt-8 border-t border-black/[0.03]">
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-bold text-bcb-muted uppercase tracking-widest">Misiones (Hoy)</p>
-                  <p className="text-2xl font-black text-bcb-text-main tracking-tight">
+                  <p className="text-2xl font-black text-black tracking-tight">
                     {(data?.summary?.tareas_today || data?.summary?.tareas_hoy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
                 </div>
@@ -151,7 +151,7 @@ export default function Ganancias() {
           <section className="space-y-5">
             <div className="flex items-center gap-2 px-1">
               <div className="w-1.5 h-4 bg-bcb-primary rounded-full" />
-              <h3 className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-[0.15em]">Filtrar Historial</h3>
+              <h3 className="text-[13px] font-extrabold text-black uppercase tracking-[0.15em]">Filtrar Historial</h3>
             </div>
             <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
               {categories.map(cat => {
@@ -206,7 +206,7 @@ export default function Ganancias() {
                           {isPositive ? <ArrowUpCircle size={24} strokeWidth={2} /> : <ArrowDownCircle size={24} strokeWidth={2} />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-[12px] font-extrabold text-bcb-text-main uppercase tracking-tight truncate group-hover:text-bcb-primary transition-colors">
+                          <h4 className="text-[12px] font-extrabold text-black uppercase tracking-tight truncate group-hover:text-bcb-primary transition-colors">
                             {item.descripcion || item.tipo_movimiento?.replace(/_/g, ' ')}
                           </h4>
                           <div className="flex items-center gap-1.5 mt-1 opacity-60">
@@ -219,7 +219,7 @@ export default function Ganancias() {
                         <div className="text-right shrink-0">
                           <p className={cn(
                             "text-lg font-black tracking-tighter",
-                            isPositive ? "text-emerald-600" : "text-bcb-text-main"
+                            isPositive ? "text-emerald-600" : "text-black"
                           )}>
                             {isPositive ? '+' : '-'}{Math.abs(Number(item.monto)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </p>
@@ -237,7 +237,7 @@ export default function Ganancias() {
                     <History size={48} strokeWidth={1.5} />
                   </div>
                   <div className="space-y-2">
-                    <p className="text-[13px] font-extrabold text-bcb-text-main uppercase tracking-widest">Sin actividad</p>
+                    <p className="text-[13px] font-extrabold text-black uppercase tracking-widest">Sin actividad</p>
                     <p className="text-[11px] font-bold text-bcb-muted uppercase tracking-tight leading-relaxed max-w-[180px] mx-auto">Comienza a realizar tareas para ver tus ganancias aquí.</p>
                   </div>
                 </div>

@@ -13,7 +13,7 @@ export function Badge({
     error: 'bg-red-100 text-red-600 border-red-200/50',
     info: 'bg-indigo-100 text-indigo-600 border-indigo-200/50',
     muted: 'bg-slate-100 text-slate-500 border-slate-200/50',
-    secondary: 'bg-bcb-surface text-bcb-text-main border-black/[0.03]'
+    secondary: 'bg-bcb-surface text-black border-black/[0.03]'
   };
 
   return (
