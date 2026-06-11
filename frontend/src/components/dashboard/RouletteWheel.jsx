@@ -1,57 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useAnimation } from 'framer-motion';
-import { cn } from '../../lib/utils/cn';
 import { api } from '../../lib/api';
 
 const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
   const wheelControls = useAnimation();
   const cumulativeRotationRef = useRef(0);
-  const [ledActive, setLedActive] = useState(0);
-  const audioContextRef = useRef(null);
+  const count = premios.length || 1;
+  const SEG = 360 / count;
+  const CX = 220;
+  const CY = 220;
+  const R_SEG = 186;
+  const R_PEG = 188;
+  const R_BOLT = 199;
 
-  // Generador de sonido de "Tick" profesional mediante Web Audio API
-  const playTick = () => {
-    try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      const ctx = audioContextRef.current;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(150, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.1);
-
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.1);
-    } catch (e) {
-      // Ignorar si el navegador bloquea el audio sin interacción previa
-    }
+  const punto = (anguloGrados, radio) => {
+    const rad = (anguloGrados * Math.PI) / 180;
+    return {
+      x: CX + radio * Math.sin(rad),
+      y: CY - radio * Math.cos(rad),
+    };
   };
-
-  // Efecto de luces LED circulares y sonidos de tick sincronizados
-  useEffect(() => {
-    let interval;
-    if (spinning) {
-      interval = setInterval(() => {
-        setLedActive(prev => {
-          const next = (prev + 1) % 12;
-          playTick();
-          return next;
-        });
-      }, 150);
-    } else {
-      setLedActive(-1);
-    }
-    return () => clearInterval(interval);
-  }, [spinning]);
 
   useEffect(() => {
     if (spinning && targetIndex !== -1) {
@@ -60,28 +28,21 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
   }, [spinning, targetIndex]);
 
   const runSpinAnimation = async () => {
-    const count = premios.length || 1;
-    const segmentAngle = 360 / count;
-    
-    // Configuración de la animación física
-    const extraRounds = 10; // Más vueltas para realismo
+    const segmentAngle = SEG;
+    const extraRounds = 6;
     const targetAngle = (targetIndex * segmentAngle) + (segmentAngle / 2);
-    
     const currentRotation = cumulativeRotationRef.current % 360;
     const finalTarget = (360 - targetAngle) % 360;
-    
     let distance = finalTarget - currentRotation;
     if (distance < 0) distance += 360;
-    
     const totalNewRotation = cumulativeRotationRef.current + (extraRounds * 360) + distance;
     cumulativeRotationRef.current = totalNewRotation;
 
-    // Animación de desaceleración física realista (Cúbica de salida fuerte)
     await wheelControls.start({
       rotate: totalNewRotation,
-      transition: { 
-        duration: 7, 
-        ease: [0.15, 0, 0.15, 1] // Curva de desaceleración progresiva premium
+      transition: {
+        duration: 5.4,
+        ease: [0.17, 0.93, 0.16, 1]
       }
     });
 
@@ -89,104 +50,181 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
   };
 
   return (
-    <div className="relative w-80 h-80 md:w-[450px] md:h-[450px] flex items-center justify-center">
-      {/* Outer Glow Ring */}
-      <div className="absolute inset-[-20px] rounded-full bg-amber-400/30 blur-[60px] animate-pulse" />
-      
-      {/* LED Lights Ring */}
-      <div className="absolute inset-[-10px] rounded-full border-4 border-amber-100 shadow-2xl flex items-center justify-center bg-white">
-        {[...Array(12)].map((_, i) => (
-          <div 
-            key={i}
-            className={cn(
-              "absolute w-3 h-3 rounded-full transition-all duration-300",
-              ledActive === i ? "bg-amber-500 shadow-[0_0_15px_#f59e0b] scale-125" : "bg-slate-300 shadow-inner"
-            )}
-            style={{
-              transform: `rotate(${i * 30}deg) translateY(-210px) md:translateY(-220px)`
-            }}
-          />
-        ))}
-      </div>
+    <div className="relative" style={{ width: 420, height: 420, maxWidth: '92vw', maxHeight: '92vw' }}>
+      <div
+        className="absolute"
+        style={{
+          left: '8%',
+          right: '8%',
+          bottom: '-3%',
+          height: '10%',
+          background: 'radial-gradient(50% 100% at 50% 0%, rgba(0,0,0,0.55), transparent 70%)',
+          filter: 'blur(6px)',
+        }}
+      />
 
-      {/* Main Wheel Container */}
-      <div className="relative w-full h-full rounded-full p-4 bg-white shadow-[0_0_50px_rgba(0,0,0,0.15),inset_0_0_20px_rgba(0,0,0,0.05)] border-8 border-amber-100 overflow-hidden">
-        <motion.div 
+      <svg viewBox="0 0 440 440" className="w-full h-full relative">
+        <defs>
+          <radialGradient id="latonRad" cx="40%" cy="32%" r="75%">
+            <stop offset="0%" stopColor="#fff4cf" />
+            <stop offset="35%" stopColor="#f3cf6b" />
+            <stop offset="62%" stopColor="#c79a32" />
+            <stop offset="100%" stopColor="#7a5712" />
+          </radialGradient>
+          <radialGradient id="cromo" cx="38%" cy="30%" r="80%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="40%" stopColor="#d7dde6" />
+            <stop offset="75%" stopColor="#8a93a3" />
+            <stop offset="100%" stopColor="#3e4554" />
+          </radialGradient>
+          <radialGradient id="boltG" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stopColor="#fff7da" />
+            <stop offset="55%" stopColor="#caa54a" />
+            <stop offset="100%" stopColor="#6e4f15" />
+          </radialGradient>
+          <radialGradient id="pegG" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="50%" stopColor="#cfd6e0" />
+            <stop offset="100%" stopColor="#5d6470" />
+          </radialGradient>
+          <radialGradient id="domo" cx="50%" cy="38%" r="72%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.28)" />
+            <stop offset="42%" stopColor="rgba(255,255,255,0)" />
+            <stop offset="82%" stopColor="rgba(0,0,0,0.12)" />
+            <stop offset="100%" stopColor="rgba(0,0,0,0.4)" />
+          </radialGradient>
+          <radialGradient id="brillo" cx="34%" cy="24%" r="44%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.55)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </radialGradient>
+          <filter id="sombraRueda" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="6" stdDeviation="9" floodColor="#000" floodOpacity="0.55" />
+          </filter>
+        </defs>
+
+        {/* GRUPO QUE GIRA */}
+        <g
           animate={wheelControls}
-          className="w-full h-full rounded-full overflow-hidden"
-          style={{ rotate: 0 }}
+          style={{
+            transformOrigin: "220px 220px",
+          }}
+          filter="url(#sombraRueda)"
         >
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            {premios.map((premio, i) => {
-              const count = premios.length;
-              const angle = 360 / count;
-              const startAngle = i * angle;
-              const endAngle = (i + 1) * angle;
-              
-              const x1 = 50 + 50 * Math.cos((Math.PI * (startAngle - 90)) / 180);
-              const y1 = 50 + 50 * Math.sin((Math.PI * (startAngle - 90)) / 180);
-              const x2 = 50 + 50 * Math.cos((Math.PI * (endAngle - 90)) / 180);
-              const y2 = 50 + 50 * Math.sin((Math.PI * (endAngle - 90)) / 180);
+          <circle cx={CX} cy={CY} r={212} fill="url(#latonRad)" />
+          <circle cx={CX} cy={CY} r={212} fill="none" stroke="#5c3f0c" strokeWidth="3" />
+          <circle cx={CX} cy={CY} r={189} fill="none" stroke="#5c3f0c" strokeWidth="3" />
+          <circle cx={CX} cy={CY} r={189} fill="#100c24" />
 
-              const largeArcFlag = angle > 180 ? 1 : 0;
-              const d = `M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
-
-              return (
-                <g key={i}>
-                  <path d={d} fill={premio.color || '#4f46e5'} stroke="#ffffff" strokeWidth="1" />
-                  <g transform={`rotate(${startAngle + angle / 2} 50 50)`}>
-                    {premio.imagen_url ? (
-                      <foreignObject x="42" y="10" width="16" height="16">
-                        <div 
-                          className="w-full h-full rounded-full overflow-hidden"
-                          style={{
-                            backgroundImage: `url(${api.getMediaUrl(premio.imagen_url)})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center'
-                          }}
-                        />
-                      </foreignObject>
-                    ) : (
-                      <text
-                        x="50"
-                        y="18"
-                        fill="#ffffff"
-                        fontSize="2.5"
-                        fontWeight="900"
-                        textAnchor="middle"
-                        className="uppercase tracking-tighter"
-                        style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.3))' }}
-                      >
-                        {premio.nombre}
-                      </text>
-                    )}
-                  </g>
+          {premios.map((premio, i) => {
+            const a1 = i * SEG;
+            const a2 = (i + 1) * SEG;
+            const p1 = punto(a1, R_SEG);
+            const p2 = punto(a2, R_SEG);
+            const path = `M ${CX} ${CY} L ${p1.x} ${p1.y} A ${R_SEG} ${R_SEG} 0 0 1 ${p2.x} ${p2.y} Z`;
+            const centro = a1 + SEG / 2;
+            return (
+              <g key={i}>
+                <path d={path} fill={premio.color || '#c81e2c'} stroke="#1a1330" strokeWidth="1.5" />
+                <g transform={`rotate(${centro} ${CX} ${CY})`}>
+                  {premio.imagen_url ? (
+                    <foreignObject x="205" y="60" width="30" height="30">
+                      <div
+                        className="w-full h-full rounded-full overflow-hidden border border-white/30 shadow-md"
+                        style={{
+                          backgroundImage: `url(${api.getMediaUrl(premio.imagen_url)})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }}
+                      />
+                    </foreignObject>
+                  ) : (
+                    <text x={CX} y={CY - 142} textAnchor="middle" fontSize="27">
+                      🎁
+                    </text>
+                  )}
+                  <text
+                    x={CX}
+                    y={CY - 86}
+                    textAnchor="middle"
+                    fontSize="14.5"
+                    fontWeight="800"
+                    fill="#ffffff"
+                    style={{
+                      paintOrder: "stroke",
+                      stroke: "rgba(0,0,0,0.4)",
+                      strokeWidth: 3,
+                      letterSpacing: "0.2px",
+                    }}
+                  >
+                    {premio.nombre}
+                  </text>
                 </g>
-              );
-            })}
-          </svg>
-        </motion.div>
+              </g>
+            );
+          })}
 
-        {/* Center Cap Premium */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-white rounded-full shadow-[0_0_30px_rgba(0,0,0,0.2)] border-4 border-amber-200 flex items-center justify-center z-20">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full border-2 border-amber-300 shadow-[inset_0_2px_10px_rgba(255,255,255,0.5)] flex items-center justify-center animate-pulse">
-             <div className="w-2 h-2 bg-white rounded-full" />
-          </div>
-        </div>
-      </div>
+          {/* domo y brillo giran sutilmente con la rueda para realismo de esmalte */}
+          <circle cx={CX} cy={CY} r={R_SEG} fill="url(#domo)" pointerEvents="none" />
 
-      {/* Pointer (Ticker) */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 z-40">
-        <motion.div 
-          animate={spinning ? { rotate: [0, -15, 0, 10, 0] } : {}}
-          transition={{ repeat: Infinity, duration: 0.2 }}
-          className="relative"
-        >
-          <div className="w-10 h-14 bg-gradient-to-b from-amber-500 to-amber-700 rounded-b-full shadow-2xl border-2 border-amber-400 flex items-center justify-center">
-            <div className="w-1 h-6 bg-amber-200/50 rounded-full mb-2" />
-          </div>
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-400 rounded-full blur-md opacity-50" />
-        </motion.div>
+          {/* clavos (pegs) en el borde */}
+          {premios.map((_, i) => {
+            const pos = punto(i * SEG, R_PEG);
+            return (
+              <g key={`peg-${i}`}>
+                <circle cx={pos.x} cy={pos.y} r={6} fill="#2a2030" />
+                <circle cx={pos.x} cy={pos.y} r={5} fill="url(#pegG)" />
+              </g>
+            );
+          })}
+
+          {/* tornillos del aro de latón */}
+          {Array.from({ length: 20 }).map((_, i) => {
+            const pos = punto(i * 18 + 9, R_BOLT);
+            return (
+              <circle key={`bolt-${i}`} cx={pos.x} cy={pos.y} r={4} fill="url(#boltG)" />
+            );
+          })}
+        </g>
+
+        {/* brillo especular FIJO (la luz no gira) */}
+        <circle cx={CX} cy={CY} r={R_SEG} fill="url(#brillo)" pointerEvents="none" />
+
+        {/* cubo central cromado FIJO */}
+        <circle cx={CX} cy={CY} r={40} fill="#1a1330" />
+        <circle cx={CX} cy={CY} r={37} fill="url(#cromo)" />
+        <circle cx={CX} cy={CY} r={37} fill="none" stroke="#2a2f3a" strokeWidth="2" />
+        <circle cx={CX - 11} cy={CY - 12} r={8} fill="rgba(255,255,255,0.6)" />
+        <circle cx={CX} cy={CY} r={13} fill="url(#boltG)" stroke="#5c3f0c" strokeWidth="2" />
+      </svg>
+
+      {/* PUNTERO / FLAPPER metálico fijo arriba */}
+      <div
+        className="absolute left-1/2 z-20 pointer-events-none"
+        style={{
+          top: "-14px",
+          transformOrigin: "50% 16%",
+          animation: spinning ? "flap 0.09s linear infinite" : "none",
+          transform: "translateX(-50%)",
+        }}
+      >
+        <svg width="58" height="74" viewBox="0 0 58 74">
+          <defs>
+            <linearGradient id="flapMetal" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="45%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
+          </defs>
+          <circle cx="29" cy="14" r="11" fill="url(#flapMetal)" stroke="#5c3f0c" strokeWidth="2" />
+          <circle cx="25" cy="11" r="3.5" fill="rgba(255,255,255,0.7)" />
+          <path
+            d="M29 60 L18 22 Q29 14 40 22 Z"
+            fill="url(#flapMetal)"
+            stroke="#5c3f0c"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+        </svg>
       </div>
     </div>
   );

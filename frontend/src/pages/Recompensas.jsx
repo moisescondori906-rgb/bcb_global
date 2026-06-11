@@ -223,6 +223,13 @@ export default function Recompensas() {
 
   return (
     <Layout>
+      <style>{`
+        @keyframes flap {
+          0%   { transform: translateX(-50%) rotate(0deg); }
+          45%  { transform: translateX(-50%) rotate(-13deg); }
+          100% { transform: translateX(-50%) rotate(2deg); }
+        }
+      `}</style>
       <div className="bg-gray-50 min-h-screen pb-24">
         {/* Header Section */}
         <div className="pt-12 pb-8 px-6">
