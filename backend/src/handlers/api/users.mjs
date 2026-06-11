@@ -7,7 +7,7 @@ import {
 } from '../../services/dbService.mjs';
 import { authenticate } from '../../utils/middleware/auth.mjs';
 import { attachRequestUser, DEMO_USER_ID } from '../../utils/middleware/requestContext.mjs';
-import { query, queryOne } from '../../config/db.mjs';
+import { query, queryOne, transaction } from '../../config/db.mjs';
 import logger from '../../utils/logger.mjs';
 import { asyncHandler } from '../../utils/asyncHandler.mjs';
 

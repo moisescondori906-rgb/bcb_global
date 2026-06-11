@@ -10,7 +10,7 @@ import {
   getMensajesGlobales, createMensajeGlobal, deleteMensajeGlobal,
   getDailyWithdrawalSummary, getDailyOperatorSummary
 } from '../../services/dbService.mjs';
-import { query, queryOne } from '../../config/db.mjs';
+import { query, queryOne, transaction } from '../../config/db.mjs';
 import { authenticate, requireAdmin } from '../../utils/middleware/auth.mjs';
 import { uploadVideoBuffer, uploadImageBuffer, uploadLocalVideo, uploadLocalImage } from '../../utils/fileStorage.mjs';
 import logger from '../../utils/logger.mjs';
