@@ -26,6 +26,19 @@ export default function BannerCarousel({ banners = [] }) {
   const next = () => setSlide((s) => (s + 1) % validBanners.length);
   const prev = () => setSlide((s) => (s - 1 + validBanners.length) % validBanners.length);
 
+  // Preload the first image for faster loading
+  useEffect(() => {
+    if (validBanners.length > 0) {
+      const firstImageUrl = api.getMediaUrl(validBanners[0]?.imagen_url);
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = firstImageUrl;
+      document.head.appendChild(link);
+      return () => document.head.removeChild(link);
+    }
+  }, [validBanners]);
+
   if (validBanners.length === 0) return (
     <div className="h-48 w-full rounded-3xl bg-bcb-dark/50 border border-white/5 flex flex-col items-center justify-center gap-3 animate-pulse">
       <div className="w-12 h-12 rounded-2xl bg-bcb-primary/10 flex items-center justify-center text-bcb-primary/30">
@@ -50,6 +63,9 @@ export default function BannerCarousel({ banners = [] }) {
             src={api.getMediaUrl(validBanners[slide]?.imagen_url)}
             alt={validBanners[slide]?.titulo || 'Promoción'}
             className="w-full h-full object-contain"
+            loading={slide === 0 ? 'eager' : 'lazy'}
+            fetchPriority={slide === 0 ? 'high' : 'low'}
+            decoding="async"
             onError={(e) => { 
               if (e.target.src !== '/imag/carrusel1.webp') {
                 e.target.src = '/imag/carrusel1.webp'; 
