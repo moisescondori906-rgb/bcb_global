@@ -103,7 +103,7 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
         </defs>
 
         {/* GRUPO QUE GIRA */}
-        <g
+        <motion.g
           animate={wheelControls}
           style={{
             transformOrigin: "220px 220px",
@@ -184,7 +184,7 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
               <circle key={`bolt-${i}`} cx={pos.x} cy={pos.y} r={4} fill="url(#boltG)" />
             );
           })}
-        </g>
+        </motion.g>
 
         {/* brillo especular FIJO (la luz no gira) */}
         <circle cx={CX} cy={CY} r={R_SEG} fill="url(#brillo)" pointerEvents="none" />
