@@ -20,12 +20,12 @@ conn.on('ready', () => {
     cd /var/www/bcb_global
     echo "📥 Actualizando código desde GitHub..."
     git pull origin main
-    echo "📦 Configurando Backend..."
+    echo "�️ Ejecutando migraciones de base de datos..."
     cd backend
+    node scripts/add-one-use-per-user-column.mjs || true
+    node scripts/fix-schema-safe.mjs || true
+    echo "📦 Configurando Backend..."
     npm install
-    echo "🗄️ Sincronizando Base de Datos..."
-    node src/db-sync.mjs || true
-    node scripts/fix_schema_safe.mjs || true
     echo "🔄 Reiniciando proceso PM2..."
     pm2 restart bcb-global-backend || pm2 start ecosystem.config.cjs --name bcb-global-backend
     pm2 save
