@@ -88,18 +88,6 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
     onSpinComplete();
   };
 
-  const getGradient = (i) => {
-    const gradients = [
-      ['#fef3c7', '#f59e0b'], // Amber
-      ['#fce7f3', '#ec4899'], // Pink
-      ['#d1fae5', '#10b981'], // Emerald
-      ['#dbeafe', '#3b82f6'], // Blue
-      ['#f3e8ff', '#a855f7'], // Purple
-      ['#fef3c7', '#f59e0b'], // Amber again for more segments
-    ];
-    return gradients[i % gradients.length];
-  };
-
   return (
     <div className="relative w-80 h-80 md:w-[450px] md:h-[450px] flex items-center justify-center">
       {/* Outer Glow Ring */}
@@ -129,18 +117,6 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
           style={{ rotate: 0 }}
         >
           <svg viewBox="0 0 100 100" className="w-full h-full">
-            <defs>
-              {/* Gradients for segments */}
-              {premios.map((_, i) => {
-                const [start, end] = getGradient(i);
-                return (
-                  <linearGradient key={`grad${i}`} id={`grad${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor={start} />
-                    <stop offset="100%" stopColor={end} />
-                  </linearGradient>
-                );
-              })}
-            </defs>
             {premios.map((premio, i) => {
               const count = premios.length;
               const angle = 360 / count;
@@ -157,20 +133,33 @@ const RouletteWheel = ({ premios, spinning, onSpinComplete, targetIndex }) => {
 
               return (
                 <g key={i}>
-                  <path d={d} fill={`url(#grad${i})`} stroke="#ffffff" strokeWidth="1" />
+                  <path d={d} fill={premio.color || '#4f46e5'} stroke="#ffffff" strokeWidth="1" />
                   <g transform={`rotate(${startAngle + angle / 2} 50 50)`}>
-                    <text
-                      x="50"
-                      y="18"
-                      fill="#1f2937"
-                      fontSize="2.5"
-                      fontWeight="900"
-                      textAnchor="middle"
-                      className="uppercase tracking-tighter"
-                      style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))' }}
-                    >
-                      {premio.nombre}
-                    </text>
+                    {premio.imagen_url ? (
+                      <foreignObject x="42" y="10" width="16" height="16">
+                        <div 
+                          className="w-full h-full rounded-full overflow-hidden"
+                          style={{
+                            backgroundImage: `url(${api.getMediaUrl(premio.imagen_url)})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center'
+                          }}
+                        />
+                      </foreignObject>
+                    ) : (
+                      <text
+                        x="50"
+                        y="18"
+                        fill="#ffffff"
+                        fontSize="2.5"
+                        fontWeight="900"
+                        textAnchor="middle"
+                        className="uppercase tracking-tighter"
+                        style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.3))' }}
+                      >
+                        {premio.nombre}
+                      </text>
+                    )}
                   </g>
                 </g>
               );

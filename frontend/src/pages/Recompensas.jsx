@@ -362,46 +362,7 @@ export default function Recompensas() {
             )}
           </div>
 
-          {/* Winner Result Overlay */}
-          <AnimatePresence>
-            {result && !spinning && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.5 }}
-                className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl"
-              >
-                <motion.div 
-                  className="bg-white rounded-[3rem] p-10 max-w-sm w-full text-center space-y-6 shadow-2xl relative overflow-hidden"
-                  initial={{ y: 50 }}
-                  animate={{ y: 0 }}
-                >
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 via-emerald-400 to-pink-500" />
-                  <div className="w-24 h-24 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto shadow-inner border-4 border-white">
-                    <Trophy size={48} />
-                  </div>
-                  <div className="space-y-2">
-                    <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">¡FELICIDADES!</h2>
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest leading-tight">Has ganado un premio de:</p>
-                    <p className="text-5xl font-black text-amber-600 tracking-tighter">{result.nombre}</p>
-                  </div>
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Acreditado a:</p>
-                    <p className="text-sm font-black text-slate-900 flex items-center justify-center gap-2">
-                      <Wallet size={16} className="text-amber-500" />
-                      SALDO DE COMISIONES
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => setResult(null)}
-                    className="w-full h-14 rounded-2xl bg-slate-900 text-white font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95"
-                  >
-                    CONTINUAR
-                  </button>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+
 
           {/* User Stats Card */}
           <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-black/5 border border-gray-100 flex items-center justify-between">
