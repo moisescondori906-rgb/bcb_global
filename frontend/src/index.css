@@ -51,10 +51,7 @@
     color-scheme: light;
   }
 
-  /* Forzar que h2 sea blanco (para banners y áreas oscuras) */
-  h2 {
-    color: #ffffff !important;
-  }
+  /* Eliminado: ya no se forza h2 a blanco */
 
   /* Forzar h3 a negro con !important */
   h3 {
