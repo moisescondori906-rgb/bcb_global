@@ -1204,7 +1204,8 @@ router.post('/codigos-canje', asyncHandler(async (req, res) => {
     max_usos = 1, 
     min_level_id, 
     expires_at, 
-    activo = true 
+    activo = true,
+    un_solo_uso_por_usuario = false
   } = req.body;
   
   const finalCodigo = codigo || uuidv4().toUpperCase().slice(0, 12);
@@ -1212,8 +1213,8 @@ router.post('/codigos-canje', asyncHandler(async (req, res) => {
   const id = uuidv4();
   await query(`
     INSERT INTO codigos_canje 
-    (id, codigo, valor, max_usos, min_level_id, expires_at, activo, created_by) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    (id, codigo, valor, max_usos, min_level_id, expires_at, activo, created_by, un_solo_uso_por_usuario) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     id, 
     finalCodigo, 
@@ -1222,14 +1223,15 @@ router.post('/codigos-canje', asyncHandler(async (req, res) => {
     min_level_id || null, 
     expires_at || null, 
     activo ? 1 : 0, 
-    req.user.id
+    req.user.id,
+    un_solo_uso_por_usuario ? 1 : 0
   ]);
   
   res.json({ id, ok: true, codigo: finalCodigo });
 }));
 
 router.put('/codigos-canje/:id', asyncHandler(async (req, res) => {
-  const { codigo, valor, max_usos, min_level_id, expires_at, activo } = req.body;
+  const { codigo, valor, max_usos, min_level_id, expires_at, activo, un_solo_uso_por_usuario } = req.body;
   const existing = await queryOne(`SELECT * FROM codigos_canje WHERE id = ?`, [req.params.id]);
   
   if (!existing) {
@@ -1244,7 +1246,8 @@ router.put('/codigos-canje/:id', asyncHandler(async (req, res) => {
       max_usos = ?, 
       min_level_id = ?, 
       expires_at = ?, 
-      activo = ? 
+      activo = ?,
+      un_solo_uso_por_usuario = ?
     WHERE id = ?
   `, [
     codigo !== undefined ? codigo : existing.codigo,
@@ -1253,6 +1256,7 @@ router.put('/codigos-canje/:id', asyncHandler(async (req, res) => {
     min_level_id !== undefined ? min_level_id : existing.min_level_id,
     expires_at !== undefined ? expires_at : existing.expires_at,
     activo !== undefined ? (activo ? 1 : 0) : existing.activo,
+    un_solo_uso_por_usuario !== undefined ? (un_solo_uso_por_usuario ? 1 : 0) : existing.un_solo_uso_por_usuario,
     req.params.id
   ]);
   

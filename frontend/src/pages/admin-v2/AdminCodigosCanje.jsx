@@ -16,7 +16,8 @@ export default function AdminCodigosCanje() {
     max_usos: 1,
     min_level_id: '',
     expires_at: '',
-    activo: true
+    activo: true,
+    un_solo_uso_por_usuario: false
   });
   const [copied, setCopied] = useState(null);
 
@@ -100,7 +101,8 @@ export default function AdminCodigosCanje() {
               max_usos: 1,
               min_level_id: '',
               expires_at: '',
-              activo: true
+              activo: true,
+              un_solo_uso_por_usuario: false
             });
             setShowModal(true);
           }}
@@ -206,7 +208,8 @@ export default function AdminCodigosCanje() {
                               max_usos: code.max_usos,
                               min_level_id: code.min_level_id || '',
                               expires_at: code.expires_at ? code.expires_at.split('T')[0] : '',
-                              activo: code.activo
+                              activo: code.activo,
+                              un_solo_uso_por_usuario: code.un_solo_uso_por_usuario
                             });
                             setShowModal(true);
                           }}
@@ -344,6 +347,23 @@ export default function AdminCodigosCanje() {
                   }`} />
                   <span className="text-[10px] font-black uppercase tracking-widest">
                     {form.activo ? 'Activo' : 'Inactivo'}
+                  </span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, un_solo_uso_por_usuario: !form.un_solo_uso_por_usuario })}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl border ${
+                    form.un_solo_uso_por_usuario 
+                      ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' 
+                      : 'bg-gray-500/10 border-gray-500/20 text-gray-400'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${
+                    form.un_solo_uso_por_usuario ? 'bg-blue-400' : 'bg-gray-400'
+                  }`} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">
+                    {form.un_solo_uso_por_usuario ? 'Un solo uso por usuario' : 'Permitir múltiples usos por usuario'}
                   </span>
                 </button>
               </div>

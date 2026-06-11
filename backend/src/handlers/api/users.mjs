@@ -477,15 +477,20 @@ router.post('/canjear-codigo', asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Código ya no disponible (usos máximos alcanzados)' });
   }
   
-  // Validate user hasn't used this code before (if max_usos > 1, still allow)
+  // Validate user hasn't used this code before
   const userUsed = await queryOne(`
     SELECT id 
     FROM codigos_canje_usos 
     WHERE codigo_id = ? AND usuario_id = ?
   `, [code.id, userId]);
   
-  if (userUsed && code.max_usos === 1) {
-    return res.status(400).json({ error: 'Ya canjeaste este código' });
+  if (userUsed) {
+    if (code.max_usos === 1) {
+      return res.status(400).json({ error: 'Ya canjeaste este código' });
+    }
+    if (code.un_solo_uso_por_usuario) {
+      return res.status(400).json({ error: 'Ya canjeaste este código (solo un uso por cuenta)' });
+    }
   }
   
   // All good! Redeem the code!
