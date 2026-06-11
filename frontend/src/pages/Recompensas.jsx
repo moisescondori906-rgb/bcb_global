@@ -34,6 +34,9 @@ export default function Recompensas() {
   const [loading, setLoading] = useState(true);
   const [punished, setPunished] = useState(false);
   const [error, setError] = useState(null);
+  const [codigoCanje, setCodigoCanje] = useState("");
+  const [cargandoCanje, setCargandoCanje] = useState(false);
+  const [mensajeCanje, setMensajeCanje] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -59,9 +62,13 @@ export default function Recompensas() {
 
     loadData();
 
-    // Polling de respaldo para historial y config cada 20 segundos
+    // Polling de respaldo para historial, config y premios cada 20 segundos
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible' && !spinning) {
+        api.sorteo.premios().then(data => {
+          if (isMounted) setPremios(data || []);
+        }).catch(() => {});
+        
         api.sorteo.historial().then(data => {
           if (isMounted) setHistorial(data || []);
         }).catch(() => {});
@@ -119,6 +126,33 @@ export default function Recompensas() {
     api.sorteo.historial().then(data => {
        if (data) setHistorial(data);
     });
+  };
+
+  const handleCanjearCodigo = async (e) => {
+    e.preventDefault();
+    if (!codigoCanje.trim()) return;
+    
+    setCargandoCanje(true);
+    setMensajeCanje(null);
+    
+    try {
+      const res = await api.users.canjearCodigo(codigoCanje.trim().toUpperCase());
+      setMensajeCanje({ tipo: "exito", texto: `¡Felicidades! Has canjeado ${res.valor} Bs exitosamente.` });
+      setCodigoCanje("");
+      refreshUser();
+      
+      // Lanzar confeti
+      confetti({
+        particleCount: 100,
+        spread: 60,
+        origin: { y: 0.5 },
+        colors: ['#f59e0b', '#10b981', '#6366f1']
+      });
+    } catch (err) {
+      setMensajeCanje({ tipo: "error", texto: err.message || "Error al canjear el código. Intenta nuevamente." });
+    } finally {
+      setCargandoCanje(false);
+    }
   };
 
   if (loading) {
@@ -208,6 +242,61 @@ export default function Recompensas() {
 
         {/* Main Content */}
         <div className="px-6 max-w-4xl mx-auto space-y-8">
+          {/* Código de Canje Section */}
+          <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-[2.5rem] p-6 border border-violet-100 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-violet-100 flex items-center justify-center text-violet-600 border border-violet-200">
+                <Gift size={24} />
+              </div>
+              <div>
+                <h2 className="font-black text-gray-900 uppercase tracking-tight text-base">Canjear Código</h2>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Introduce tu código para reclamar recompensas</p>
+              </div>
+            </div>
+            
+            <form onSubmit={handleCanjearCodigo} className="space-y-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={codigoCanje}
+                  onChange={(e) => setCodigoCanje(e.target.value)}
+                  placeholder="Introduce tu código (ej: BCB-2024)"
+                  className="w-full bg-white border border-violet-200 rounded-2xl px-5 py-4 text-sm font-black text-gray-900 placeholder-gray-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all uppercase tracking-widest"
+                  disabled={cargandoCanje}
+                />
+              </div>
+              
+              {mensajeCanje && (
+                <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${
+                  mensajeCanje.tipo === "exito" 
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                    : "bg-rose-50 text-rose-700 border-rose-200"
+                }`}>
+                  {mensajeCanje.tipo === "exito" ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                  {mensajeCanje.texto}
+                </div>
+              )}
+              
+              <button
+                type="submit"
+                disabled={cargandoCanje || !codigoCanje.trim()}
+                className={`w-full py-4 rounded-[2rem] font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300 ${
+                  cargandoCanje || !codigoCanje.trim()
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                }`}
+              >
+                {cargandoCanje ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Canjeando...
+                  </span>
+                ) : (
+                  "Canjear Código"
+                )}
+              </button>
+            </form>
+          </div>
           {/* Wheel Container */}
           <div className="relative flex flex-col items-center">
             <RouletteWheel 

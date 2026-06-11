@@ -1163,4 +1163,116 @@ router.get('/telegram/historial', asyncHandler(async (req, res) => {
   res.json(list);
 }));
 
+// ========================
+// GESTIÓN DE CÓDIGOS DE CANJE
+// ========================
+
+router.get('/codigos-canje', asyncHandler(async (req, res) => {
+  const list = await query(`
+    SELECT 
+      cc.*, 
+      u_admin.nombre_usuario as created_by_name,
+      n.nombre as min_level_nombre
+    FROM codigos_canje cc
+    LEFT JOIN usuarios u_admin ON cc.created_by = u_admin.id
+    LEFT JOIN niveles n ON cc.min_level_id = n.id
+    ORDER BY cc.created_at DESC
+  `);
+  
+  // Get usage counts per code
+  const usages = await query(`
+    SELECT codigo_id, COUNT(*) as total_usos
+    FROM codigos_canje_usos
+    GROUP BY codigo_id
+  `);
+  
+  const usageMap = {};
+  usages.forEach(u => { usageMap[u.codigo_id] = u.total_usos; });
+  
+  const result = list.map(c => ({
+    ...c,
+    usos_count: usageMap[c.id] || 0
+  }));
+  
+  res.json(result);
+}));
+
+router.post('/codigos-canje', asyncHandler(async (req, res) => {
+  const { 
+    codigo, 
+    valor, 
+    max_usos = 1, 
+    min_level_id, 
+    expires_at, 
+    activo = true 
+  } = req.body;
+  
+  const finalCodigo = codigo || uuidv4().toUpperCase().slice(0, 12);
+  
+  const id = uuidv4();
+  await query(`
+    INSERT INTO codigos_canje 
+    (id, codigo, valor, max_usos, min_level_id, expires_at, activo, created_by) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `, [
+    id, 
+    finalCodigo, 
+    valor || 0, 
+    max_usos, 
+    min_level_id || null, 
+    expires_at || null, 
+    activo ? 1 : 0, 
+    req.user.id
+  ]);
+  
+  res.json({ id, ok: true, codigo: finalCodigo });
+}));
+
+router.put('/codigos-canje/:id', asyncHandler(async (req, res) => {
+  const { codigo, valor, max_usos, min_level_id, expires_at, activo } = req.body;
+  const existing = await queryOne(`SELECT * FROM codigos_canje WHERE id = ?`, [req.params.id]);
+  
+  if (!existing) {
+    return res.status(404).json({ error: 'Código no encontrado' });
+  }
+  
+  await query(`
+    UPDATE codigos_canje 
+    SET 
+      codigo = ?, 
+      valor = ?, 
+      max_usos = ?, 
+      min_level_id = ?, 
+      expires_at = ?, 
+      activo = ? 
+    WHERE id = ?
+  `, [
+    codigo !== undefined ? codigo : existing.codigo,
+    valor !== undefined ? valor : existing.valor,
+    max_usos !== undefined ? max_usos : existing.max_usos,
+    min_level_id !== undefined ? min_level_id : existing.min_level_id,
+    expires_at !== undefined ? expires_at : existing.expires_at,
+    activo !== undefined ? (activo ? 1 : 0) : existing.activo,
+    req.params.id
+  ]);
+  
+  res.json({ ok: true });
+}));
+
+router.delete('/codigos-canje/:id', asyncHandler(async (req, res) => {
+  await query('DELETE FROM codigos_canje WHERE id = ?', [req.params.id]);
+  res.json({ ok: true });
+}));
+
+router.get('/codigos-canje/:id/usos', asyncHandler(async (req, res) => {
+  const list = await query(`
+    SELECT cu.*, u.nombre_usuario, u.telefono
+    FROM codigos_canje_usos cu
+    JOIN usuarios u ON cu.usuario_id = u.id
+    WHERE cu.codigo_id = ?
+    ORDER BY cu.usado_at DESC
+  `, [req.params.id]);
+  res.json(list);
+}));
+
 export default router;

@@ -237,6 +237,8 @@ export const api = {
     setFundPassword: (data) => request('/users/fund-password', { method: 'POST', body: JSON.stringify(data) }),
     createBankAccount: (data) => request('/users/bank-account', { method: 'POST', body: JSON.stringify(data) }),
     getBankAccounts: () => request('/users/bank-accounts'),
+    canjearCodigo: (codigo) => request('/users/canjear-codigo', { method: 'POST', body: JSON.stringify({ codigo }) }),
+    historialCodigos: () => request('/users/historial-codigos'),
   },
   tasks: {
     list: () => request('/tasks'),
@@ -396,6 +398,11 @@ export const api = {
     crearCuestionario: (data) => request('/admin/cuestionarios', { method: 'POST', body: JSON.stringify(data) }),
     eliminarCuestionario: (id) => request(`/admin/cuestionarios/${id}`, { method: 'DELETE' }),
     respuestasCuestionario: () => request('/admin/cuestionario/respuestas'),
+    codigosCanje: () => request('/admin/codigos-canje'),
+    crearCodigoCanje: (data) => request('/admin/codigos-canje', { method: 'POST', body: JSON.stringify(data) }),
+    actualizarCodigoCanje: (id, data) => request(`/admin/codigos-canje/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    eliminarCodigoCanje: (id) => request(`/admin/codigos-canje/${id}`, { method: 'DELETE' }),
+    verUsosCodigoCanje: (id) => request(`/admin/codigos-canje/${id}/usos`),
   },
 };
 

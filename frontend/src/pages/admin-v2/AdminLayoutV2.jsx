@@ -62,6 +62,7 @@ const menuGroups = [
     title: 'Sistema',
     items: [
       { to: '/admin/recompensas', icon: Gift, label: 'Premios' },
+      { to: '/admin/codigos-canje', icon: Trophy, label: 'Códigos Canje' },
       { to: '/admin/admins', icon: ShieldCheck, label: 'Staff & Turnos' },
       { to: '/admin/telegram', icon: Send, label: 'Bots Telegram' },
       { to: '/admin/cuestionarios', icon: HelpCircle, label: 'Cuestionarios' },

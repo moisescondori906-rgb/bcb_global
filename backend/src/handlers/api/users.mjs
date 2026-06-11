@@ -418,4 +418,123 @@ router.delete('/my-referrals/:referralId', asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Usuario Pasante eliminado correctamente.' });
 }));
 
+// ========================
+// CÓDIGOS DE CANJE
+// ========================
+
+router.post('/canjear-codigo', asyncHandler(async (req, res) => {
+  const { codigo } = req.body;
+  const userId = req.user.id;
+  const user = req.requestUser;
+  
+  if (!codigo) {
+    return res.status(400).json({ error: 'Código es requerido' });
+  }
+  
+  const normalizedCodigo = codigo.trim().toUpperCase();
+  
+  // Find the code
+  const code = await queryOne(`
+    SELECT cc.*, n.orden as min_level_orden
+    FROM codigos_canje cc
+    LEFT JOIN niveles n ON cc.min_level_id = n.id
+    WHERE cc.codigo = ?
+  `, [normalizedCodigo]);
+  
+  if (!code) {
+    return res.status(404).json({ error: 'Código inválido' });
+  }
+  
+  // Validate code is active
+  if (!code.activo) {
+    return res.status(400).json({ error: 'Código no está activo' });
+  }
+  
+  // Validate expiration
+  if (code.expires_at && new Date() > new Date(code.expires_at)) {
+    return res.status(400).json({ error: 'Código expirado' });
+  }
+  
+  // Validate user level
+  if (code.min_level_id) {
+    const userLevel = await queryOne(`SELECT orden FROM niveles WHERE id = ?`, [user.nivel_id]);
+    if (!userLevel || (userLevel.orden < code.min_level_orden)) {
+      const minLevelName = await queryOne(`SELECT nombre FROM niveles WHERE id = ?`, [code.min_level_id]);
+      return res.status(400).json({ 
+        error: `Nivel insuficiente. Necesitas ser nivel ${minLevelName?.nombre || 'mínimo'}` 
+      });
+    }
+  }
+  
+  // Validate max uses
+  const currentUses = await queryOne(`
+    SELECT COUNT(*) as total 
+    FROM codigos_canje_usos 
+    WHERE codigo_id = ?
+  `, [code.id]);
+  
+  if (currentUses.total >= code.max_usos) {
+    return res.status(400).json({ error: 'Código ya no disponible (usos máximos alcanzados)' });
+  }
+  
+  // Validate user hasn't used this code before (if max_usos > 1, still allow)
+  const userUsed = await queryOne(`
+    SELECT id 
+    FROM codigos_canje_usos 
+    WHERE codigo_id = ? AND usuario_id = ?
+  `, [code.id, userId]);
+  
+  if (userUsed && code.max_usos === 1) {
+    return res.status(400).json({ error: 'Ya canjeaste este código' });
+  }
+  
+  // All good! Redeem the code!
+  const usageId = uuidv4();
+  const transactionId = uuidv4();
+  
+  await transaction(async (conn) => {
+    // 1. Record the usage
+    await conn.query(`
+      INSERT INTO codigos_canje_usos (id, codigo_id, usuario_id, valor) VALUES (?, ?, ?, ?)
+    `, [usageId, code.id, userId, code.valor]);
+    
+    // 2. Add to user's balance (principal)
+    await conn.query(`
+      UPDATE usuarios 
+      SET saldo_principal = saldo_principal + ? 
+      WHERE id = ?
+    `, [code.valor, userId]);
+    
+    // 3. Record the transaction
+    await conn.query(`
+      INSERT INTO movimientos_saldo 
+      (id, usuario_id, tipo_billetera, tipo_movimiento, monto, saldo_anterior, saldo_nuevo, referencia_id, descripcion)
+      VALUES (?, ?, 'principal', 'canje_codigo', ?, 
+              (SELECT saldo_principal FROM usuarios WHERE id = ?) - ?, 
+              (SELECT saldo_principal FROM usuarios WHERE id = ?), 
+              ?, ?)
+    `, [transactionId, userId, code.valor, userId, code.valor, userId, usageId, `Canje de código: ${code.codigo}`]);
+  });
+  
+  res.json({ 
+    ok: true, 
+    valor: code.valor, 
+    message: `Has canjeado exitosamente ${code.valor} Bs!` 
+  });
+}));
+
+// Get user's redemption history
+router.get('/historial-codigos', asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const list = await query(`
+    SELECT cu.*, cc.codigo
+    FROM codigos_canje_usos cu
+    JOIN codigos_canje cc ON cu.codigo_id = cc.id
+    WHERE cu.usuario_id = ?
+    ORDER BY cu.usado_at DESC
+  `, [userId]);
+  
+  res.json(list);
+}));
+
 export default router;
