@@ -343,7 +343,7 @@ CREATE TABLE IF NOT EXISTS horarios_operacion (
   hora_inicio TIME DEFAULT '00:00:00',
   hora_fin TIME DEFAULT '23:59:59',
   habilitado TINYINT(1) DEFAULT 1,
-  timezone VARCHAR(50) DEFAULT 'America/Lima',
+  timezone VARCHAR(50) DEFAULT 'America/La_Paz',
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_horarios_region_tipo (region, operacion_tipo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -60,11 +60,11 @@ export const setupJobs = () => {
   // 3. Reporte Diario 23:30 (Con Idempotencia Persistente)
   setInterval(async () => {
     const now = new Date();
-    const peruTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Lima' }));
+    const boliviaTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/La_Paz' }));
     
-    if (peruTime.getHours() === 23 && peruTime.getMinutes() === 30) {
+    if (boliviaTime.getHours() === 23 && boliviaTime.getMinutes() === 30) {
       const traceId = uuidv4();
-      const hoy = peruTime.toISOString().split('T')[0];
+      const hoy = boliviaTime.toISOString().split('T')[0];
       
       try {
         const lock = await acquireLock(`reporte:${hoy}`, 300000); // 5 min lock

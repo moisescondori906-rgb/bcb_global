@@ -60,7 +60,7 @@ class OperationalControlService {
       if (!schedule) return { allowed: true }; // Si no hay config, se permite
 
       // Validación de Timezone y Rango
-      const now = peruTime.now(); // Centralizado en America/Lima
+      const now = peruTime.now(); // Centralizado en America/La_Paz (Horario Bolivia)
       const currentDay = now.getDay(); // 0=Dom, 1=Lun
       const currentTime = now.toTimeString().split(' ')[0]; // HH:mm:ss
 

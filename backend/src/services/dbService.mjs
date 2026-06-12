@@ -772,7 +772,7 @@ export async function createLevelPurchase(userId, nivelId, monto, comprobanteUrl
  * Solicitar Retiro con Blindaje Extremo (Nivel Senior):
  * 1. Idempotencia en DB (No Redis).
  * 2. Bloqueo Pesimista (SELECT FOR UPDATE).
- * 3. Validación de 1 Retiro/Día usando Timezone Bolivia (America/Lima).
+ * 3. Validación de 1 Retiro/Día usando Timezone Bolivia (America/La_Paz).
  * 4. Auditoría Forense Atómica.
  */
 export async function requestWithdrawal(userId, { monto, tipo_billetera, tarjeta_id, idempotencyKey, comprobante_url, comprobante_public_id }) {

@@ -13,22 +13,22 @@ export function parseMinutes(hhmm) {
 export function isScheduleOpen(schedule) {
   if (!schedule || schedule.enabled === false) return { ok: true };
   
-  // Obtener la hora actual en la zona horaria de Perú (UTC-5)
-  const nowPeru = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Lima' }));
+  // Obtener la hora actual en la zona horaria de Bolivia (UTC-4)
+  const nowBolivia = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/La_Paz' }));
   
   const dias = Array.isArray(schedule.dias_semana) ? schedule.dias_semana : [];
   if (dias.length === 0) return { ok: false, message: 'No hay días habilitados en el horario configurado.' };
   
-  const day = nowPeru.getDay();
+  const day = nowBolivia.getDay();
   if (!dias.includes(day)) {
     return {
       ok: false,
-      message: 'Hoy no está dentro de los días permitidos para esta operación.',
+      message: 'Hoy no está dentro de los días permitidos para esta operación (Horario Bolivia).',
     };
   }
   const start = parseMinutes(schedule.hora_inicio || '00:00');
   const end = parseMinutes(schedule.hora_fin || '23:59');
-  const cur = nowPeru.getHours() * 60 + nowPeru.getMinutes();
+  const cur = nowBolivia.getHours() * 60 + nowBolivia.getMinutes();
   let inWindow;
   if (start <= end) {
     inWindow = cur >= start && cur <= end;
@@ -39,7 +39,7 @@ export function isScheduleOpen(schedule) {
   if (!inWindow) {
     return {
       ok: false,
-      message: `Fuera del horario permitido (${schedule.hora_inicio || '00:00'} – ${schedule.hora_fin || '23:59'}).`,
+      message: `Fuera del horario permitido (${schedule.hora_inicio || '00:00'} – ${schedule.hora_fin || '23:59'}) (Horario Bolivia).`,
     };
   }
   return { ok: true };
