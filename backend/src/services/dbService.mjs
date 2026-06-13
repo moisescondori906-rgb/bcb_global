@@ -951,6 +951,31 @@ export async function approveLevelPurchase(compraId, adminId, idempotencyKey = n
       [targetLevel.id, ticketsToAdd, compra.usuario_id]
     );
 
+    // 4. REGALAR TICKETS A INVITADOR SEGÚN NIVEL DEL NUEVO USUARIO
+    if (user.invitado_por) {
+      let ticketsParaInvitador = 0;
+      // Global 1 o Global 2 → 1 ticket
+      if (targetLevel.codigo === 'global1' || targetLevel.codigo === 'global2') {
+        ticketsParaInvitador = 1;
+      }
+      // Global 3 → 2 tickets
+      else if (targetLevel.codigo === 'global3') {
+        ticketsParaInvitador = 2;
+      }
+
+      if (ticketsParaInvitador > 0) {
+        await conn.query(
+          `UPDATE usuarios SET tickets_ruleta = tickets_ruleta + ? WHERE id = ?`,
+          [ticketsParaInvitador, user.invitado_por]
+        );
+        // Notificación al invitador
+        emitToUser(user.invitado_por, 'user:tickets_gifted', {
+          cantidad: ticketsParaInvitador,
+          razon: `Tu invitado ascendió a ${targetLevel.nombre}`,
+        });
+      }
+    }
+
     // Notificación en tiempo real v12.0.0
     emitToUser(compra.usuario_id, 'user:level_up', { 
       nuevo_nivel: targetLevel.nombre,
@@ -1391,8 +1416,42 @@ export async function updateRetiro(id, updates) {
   await query(`UPDATE retiros SET ${setClause} WHERE id = ?`, params);
 }
 
-export async function handleLevelUpRewards() {
-  // Opcional, por ahora solo exportamos para evitar errores de importación
+export async function handleLevelUpRewards(userId, oldLevelId, newLevelId) {
+  const [userRows] = await query(`SELECT * FROM usuarios WHERE id = ?`, [userId]);
+  const user = userRows[0];
+  
+  if (!user) return false;
+
+  const [levels] = await query(`SELECT * FROM niveles WHERE id = ?`, [newLevelId]);
+  const targetLevel = levels[0];
+
+  if (!targetLevel) return false;
+
+  // REGALAR TICKETS A INVITADOR SEGÚN NIVEL DEL NUEVO USUARIO
+  if (user.invitado_por) {
+    let ticketsParaInvitador = 0;
+    // Global 1 o Global 2 → 1 ticket
+    if (targetLevel.codigo === 'global1' || targetLevel.codigo === 'global2') {
+      ticketsParaInvitador = 1;
+    }
+    // Global 3 → 2 tickets
+    else if (targetLevel.codigo === 'global3') {
+      ticketsParaInvitador = 2;
+    }
+
+    if (ticketsParaInvitador > 0) {
+      await query(
+        `UPDATE usuarios SET tickets_ruleta = tickets_ruleta + ? WHERE id = ?`,
+        [ticketsParaInvitador, user.invitado_por]
+      );
+      // Notificación al invitador
+      emitToUser(user.invitado_por, 'user:tickets_gifted', {
+        cantidad: ticketsParaInvitador,
+        razon: `Tu invitado ascendió a ${targetLevel.nombre}`,
+      });
+    }
+  }
+
   return true;
 }
 
