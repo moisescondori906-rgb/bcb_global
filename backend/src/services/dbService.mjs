@@ -951,28 +951,39 @@ export async function approveLevelPurchase(compraId, adminId, idempotencyKey = n
       [targetLevel.id, ticketsToAdd, compra.usuario_id]
     );
 
-    // 4. REGALAR TICKETS A INVITADOR SEGÚN NIVEL DEL NUEVO USUARIO
+    // 4. REGALAR TICKETS A INVITADOR SOLO SI ES PRIMERA COMPRA DE NIVEL VIP
     if (user.invitado_por) {
-      let ticketsParaInvitador = 0;
-      // Global 1 o Global 2 → 1 ticket
-      if (targetLevel.codigo === 'global1' || targetLevel.codigo === 'global2') {
-        ticketsParaInvitador = 1;
-      }
-      // Global 3 → 2 tickets
-      else if (targetLevel.codigo === 'global3') {
-        ticketsParaInvitador = 2;
-      }
+      // Verificar si es la primera compra completada de nivel del usuario
+      const [completasCount] = await conn.query(
+        `SELECT COUNT(*) as total FROM compras_nivel 
+         WHERE usuario_id = ? AND estado = 'completada' AND id != ?`,
+        [compra.usuario_id, compraId]
+      );
+      const yaTieneCompraVip = completasCount[0].total > 0;
 
-      if (ticketsParaInvitador > 0) {
-        await conn.query(
-          `UPDATE usuarios SET tickets_ruleta = tickets_ruleta + ? WHERE id = ?`,
-          [ticketsParaInvitador, user.invitado_por]
-        );
-        // Notificación al invitador
-        emitToUser(user.invitado_por, 'user:tickets_gifted', {
-          cantidad: ticketsParaInvitador,
-          razon: `Tu invitado ascendió a ${targetLevel.nombre}`,
-        });
+      // Solo regalamos tickets si es la PRIMERA compra completada de nivel
+      if (!yaTieneCompraVip) {
+        let ticketsParaInvitador = 0;
+        // Global 1 o Global 2 → 1 ticket
+        if (targetLevel.codigo === 'global1' || targetLevel.codigo === 'global2') {
+          ticketsParaInvitador = 1;
+        }
+        // Global 3 → 2 tickets
+        else if (targetLevel.codigo === 'global3') {
+          ticketsParaInvitador = 2;
+        }
+
+        if (ticketsParaInvitador > 0) {
+          await conn.query(
+            `UPDATE usuarios SET tickets_ruleta = tickets_ruleta + ? WHERE id = ?`,
+            [ticketsParaInvitador, user.invitado_por]
+          );
+          // Notificación al invitador
+          emitToUser(user.invitado_por, 'user:tickets_gifted', {
+            cantidad: ticketsParaInvitador,
+            razon: `Tu invitado compró ${targetLevel.nombre} por primera vez`,
+          });
+        }
       }
     }
 
@@ -1416,7 +1427,7 @@ export async function updateRetiro(id, updates) {
   await query(`UPDATE retiros SET ${setClause} WHERE id = ?`, params);
 }
 
-export async function handleLevelUpRewards(userId, oldLevelId, newLevelId) {
+export async function handleLevelUpRewards(userId, oldLevelId, newLevelId, compraId = null) {
   const [userRows] = await query(`SELECT * FROM usuarios WHERE id = ?`, [userId]);
   const user = userRows[0];
   
@@ -1427,28 +1438,43 @@ export async function handleLevelUpRewards(userId, oldLevelId, newLevelId) {
 
   if (!targetLevel) return false;
 
-  // REGALAR TICKETS A INVITADOR SEGÚN NIVEL DEL NUEVO USUARIO
+  // REGALAR TICKETS A INVITADOR SOLO SI ES PRIMERA COMPRA DE NIVEL VIP
   if (user.invitado_por) {
-    let ticketsParaInvitador = 0;
-    // Global 1 o Global 2 → 1 ticket
-    if (targetLevel.codigo === 'global1' || targetLevel.codigo === 'global2') {
-      ticketsParaInvitador = 1;
-    }
-    // Global 3 → 2 tickets
-    else if (targetLevel.codigo === 'global3') {
-      ticketsParaInvitador = 2;
+    // Verificar si es la primera compra completada de nivel del usuario
+    const queryParams = [userId];
+    let sql = `SELECT COUNT(*) as total FROM compras_nivel 
+               WHERE usuario_id = ? AND estado = 'completada'`;
+    if (compraId) {
+      sql += ` AND id != ?`;
+      queryParams.push(compraId);
     }
 
-    if (ticketsParaInvitador > 0) {
-      await query(
-        `UPDATE usuarios SET tickets_ruleta = tickets_ruleta + ? WHERE id = ?`,
-        [ticketsParaInvitador, user.invitado_por]
-      );
-      // Notificación al invitador
-      emitToUser(user.invitado_por, 'user:tickets_gifted', {
-        cantidad: ticketsParaInvitador,
-        razon: `Tu invitado ascendió a ${targetLevel.nombre}`,
-      });
+    const [completasCount] = await query(sql, queryParams);
+    const yaTieneCompraVip = completasCount[0].total > 0;
+
+    // Solo regalamos tickets si es la PRIMERA compra completada de nivel
+    if (!yaTieneCompraVip) {
+      let ticketsParaInvitador = 0;
+      // Global 1 o Global 2 → 1 ticket
+      if (targetLevel.codigo === 'global1' || targetLevel.codigo === 'global2') {
+        ticketsParaInvitador = 1;
+      }
+      // Global 3 → 2 tickets
+      else if (targetLevel.codigo === 'global3') {
+        ticketsParaInvitador = 2;
+      }
+
+      if (ticketsParaInvitador > 0) {
+        await query(
+          `UPDATE usuarios SET tickets_ruleta = tickets_ruleta + ? WHERE id = ?`,
+          [ticketsParaInvitador, user.invitado_por]
+        );
+        // Notificación al invitador
+        emitToUser(user.invitado_por, 'user:tickets_gifted', {
+          cantidad: ticketsParaInvitador,
+          razon: `Tu invitado compró ${targetLevel.nombre} por primera vez`,
+        });
+      }
     }
   }
 

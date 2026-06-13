@@ -268,7 +268,7 @@ export async function processTelegramUpdate(update) {
               });
             }
             await updateUser(user.id, updates);
-            await handleLevelUpRewards(user.id, user.nivel_id, nivelDestino.id);
+            await handleLevelUpRewards(user.id, user.nivel_id, nivelDestino.id, id);
             // Distribuir comisiones por ascenso (Inversión)
             await distributeInvestmentCommissions(user.id, recarga.monto);
             statusMsg = `✅ Ascenso Aprobado por ${adminName} a ${nivelDestino.nombre}`;
