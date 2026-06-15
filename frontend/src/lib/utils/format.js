@@ -12,6 +12,7 @@ export const formatDate = (date) => {
     const d = new Date(date);
     if (isNaN(d.getTime())) return '---';
     return d.toLocaleDateString('es-BO', {
+      timeZone: 'America/La_Paz',
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
@@ -27,6 +28,7 @@ export const formatTime = (date) => {
     const d = new Date(date);
     if (isNaN(d.getTime())) return '---';
     return d.toLocaleTimeString('es-BO', {
+      timeZone: 'America/La_Paz',
       hour: '2-digit',
       minute: '2-digit'
     });
@@ -41,6 +43,7 @@ export const formatDateTime = (date) => {
     const d = new Date(date);
     if (isNaN(d.getTime())) return '---';
     return d.toLocaleString('es-BO', {
+      timeZone: 'America/La_Paz',
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
