@@ -30,7 +30,8 @@ export const formatTime = (date) => {
     return d.toLocaleTimeString('es-BO', {
       timeZone: 'America/La_Paz',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: false
     });
   } catch (e) {
     return '---';
@@ -48,7 +49,8 @@ export const formatDateTime = (date) => {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: false
     });
   } catch (e) {
     return '---';
