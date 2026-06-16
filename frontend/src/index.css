@@ -46,7 +46,7 @@
 
 @layer base {
   html, body {
-    @apply w-full overflow-x-hidden bg-white text-black font-bold;
+    @apply w-full overflow-x-hidden text-black font-bold;
     height: -webkit-fill-available;
     color-scheme: light;
   }
@@ -495,7 +495,7 @@
 
 @layer components {
   .app-container {
-    @apply min-h-screen min-h-[100dvh] w-full flex flex-col relative bg-bcb-dark text-slate-900;
+    @apply min-h-screen min-h-[100dvh] w-full flex flex-col relative text-slate-900;
     padding-bottom: calc(85px + env(safe-area-inset-bottom));
   }
 
