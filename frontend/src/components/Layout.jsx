@@ -18,11 +18,16 @@ export default function Layout({ children }) {
 
   return (
     <div className="app-container">
-      {/* Aurora Background Effect - Más llamativo */}
+      {/* Vibrant Dynamic Aurora Background */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-[-20%] -left-[20%] w-[100%] h-[70%] bg-indigo-500/10 rounded-full blur-[140px] animate-pulse" />
-        <div className="absolute bottom-[-15%] -right-[15%] w-[80%] h-[60%] bg-rose-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/4 right-[-10%] w-[50%] h-[40%] bg-violet-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-[-20%] -left-[20%] w-[100%] h-[70%] bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/10 rounded-full blur-[180px] animate-[float_8s_ease-in-out_infinite]" 
+             style={{ animationDelay: '0s' }} />
+        <div className="absolute bottom-[-15%] -right-[15%] w-[80%] h-[60%] bg-gradient-to-tl from-rose-500/20 via-amber-500/20 to-orange-500/10 rounded-full blur-[160px] animate-[float_10s_ease-in-out_infinite]"
+             style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/4 right-[-10%] w-[50%] h-[40%] bg-gradient-to-bl from-violet-500/20 via-blue-500/20 to-cyan-500/10 rounded-full blur-[140px] animate-[float_12s_ease-in-out_infinite]"
+             style={{ animationDelay: '4s' }} />
+        <div className="absolute bottom-1/3 left-[-5%] w-[60%] h-[50%] bg-gradient-to-tr from-emerald-500/15 via-teal-500/15 to-cyan-500/10 rounded-full blur-[150px] animate-[float_14s_ease-in-out_infinite]"
+             style={{ animationDelay: '6s' }} />
       </div>
 
       <div className="flex-1 relative z-10 overflow-x-hidden no-scrollbar pb-[calc(100px+env(safe-area-inset-bottom))]">
@@ -60,7 +65,7 @@ export default function Layout({ children }) {
                 {isActive && (
                   <motion.div
                     layoutId="active-indicator"
-                    className="absolute top-0 w-8 h-1 bg-indigo-900 rounded-full"
+                    className="absolute top-0 w-8 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-md shadow-indigo-500/40"
                   />
                 )}
               </NavLink>

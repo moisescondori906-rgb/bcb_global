@@ -61,9 +61,17 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white relative overflow-hidden">
-      {/* Background Decor (Matching Reference) */}
-      <div className="absolute top-[30%] left-[20%] w-[100%] h-[100%] bg-rose-100/30 rounded-full blur-[100px]" />
-      <div className="absolute top-[10%] right-[10%] w-[60%] h-[60%] bg-blue-100/20 rounded-full blur-[80px]" />
+      {/* Vibrant Dynamic Aurora Background for Auth Pages */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute top-[-20%] -left-[20%] w-[100%] h-[70%] bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/10 rounded-full blur-[180px] animate-[float_8s_ease-in-out_infinite]" 
+             style={{ animationDelay: '0s' }} />
+        <div className="absolute bottom-[-15%] -right-[15%] w-[80%] h-[60%] bg-gradient-to-tl from-rose-500/20 via-amber-500/20 to-orange-500/10 rounded-full blur-[160px] animate-[float_10s_ease-in-out_infinite]"
+             style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/4 right-[-10%] w-[50%] h-[40%] bg-gradient-to-bl from-violet-500/20 via-blue-500/20 to-cyan-500/10 rounded-full blur-[140px] animate-[float_12s_ease-in-out_infinite]"
+             style={{ animationDelay: '4s' }} />
+        <div className="absolute bottom-1/3 left-[-5%] w-[60%] h-[50%] bg-gradient-to-tr from-emerald-500/15 via-teal-500/15 to-cyan-500/10 rounded-full blur-[150px] animate-[float_14s_ease-in-out_infinite]"
+             style={{ animationDelay: '6s' }} />
+      </div>
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
